@@ -856,13 +856,14 @@ Transform even the messiest developer thoughts into prompts that produce product
         stream: true
       };
       
-      // GPT-5 models use max_completion_tokens instead of max_tokens
+      // GPT-5 models use max_completion_tokens and don't support custom temperature
       if (selectedModel.startsWith('gpt-5')) {
         completionParams.max_completion_tokens = 2000;
+        // GPT-5 only supports default temperature (1)
       } else {
         completionParams.max_tokens = 2000;
+        completionParams.temperature = 0.3;
       }
-      completionParams.temperature = 0.3;
       
       spinner.stop();
       console.log('\n\n' + chalk.gray('─'.repeat(80)));

@@ -856,8 +856,12 @@ Transform even the messiest developer thoughts into prompts that produce product
         stream: true
       };
       
-      // Standard parameters for all OpenAI models
-      completionParams.max_tokens = 2000;
+      // GPT-5 models use max_completion_tokens instead of max_tokens
+      if (selectedModel.startsWith('gpt-5')) {
+        completionParams.max_completion_tokens = 2000;
+      } else {
+        completionParams.max_tokens = 2000;
+      }
       completionParams.temperature = 0.3;
       
       spinner.stop();

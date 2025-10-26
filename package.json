@@ -1,6 +1,6 @@
 {
   "name": "@lukaloehr/promptx",
-  "version": "3.6.5",
+  "version": "3.6.6",
   "description": "A CLI tool that transforms messy prompts into structured, clear prompts for AI agents",
   "type": "module",
   "main": "bin/promptx.js",

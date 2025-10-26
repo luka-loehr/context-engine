@@ -870,11 +870,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for thinking models
-      let thinkingSpinner;
-      if (modelInfo.isThinkingModel) {
-        thinkingSpinner = ora('Thinking...').start();
-      }
+      // Show thinking spinner for all models
+      const thinkingSpinner = ora('Thinking...').start();
       
       const streamWriter = createStreamWriter();
       const stream = await openai.chat.completions.create(completionParams);
@@ -884,7 +881,7 @@ Transform even the messiest developer thoughts into prompts that produce product
       for await (const chunk of stream) {
         if (chunk.choices[0]?.delta?.content) {
           // Stop thinking spinner on first chunk
-          if (firstChunk && thinkingSpinner) {
+          if (firstChunk) {
             thinkingSpinner.stop();
             firstChunk = false;
           }
@@ -917,10 +914,21 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
+      // Show thinking spinner for all models
+      const thinkingSpinner = ora('Thinking...').start();
+      
       const streamWriter = createStreamWriter();
       refinedPrompt = '';
+      let firstChunk = true;
+      
       for await (const chunk of stream) {
         if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
+          // Stop thinking spinner on first chunk
+          if (firstChunk) {
+            thinkingSpinner.stop();
+            firstChunk = false;
+          }
+          
           const content = chunk.delta.text;
           streamWriter.write(content);
           refinedPrompt += content;
@@ -961,11 +969,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for thinking models
-      let thinkingSpinner;
-      if (modelInfo.isThinkingModel) {
-        thinkingSpinner = ora('Thinking...').start();
-      }
+      // Show thinking spinner for all models
+      const thinkingSpinner = ora('Thinking...').start();
       
       const streamWriter = createStreamWriter();
       const stream = await xai.chat.completions.create(completionParams);
@@ -975,7 +980,7 @@ Transform even the messiest developer thoughts into prompts that produce product
       for await (const chunk of stream) {
         if (chunk.choices[0]?.delta?.content) {
           // Stop thinking spinner on first chunk
-          if (firstChunk && thinkingSpinner) {
+          if (firstChunk) {
             thinkingSpinner.stop();
             firstChunk = false;
           }
@@ -1000,11 +1005,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for thinking models
-      let thinkingSpinner;
-      if (modelInfo.isThinkingModel) {
-        thinkingSpinner = ora('Thinking...').start();
-      }
+      // Show thinking spinner for all models
+      const thinkingSpinner = ora('Thinking...').start();
       
       const streamWriter = createStreamWriter();
       const result = await model.generateContentStream(fullPrompt);
@@ -1015,7 +1017,7 @@ Transform even the messiest developer thoughts into prompts that produce product
         const text = chunk.text();
         if (text) {
           // Stop thinking spinner on first chunk
-          if (firstChunk && thinkingSpinner) {
+          if (firstChunk) {
             thinkingSpinner.stop();
             firstChunk = false;
           }
@@ -1051,12 +1053,22 @@ Transform even the messiest developer thoughts into prompts that produce product
         console.log(chalk.green('REFINED PROMPT:'));
         console.log(chalk.gray('─'.repeat(80)) + '\n');
 
+        // Show thinking spinner for all models
+        const thinkingSpinner = ora('Thinking...').start();
+
         const streamWriter = createStreamWriter();
         const stream = await ollama.chat.completions.create(completionParams);
         refinedPrompt = '';
+        let firstChunk = true;
 
         for await (const chunk of stream) {
           if (chunk.choices[0]?.delta?.content) {
+            // Stop thinking spinner on first chunk
+            if (firstChunk) {
+              thinkingSpinner.stop();
+              firstChunk = false;
+            }
+            
             const content = chunk.choices[0].delta.content;
             streamWriter.write(content);
             refinedPrompt += content;

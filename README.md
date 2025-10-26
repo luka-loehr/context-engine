@@ -69,6 +69,17 @@ promptx
 promptx "your messy prompt here"
 ```
 
+**Pro mode (with full project context):**
+```bash
+promptx --pro "improve the homepage"
+```
+
+The `--pro` flag:
+- 🔍 Scans all files in your project directory
+- 📊 Shows file list and asks for confirmation
+- 🎯 Creates context-aware prompts specific to your codebase
+- 🔒 Respects .gitignore and skips sensitive files
+
 **Commands:**
 - `promptx /help` - Show help
 - `promptx /model` - Switch models

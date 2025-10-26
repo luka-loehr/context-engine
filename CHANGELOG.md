@@ -2,6 +2,36 @@
 
 All notable changes to promptx will be documented in this file.
 
+## [3.7.0] - 2025-10-26 - PRO MODE WITH PROJECT CONTEXT 🚀
+
+### Added
+- 🚀 **Pro Mode** - Revolutionary `--pro` flag for full project context awareness
+- 📁 **Automatic File Scanning** - Recursively scans all project files in current directory
+- 🔒 **Security Confirmation** - Requires user confirmation before sending files to AI
+- 📊 **Smart File Filtering** - Ignores node_modules, .git, build files, and other unnecessary folders
+- 📝 **Context-Aware Prompts** - AI generates highly specific prompts tailored to your exact codebase
+- 🎯 **Intelligent Extensions** - Supports 30+ file types (JS, TS, Python, Java, Go, and more)
+- 📦 **Size Limits** - Automatically skips files over 100KB to prevent token overload
+- 🌈 **Beautiful UI** - Shows file list, total characters, and progress spinners
+
+### Changed
+- 📊 **Enhanced System Prompt** - AI now understands project structure when in Pro mode
+- 🎨 **Improved Help Menu** - Added Pro mode documentation and usage examples
+- 🔄 **All Providers Supported** - Pro mode works with OpenAI, Anthropic, xAI, and Google models
+
+### Technical Details
+- Adds project context as JSON to AI messages with file paths and contents
+- Respects common ignore patterns (.env, .log, lock files)
+- Validates file extensions before reading
+- Shows file preview (first 10 files) before confirmation
+- Displays total character count for transparency
+
+### Benefits for Users
+- 🎯 **Hyper-Specific Prompts** - AI references actual files, functions, and code structure
+- ⚡ **Saves Time** - No need to manually copy-paste code context
+- 🔐 **Safe** - Requires explicit confirmation with warning about sensitive data
+- 📈 **Better Results** - More accurate and contextual prompt refinements
+
 ## [3.6.0] - 2025-10-26 - LATEST MODELS WITH BENCHMARKS 📊
 
 ### Added

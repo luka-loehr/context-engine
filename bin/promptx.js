@@ -22,6 +22,39 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'packa
 
 const execAsync = promisify(exec);
 
+// Files and directories to ignore when scanning project
+const IGNORE_PATTERNS = [
+  'node_modules',
+  '.git',
+  '.next',
+  '.nuxt',
+  'dist',
+  'build',
+  'out',
+  '.cache',
+  'coverage',
+  '.DS_Store',
+  '.env',
+  '.env.local',
+  '.env.production',
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  '.log',
+  '.tmp',
+  '.temp'
+];
+
+// File extensions to include
+const VALID_EXTENSIONS = [
+  '.js', '.jsx', '.ts', '.tsx', '.vue', '.svelte',
+  '.py', '.java', '.go', '.rb', '.php', '.rs', '.swift',
+  '.html', '.css', '.scss', '.sass', '.less',
+  '.json', '.yaml', '.yml', '.toml', '.xml',
+  '.md', '.txt', '.sql', '.sh', '.bash',
+  '.c', '.cpp', '.h', '.hpp', '.cs'
+];
+
 // Helper function for streaming with word wrap
 function createStreamWriter() {
   const terminalWidth = process.stdout.columns || 80;
@@ -476,6 +509,103 @@ async function setupWizard() {
   console.log(chalk.gray('You can change your model anytime by typing /model\n'));
 }
 
+// Function to recursively scan directory and collect file contents
+async function scanDirectory(dir, baseDir = dir) {
+  const files = [];
+  
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      const relativePath = path.relative(baseDir, fullPath);
+      
+      // Skip ignored patterns
+      if (IGNORE_PATTERNS.some(pattern => relativePath.includes(pattern) || entry.name.includes(pattern))) {
+        continue;
+      }
+      
+      if (entry.isDirectory()) {
+        // Recursively scan subdirectories
+        const subFiles = await scanDirectory(fullPath, baseDir);
+        files.push(...subFiles);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name);
+        
+        // Only include valid file extensions
+        if (VALID_EXTENSIONS.includes(ext)) {
+          try {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            // Skip very large files (>100KB)
+            if (content.length < 100000) {
+              files.push({
+                path: relativePath,
+                content: content
+              });
+            }
+          } catch (err) {
+            // Skip files that can't be read
+            continue;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.log(chalk.yellow(`Warning: Could not scan directory ${dir}`));
+  }
+  
+  return files;
+}
+
+// Function to get project context
+async function getProjectContext(currentDir) {
+  const spinner = ora('Scanning project files...').start();
+  
+  try {
+    const files = await scanDirectory(currentDir);
+    spinner.succeed(`Found ${files.length} files`);
+    
+    if (files.length === 0) {
+      console.log(chalk.yellow('\nNo valid files found in current directory.'));
+      return null;
+    }
+    
+    // Show file list
+    console.log(chalk.gray('\nFiles to include:'));
+    files.slice(0, 10).forEach(file => {
+      console.log(chalk.gray(`  • ${file.path}`));
+    });
+    if (files.length > 10) {
+      console.log(chalk.gray(`  ... and ${files.length - 10} more files`));
+    }
+    
+    // Get confirmation
+    console.log(chalk.yellow('\n⚠️  WARNING: All file contents will be sent to the AI model.'));
+    console.log(chalk.gray('This may include sensitive information like API keys or secrets.'));
+    console.log(chalk.gray('Total characters: ~' + files.reduce((sum, f) => sum + f.content.length, 0).toLocaleString()));
+    
+    const { confirmed } = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'confirmed',
+        message: 'Do you want to proceed with --pro mode?',
+        default: false
+      }
+    ]);
+    
+    if (!confirmed) {
+      console.log(chalk.gray('Cancelled. Running in normal mode without project context.'));
+      return null;
+    }
+    
+    return files;
+  } catch (err) {
+    spinner.fail('Failed to scan project');
+    console.log(chalk.red('Error:', err.message));
+    return null;
+  }
+}
+
 async function getOrSetupConfig() {
   const setupComplete = config.get('setup_complete');
   
@@ -777,9 +907,18 @@ async function changeModel() {
   console.log(chalk.green(`\n✅ Switched to ${modelInfo.name}`));
 }
 
-async function refinePrompt(messyPrompt, selectedModel, apiKey) {
+async function refinePrompt(messyPrompt, selectedModel, apiKey, projectContext = null) {
   const modelInfo = getAllModels()[selectedModel];
   const spinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
+  
+  // Add project context to the prompt if provided
+  let contextPrefix = '';
+  if (projectContext && projectContext.length > 0) {
+    contextPrefix = `\n\nPROJECT CONTEXT (--pro mode enabled):\n`;
+    contextPrefix += `You have access to ${projectContext.length} files from the user's project:\n\n`;
+    contextPrefix += JSON.stringify(projectContext, null, 2);
+    contextPrefix += `\n\nUse this project context to create highly specific, tailored prompts that reference actual files, functions, and code structure from their project. Make the refined prompt deeply contextual to their existing codebase.\n\n`;
+  }
   
   const systemPrompt = `You are promptx, an expert prompt engineering tool created by Luka Loehr (https://github.com/luka-loehr). You are part of the @lukaloehr/promptx npm package - a CLI tool that transforms messy, informal developer prompts into meticulously crafted instructions for AI coding assistants.
 CRITICAL BEHAVIOR RULES:
@@ -851,7 +990,7 @@ Transform even the messiest developer thoughts into prompts that produce product
         model: selectedModel,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: messyPrompt }
+          { role: 'user', content: contextPrefix + messyPrompt }
         ],
         stream: true
       };
@@ -902,7 +1041,7 @@ Transform even the messiest developer thoughts into prompts that produce product
       
       const stream = await anthropic.messages.create({
         model: selectedModel,
-        messages: [{ role: 'user', content: messyPrompt }],
+        messages: [{ role: 'user', content: contextPrefix + messyPrompt }],
         system: systemPrompt,
         temperature: 0.3,
         max_tokens: maxTokens,
@@ -948,7 +1087,7 @@ Transform even the messiest developer thoughts into prompts that produce product
         model: selectedModel,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: messyPrompt }
+          { role: 'user', content: contextPrefix + messyPrompt }
         ],
         stream: true
       };
@@ -998,7 +1137,7 @@ Transform even the messiest developer thoughts into prompts that produce product
       const model = genAI.getGenerativeModel({ model: selectedModel });
       
       // Combine system prompt and user prompt for Google AI
-      const fullPrompt = `${systemPrompt}\n\nUser Prompt: ${messyPrompt}`;
+      const fullPrompt = `${systemPrompt}\n\nUser Prompt: ${contextPrefix + messyPrompt}`;
       
       spinner.stop();
       console.log('\n\n' + chalk.gray('─'.repeat(80)));
@@ -1041,7 +1180,7 @@ Transform even the messiest developer thoughts into prompts that produce product
           model: selectedModel,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: messyPrompt }
+            { role: 'user', content: contextPrefix + messyPrompt }
           ],
           stream: true,
           temperature: 0.3,
@@ -1159,12 +1298,18 @@ function showHelp() {
   console.log(chalk.green('\n🚀 Basic Usage:'));
   console.log(chalk.white('  promptx                    ') + chalk.gray('- Interactive mode'));
   console.log(chalk.white('  promptx "your prompt"      ') + chalk.gray('- Direct mode'));
+  console.log(chalk.white('  promptx --pro              ') + chalk.gray('- Pro mode with project context'));
   
   console.log(chalk.green('\n⚡ Commands:'));
   console.log(chalk.white('  /help                      ') + chalk.gray('- Show this help menu'));
   console.log(chalk.white('  /model                     ') + chalk.gray('- Switch AI models'));
   console.log(chalk.white('  /whats-new                 ') + chalk.gray('- See latest updates'));
   console.log(chalk.white('  promptx reset              ') + chalk.gray('- Reset configuration'));
+  
+  console.log(chalk.green('\n🚀 Pro Mode:'));
+  console.log(chalk.white('  --pro                      ') + chalk.gray('- Scans all project files'));
+  console.log(chalk.gray('                               Sends file contents to AI for context-aware prompts'));
+  console.log(chalk.gray('                               Requires confirmation before proceeding'));
   
   console.log(chalk.green('\n🤖 Supported Providers:'));
   console.log(chalk.white('  • OpenAI    ') + chalk.gray('- GPT-5 (74.9% coding), Mini (71%, 2× faster), Nano (fastest)'));
@@ -1266,7 +1411,8 @@ program
 
 program
   .argument('[prompt...]', 'The messy prompt to refine')
-  .action(async (promptParts) => {
+  .option('--pro', 'Enable Pro mode with full project context awareness')
+  .action(async (promptParts, options) => {
     // Handle special commands
     if (promptParts && promptParts.length === 1) {
       const command = promptParts[0].toLowerCase();
@@ -1288,6 +1434,20 @@ program
     }
     
     const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig();
+    
+    // Get project context if --pro mode is enabled
+    let projectContext = null;
+    if (options.pro) {
+      console.log(chalk.blue('\n🚀 Pro Mode Enabled'));
+      console.log(chalk.gray('Scanning current directory for project files...\n'));
+      projectContext = await getProjectContext(process.cwd());
+      
+      if (!projectContext) {
+        console.log(chalk.gray('Continuing without project context.\n'));
+      } else {
+        console.log(chalk.green(`\n✅ Project context loaded (${projectContext.length} files)\n`));
+      }
+    }
     
     let messyPrompt;
     
@@ -1328,7 +1488,7 @@ program
       }
     }
     
-    await refinePrompt(messyPrompt, selectedModel, apiKey);
+    await refinePrompt(messyPrompt, selectedModel, apiKey, projectContext);
   });
 
 program.parse();

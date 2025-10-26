@@ -2,6 +2,41 @@
 
 All notable changes to promptx will be documented in this file.
 
+## [3.6.0] - 2025-10-26 - LATEST MODELS WITH BENCHMARKS 📊
+
+### Added
+- 🤖 **GPT-5 Family** - Latest OpenAI models with GPT-5, GPT-5 Mini, and GPT-5 Nano
+- 🧠 **Claude 4.5 Family** - Sonnet 4.5 (frontier coding), Haiku 4.5 (fastest), Opus 4.1 (deepest reasoning)
+- 🚀 **Grok 4 Fast** - New xAI models with 2M context and specialized coding model
+- 🌟 **Gemini 2.5 Family** - Latest Google models with 1M context windows
+- 📊 **Benchmark-Based Descriptions** - All models now rated by actual SWE-bench Verified scores
+
+### Changed
+- 🏆 **Performance Data** - GPT-5 leads with 74.9% coding score, Claude Opus 4.1 at 74.5%
+- ⚡ **Speed Metrics** - Real latency data: GPT-5 Nano (3s), Mini (4.5s), Base (10s)
+- 💰 **Cost Transparency** - Accurate pricing for all models from official sources
+- 📦 **Context Windows** - Grok 4 Fast (2M), Gemini/Claude (1M), GPT-5 (400K)
+- 🧠 **Reasoning Support** - Marked models with extended thinking capabilities
+
+### Documentation
+- 📚 **Complete README Overhaul** - Detailed benchmark data for 12 models across 4 providers
+- 🎯 **Quick Selection Guide** - Compare models by coding ability, speed, cost, and context
+- 📈 **Release Dates** - Added official release dates for all models
+- 🔍 **Technical Details** - Token limits, throughput, and feature capabilities
+
+### Technical Details
+- Updated all model API identifiers to latest versions
+- Added benchmark scores from official announcements (Aug-Oct 2025)
+- Included latency measurements and throughput data
+- Updated reasoning/thinking model flags based on official capabilities
+- Comprehensive model comparison tables with real performance metrics
+
+### User Benefits
+- ✅ Make data-driven model selection decisions
+- ✅ Understand true performance vs marketing claims
+- ✅ Choose right model for specific use cases (coding, reasoning, speed, cost)
+- ✅ Access latest cutting-edge AI models
+
 ## [3.5.3] - 2025-08-06 - PERSISTENT QUALITY RECOMMENDATIONS 💡
 
 ### Added

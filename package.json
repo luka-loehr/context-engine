@@ -1,6 +1,6 @@
 {
-  "name": "@luka-loehr/promptx",
-  "version": "3.5.3",
+  "name": "@lukaloehr/promptx",
+  "version": "3.6.1",
   "description": "A CLI tool that transforms messy prompts into structured, clear prompts for AI agents",
   "type": "module",
   "main": "bin/promptx.js",
@@ -35,7 +35,7 @@
   "author": "Luka Loehr",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luka-loehr/promptx-cli.git"
+    "url": "git+https://github.com/luka-loehr/promptx-cli.git"
   },
   "bugs": {
     "url": "https://github.com/luka-loehr/promptx-cli/issues"

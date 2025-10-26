@@ -195,24 +195,24 @@ const config = new Conf({ projectName: 'promptx' });
 
 const MODELS = {
   openai: {
-    'gpt-4o': { name: 'GPT-4o', provider: 'openai' },
-    'o4-mini': { name: 'O4 Mini', provider: 'openai', isThinkingModel: true },
-    'gpt-4.1': { name: 'GPT-4.1', provider: 'openai' }
+    'gpt-5': { name: 'GPT-5', provider: 'openai' },
+    'gpt-5-mini': { name: 'GPT-5 Mini', provider: 'openai' },
+    'gpt-5-nano': { name: 'GPT-5 Nano', provider: 'openai' }
   },
   anthropic: {
-    'claude-3-5-sonnet-20241022': { name: 'Claude 3.5 Sonnet', provider: 'anthropic' },
-    'claude-opus-4': { name: 'Claude Opus 4', provider: 'anthropic' },
-    'claude-sonnet-4': { name: 'Claude Sonnet 4', provider: 'anthropic' }
+    'claude-sonnet-4-5': { name: 'Claude Sonnet 4.5', provider: 'anthropic' },
+    'claude-haiku-4-5': { name: 'Claude Haiku 4.5', provider: 'anthropic' },
+    'claude-opus-4-1': { name: 'Claude Opus 4.1', provider: 'anthropic' }
   },
   xai: {
-    'grok-3': { name: 'Grok 3', provider: 'xai' },
-    'grok-3-mini': { name: 'Grok 3 Mini', provider: 'xai' },
-    'grok-4': { name: 'Grok 4', provider: 'xai', isThinkingModel: true }
+    'grok-code-fast-1': { name: 'Grok Code Fast 1', provider: 'xai' },
+    'grok-4-fast-reasoning': { name: 'Grok 4 Fast Reasoning', provider: 'xai', isThinkingModel: true },
+    'grok-4-fast-non-reasoning': { name: 'Grok 4 Fast Non Reasoning', provider: 'xai' }
   },
   google: {
-    'gemini-2.5-flash': { name: 'Gemini 2.5 Flash', provider: 'google' },
-    'gemini-2.0-flash': { name: 'Gemini 2.0 Flash', provider: 'google' },
-    'gemini-2.5-pro': { name: 'Gemini 2.5 Pro', provider: 'google', isThinkingModel: true }
+    'gemini-2.5-pro': { name: 'Gemini 2.5 Pro', provider: 'google', isThinkingModel: true },
+    'gemini-flash-latest': { name: 'Gemini Flash Latest', provider: 'google' },
+    'gemini-flash-lite-latest': { name: 'Gemini Flash Lite Latest', provider: 'google' }
   },
   ollama: {}
 };
@@ -235,10 +235,10 @@ async function setupWizard() {
       name: 'provider',
       message: 'Which AI provider would you like to use?',
       choices: [
-        { name: '🤖 OpenAI (GPT-4o, O4 Mini, GPT-4.1)', value: 'openai' },
-        { name: '🧠 Anthropic (Claude Sonnet 4, Claude Opus 4)', value: 'anthropic' },
-        { name: '🚀 xAI (Grok 3, Grok 4)', value: 'xai' },
-        { name: '🌟 Google (Gemini 2.5 Flash, 2.0 Flash, 2.5 Pro)', value: 'google' },
+        { name: '🤖 OpenAI (Best coding: GPT-5 74.9% SWE-bench)', value: 'openai' },
+        { name: '🧠 Anthropic (Fastest: Haiku 4.5, Deep reasoning: Opus 4.1)', value: 'anthropic' },
+        { name: '🚀 xAI (2M context Grok 4, Coding: Grok Code Fast)', value: 'xai' },
+        { name: '🌟 Google (1M context, Best price/perf: Flash)', value: 'google' },
         { name: '🦙 Ollama (Local models)', value: 'ollama' }
       ]
     }
@@ -248,21 +248,21 @@ async function setupWizard() {
   let modelChoices = [];
   if (provider === 'openai') {
     modelChoices = [
-      { name: 'GPT-4o (Most capable)', value: 'gpt-4o' },
-      { name: 'O4 Mini (Thinking model, efficient)', value: 'o4-mini' },
-      { name: 'GPT-4.1 (Latest version)', value: 'gpt-4.1' }
+      { name: 'GPT-5 (Best coding: 74.9% SWE-bench)', value: 'gpt-5' },
+      { name: 'GPT-5 Mini (Balanced: 71% coding, 2× faster)', value: 'gpt-5-mini' },
+      { name: 'GPT-5 Nano (Fastest: 3× speed, lowest cost)', value: 'gpt-5-nano' }
     ];
   } else if (provider === 'anthropic') {
     modelChoices = [
-      { name: 'Claude Opus 4 (Most powerful, best coding)', value: 'claude-opus-4' },
-      { name: 'Claude Sonnet 4 (Balanced performance)', value: 'claude-sonnet-4' },
-      { name: 'Claude 3.5 Sonnet (Previous generation)', value: 'claude-3-5-sonnet-20241022' }
+      { name: 'Claude Sonnet 4.5 (Top coding, 1M context)', value: 'claude-sonnet-4-5' },
+      { name: 'Claude Haiku 4.5 (Fastest, 1/3 cost, 90% quality)', value: 'claude-haiku-4-5' },
+      { name: 'Claude Opus 4.1 (Deepest reasoning: 74.5% SWE)', value: 'claude-opus-4-1' }
     ];
   } else if (provider === 'xai') {
     modelChoices = [
-      { name: 'Grok 3 (Advanced reasoning)', value: 'grok-3' },
-      { name: 'Grok 3 Mini (Cost-efficient)', value: 'grok-3-mini' },
-      { name: 'Grok 4 (Thinking model, intelligent)', value: 'grok-4' }
+      { name: 'Grok Code Fast 1 (Coding specialist: 70.8%)', value: 'grok-code-fast-1' },
+      { name: 'Grok 4 Fast Reasoning (2M context, deep thinking)', value: 'grok-4-fast-reasoning' },
+      { name: 'Grok 4 Fast Non Reasoning (Fastest, cheapest)', value: 'grok-4-fast-non-reasoning' }
     ];
   } else if (provider === 'ollama') {
     const ollamaResult = await discoverOllamaModels();
@@ -302,10 +302,10 @@ async function setupWizard() {
             name: 'newProvider',
             message: 'Which AI provider would you like to use?',
             choices: [
-              { name: '🤖 OpenAI (GPT-4o, O4 Mini, GPT-4.1)', value: 'openai' },
-              { name: '🧠 Anthropic (Claude Sonnet 4, Claude Opus 4)', value: 'anthropic' },
-              { name: '🚀 xAI (Grok 3, Grok 4)', value: 'xai' },
-              { name: '🌟 Google (Gemini 2.5 Flash, 2.0 Flash, 2.5 Pro)', value: 'google' }
+              { name: '🤖 OpenAI (GPT-5, GPT-5 Mini, GPT-5 Nano)', value: 'openai' },
+              { name: '🧠 Anthropic (Claude Sonnet 4.5, Claude Haiku 4.5, Claude Opus 4.1)', value: 'anthropic' },
+              { name: '🚀 xAI (Grok Code Fast 1, Grok 4 Fast Reasoning)', value: 'xai' },
+              { name: '🌟 Google (Gemini 2.5 Pro, Gemini Flash Latest)', value: 'google' }
             ]
           }
         ]);
@@ -316,27 +316,27 @@ async function setupWizard() {
         // Set model choices based on new provider
         if (provider === 'openai') {
           modelChoices = [
-            { name: 'GPT-4o (Most capable)', value: 'gpt-4o' },
-            { name: 'O4 Mini (Thinking model, efficient)', value: 'o4-mini' },
-            { name: 'GPT-4.1 (Latest version)', value: 'gpt-4.1' }
+            { name: 'GPT-5 (Most capable)', value: 'gpt-5' },
+            { name: 'GPT-5 Mini (Efficient and fast)', value: 'gpt-5-mini' },
+            { name: 'GPT-5 Nano (Ultra-fast, lightweight)', value: 'gpt-5-nano' }
           ];
         } else if (provider === 'anthropic') {
           modelChoices = [
-            { name: 'Claude Opus 4 (Most powerful, best coding)', value: 'claude-opus-4' },
-            { name: 'Claude Sonnet 4 (Balanced performance)', value: 'claude-sonnet-4' },
-            { name: 'Claude 3.5 Sonnet (Previous generation)', value: 'claude-3-5-sonnet-20241022' }
+            { name: 'Claude Sonnet 4.5 (Most powerful, best coding)', value: 'claude-sonnet-4-5' },
+            { name: 'Claude Haiku 4.5 (Fast and efficient)', value: 'claude-haiku-4-5' },
+            { name: 'Claude Opus 4.1 (Balanced performance)', value: 'claude-opus-4-1' }
           ];
         } else if (provider === 'xai') {
           modelChoices = [
-            { name: 'Grok 3 (Advanced reasoning)', value: 'grok-3' },
-            { name: 'Grok 3 Mini (Cost-efficient)', value: 'grok-3-mini' },
-            { name: 'Grok 4 (Thinking model, intelligent)', value: 'grok-4' }
+            { name: 'Grok Code Fast 1 (Code-focused, fast)', value: 'grok-code-fast-1' },
+            { name: 'Grok 4 Fast Reasoning (Thinking model, intelligent)', value: 'grok-4-fast-reasoning' },
+            { name: 'Grok 4 Fast Non Reasoning (Fast responses)', value: 'grok-4-fast-non-reasoning' }
           ];
         } else {
           modelChoices = [
-            { name: 'Gemini 2.5 Flash (Fast, efficient)', value: 'gemini-2.5-flash' },
-            { name: 'Gemini 2.0 Flash (Previous flash)', value: 'gemini-2.0-flash' },
-            { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' }
+            { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' },
+            { name: 'Gemini Flash Latest (Fast, efficient)', value: 'gemini-flash-latest' },
+            { name: 'Gemini Flash Lite Latest (Ultra-fast, lightweight)', value: 'gemini-flash-lite-latest' }
           ];
         }
       } else {
@@ -359,9 +359,9 @@ async function setupWizard() {
     }
   } else {
     modelChoices = [
-      { name: 'Gemini 2.5 Flash (Fast, efficient)', value: 'gemini-2.5-flash' },
-      { name: 'Gemini 2.0 Flash (Previous flash)', value: 'gemini-2.0-flash' },
-      { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' }
+      { name: 'Gemini 2.5 Pro (Best reasoning, 1M context)', value: 'gemini-2.5-pro' },
+      { name: 'Gemini Flash Latest (Best price/performance)', value: 'gemini-flash-latest' },
+      { name: 'Gemini Flash Lite Latest (Fastest, lowest cost)', value: 'gemini-flash-lite-latest' }
     ];
   }
   
@@ -483,7 +483,7 @@ async function getOrSetupConfig() {
     await setupWizard();
   }
   
-  const selectedModel = config.get('selected_model') || 'gpt-4o';
+  const selectedModel = config.get('selected_model') || 'gpt-5';
   let modelInfo = getAllModels()[selectedModel];
 
   // If model not found and it might be an Ollama model, try to discover Ollama models
@@ -497,9 +497,9 @@ async function getOrSetupConfig() {
 
   // If still not found, fall back to default
   if (!modelInfo) {
-    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to GPT-4o.`));
-    config.set('selected_model', 'gpt-4o');
-    modelInfo = getAllModels()['gpt-4o'];
+    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to GPT-5.`));
+    config.set('selected_model', 'gpt-5');
+    modelInfo = getAllModels()['gpt-5'];
   }
 
   const provider = modelInfo.provider;
@@ -544,8 +544,8 @@ async function getOrSetupConfig() {
 async function changeModel() {
   console.log(chalk.blue('\n🔄 Change Model'));
   
-  const currentModel = config.get('selected_model') || 'gpt-4o';
-  const currentModelInfo = getAllModels()[currentModel] || getAllModels()['gpt-4o'];
+  const currentModel = config.get('selected_model') || 'gpt-5';
+  const currentModelInfo = getAllModels()[currentModel] || getAllModels()['gpt-5'];
   
   console.log(chalk.gray(`Current model: ${currentModelInfo.name}\n`));
   
@@ -556,10 +556,10 @@ async function changeModel() {
       name: 'provider',
       message: 'Which AI provider would you like to use?',
       choices: [
-        { name: '🤖 OpenAI (GPT-4o, O4 Mini, GPT-4.1)', value: 'openai' },
-        { name: '🧠 Anthropic (Claude Sonnet 4, Claude Opus 4)', value: 'anthropic' },
-        { name: '🚀 xAI (Grok 3, Grok 4)', value: 'xai' },
-        { name: '🌟 Google (Gemini 2.5 Flash, 2.0 Flash, 2.5 Pro)', value: 'google' },
+        { name: '🤖 OpenAI (Best coding: GPT-5 74.9% SWE-bench)', value: 'openai' },
+        { name: '🧠 Anthropic (Fastest: Haiku 4.5, Deep reasoning: Opus 4.1)', value: 'anthropic' },
+        { name: '🚀 xAI (2M context Grok 4, Coding: Grok Code Fast)', value: 'xai' },
+        { name: '🌟 Google (1M context, Best price/perf: Flash)', value: 'google' },
         { name: '🦙 Ollama (Local models)', value: 'ollama' }
       ]
     }
@@ -569,21 +569,21 @@ async function changeModel() {
   let modelChoices = [];
   if (provider === 'openai') {
     modelChoices = [
-      { name: 'GPT-4o (Most capable)', value: 'gpt-4o' },
-      { name: 'O4 Mini (Thinking model, efficient)', value: 'o4-mini' },
-      { name: 'GPT-4.1 (Latest version)', value: 'gpt-4.1' }
+      { name: 'GPT-5 (Best coding: 74.9% SWE-bench)', value: 'gpt-5' },
+      { name: 'GPT-5 Mini (Balanced: 71% coding, 2× faster)', value: 'gpt-5-mini' },
+      { name: 'GPT-5 Nano (Fastest: 3× speed, lowest cost)', value: 'gpt-5-nano' }
     ];
   } else if (provider === 'anthropic') {
     modelChoices = [
-      { name: 'Claude Opus 4 (Most powerful, best coding)', value: 'claude-opus-4' },
-      { name: 'Claude Sonnet 4 (Balanced performance)', value: 'claude-sonnet-4' },
-      { name: 'Claude 3.5 Sonnet (Previous generation)', value: 'claude-3-5-sonnet-20241022' }
+      { name: 'Claude Sonnet 4.5 (Top coding, 1M context)', value: 'claude-sonnet-4-5' },
+      { name: 'Claude Haiku 4.5 (Fastest, 1/3 cost, 90% quality)', value: 'claude-haiku-4-5' },
+      { name: 'Claude Opus 4.1 (Deepest reasoning: 74.5% SWE)', value: 'claude-opus-4-1' }
     ];
   } else if (provider === 'xai') {
     modelChoices = [
-      { name: 'Grok 3 (Advanced reasoning)', value: 'grok-3' },
-      { name: 'Grok 3 Mini (Cost-efficient)', value: 'grok-3-mini' },
-      { name: 'Grok 4 (Thinking model, intelligent)', value: 'grok-4' }
+      { name: 'Grok Code Fast 1 (Coding specialist: 70.8%)', value: 'grok-code-fast-1' },
+      { name: 'Grok 4 Fast Reasoning (2M context, deep thinking)', value: 'grok-4-fast-reasoning' },
+      { name: 'Grok 4 Fast Non Reasoning (Fastest, cheapest)', value: 'grok-4-fast-non-reasoning' }
     ];
   } else if (provider === 'ollama') {
     const ollamaResult = await discoverOllamaModels();
@@ -623,10 +623,10 @@ async function changeModel() {
             name: 'newProvider',
             message: 'Which AI provider would you like to use?',
             choices: [
-              { name: '🤖 OpenAI (GPT-4o, O4 Mini, GPT-4.1)', value: 'openai' },
-              { name: '🧠 Anthropic (Claude Sonnet 4, Claude Opus 4)', value: 'anthropic' },
-              { name: '🚀 xAI (Grok 3, Grok 4)', value: 'xai' },
-              { name: '🌟 Google (Gemini 2.5 Flash, 2.0 Flash, 2.5 Pro)', value: 'google' }
+              { name: '🤖 OpenAI (GPT-5, GPT-5 Mini, GPT-5 Nano)', value: 'openai' },
+              { name: '🧠 Anthropic (Claude Sonnet 4.5, Claude Haiku 4.5, Claude Opus 4.1)', value: 'anthropic' },
+              { name: '🚀 xAI (Grok Code Fast 1, Grok 4 Fast Reasoning)', value: 'xai' },
+              { name: '🌟 Google (Gemini 2.5 Pro, Gemini Flash Latest)', value: 'google' }
             ]
           }
         ]);
@@ -636,27 +636,27 @@ async function changeModel() {
 
         if (provider === 'openai') {
           modelChoices = [
-            { name: 'GPT-4o (Most capable)', value: 'gpt-4o' },
-            { name: 'O4 Mini (Thinking model, efficient)', value: 'o4-mini' },
-            { name: 'GPT-4.1 (Latest version)', value: 'gpt-4.1' }
+            { name: 'GPT-5 (Most capable)', value: 'gpt-5' },
+            { name: 'GPT-5 Mini (Efficient and fast)', value: 'gpt-5-mini' },
+            { name: 'GPT-5 Nano (Ultra-fast, lightweight)', value: 'gpt-5-nano' }
           ];
         } else if (provider === 'anthropic') {
           modelChoices = [
-            { name: 'Claude Opus 4 (Most powerful, best coding)', value: 'claude-opus-4' },
-            { name: 'Claude Sonnet 4 (Balanced performance)', value: 'claude-sonnet-4' },
-            { name: 'Claude 3.5 Sonnet (Previous generation)', value: 'claude-3-5-sonnet-20241022' }
+            { name: 'Claude Sonnet 4.5 (Most powerful, best coding)', value: 'claude-sonnet-4-5' },
+            { name: 'Claude Haiku 4.5 (Fast and efficient)', value: 'claude-haiku-4-5' },
+            { name: 'Claude Opus 4.1 (Balanced performance)', value: 'claude-opus-4-1' }
           ];
         } else if (provider === 'xai') {
           modelChoices = [
-            { name: 'Grok 3 (Advanced reasoning)', value: 'grok-3' },
-            { name: 'Grok 3 Mini (Cost-efficient)', value: 'grok-3-mini' },
-            { name: 'Grok 4 (Thinking model, intelligent)', value: 'grok-4' }
+            { name: 'Grok Code Fast 1 (Code-focused, fast)', value: 'grok-code-fast-1' },
+            { name: 'Grok 4 Fast Reasoning (Thinking model, intelligent)', value: 'grok-4-fast-reasoning' },
+            { name: 'Grok 4 Fast Non Reasoning (Fast responses)', value: 'grok-4-fast-non-reasoning' }
           ];
         } else {
           modelChoices = [
-            { name: 'Gemini 2.5 Flash (Fast, efficient)', value: 'gemini-2.5-flash' },
-            { name: 'Gemini 2.0 Flash (Previous flash)', value: 'gemini-2.0-flash' },
-            { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' }
+            { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' },
+            { name: 'Gemini Flash Latest (Fast, efficient)', value: 'gemini-flash-latest' },
+            { name: 'Gemini Flash Lite Latest (Ultra-fast, lightweight)', value: 'gemini-flash-lite-latest' }
           ];
         }
       } else {
@@ -679,9 +679,9 @@ async function changeModel() {
     }
   } else {
     modelChoices = [
-      { name: 'Gemini 2.5 Flash (Fast, efficient)', value: 'gemini-2.5-flash' },
-      { name: 'Gemini 2.0 Flash (Previous flash)', value: 'gemini-2.0-flash' },
-      { name: 'Gemini 2.5 Pro (Thinking model, most capable)', value: 'gemini-2.5-pro' }
+      { name: 'Gemini 2.5 Pro (Best reasoning, 1M context)', value: 'gemini-2.5-pro' },
+      { name: 'Gemini Flash Latest (Best price/performance)', value: 'gemini-flash-latest' },
+      { name: 'Gemini Flash Lite Latest (Fastest, lowest cost)', value: 'gemini-flash-lite-latest' }
     ];
   }
   
@@ -856,13 +856,9 @@ Transform even the messiest developer thoughts into prompts that produce product
         stream: true
       };
       
-      // O4 Mini is a thinking model and doesn't support temperature
-      if (selectedModel === 'o4-mini') {
-        completionParams.max_completion_tokens = 2000;
-      } else {
-        completionParams.max_tokens = 2000;
-        completionParams.temperature = 0.3;
-      }
+      // Standard parameters for all OpenAI models
+      completionParams.max_tokens = 2000;
+      completionParams.temperature = 0.3;
       
       spinner.stop();
       console.log('\n\n' + chalk.gray('─'.repeat(80)));
@@ -904,7 +900,7 @@ Transform even the messiest developer thoughts into prompts that produce product
         messages: [{ role: 'user', content: messyPrompt }],
         system: systemPrompt,
         temperature: 0.3,
-        max_tokens: selectedModel === 'claude-opus-4' ? 32000 : 64000, // Opus 4: 32k, Sonnet 4: 64k
+        max_tokens: 64000, // Standard max tokens for Claude models
         stream: true
       });
       
@@ -941,14 +937,15 @@ Transform even the messiest developer thoughts into prompts that produce product
         stream: true
       };
       
-      // Grok 4 is a reasoning model - no temperature/frequency/presence penalties
-      // Grok 3 supports standard parameters
-      if (selectedModel === 'grok-3' || selectedModel === 'grok-3-mini') {
+      // Grok 4 Fast Reasoning is a reasoning model - no temperature/frequency/presence penalties
+      // Other Grok models support standard parameters
+      if (selectedModel === 'grok-4-fast-reasoning') {
+        // Reasoning model
+        completionParams.max_tokens = 100000; // Max 100k tokens for Grok models
+      } else {
+        // Standard models
         completionParams.temperature = 0.3;
         completionParams.max_tokens = 2000;
-      } else {
-        // Grok 4 - reasoning model
-        completionParams.max_tokens = 100000; // Max 100k tokens for Grok models
       }
       
       spinner.stop();
@@ -1150,10 +1147,10 @@ function showHelp() {
   console.log(chalk.white('  promptx reset              ') + chalk.gray('- Reset configuration'));
   
   console.log(chalk.green('\n🤖 Supported Providers:'));
-  console.log(chalk.white('  • OpenAI    ') + chalk.gray('- GPT-4o, O4 Mini, GPT-4.1'));
-  console.log(chalk.white('  • Anthropic ') + chalk.gray('- Claude Sonnet 4, Opus 4'));
-  console.log(chalk.white('  • xAI       ') + chalk.gray('- Grok 3, Grok 4'));
-  console.log(chalk.white('  • Google    ') + chalk.gray('- Gemini 2.5 Flash, 2.0 Flash, 2.5 Pro'));
+  console.log(chalk.white('  • OpenAI    ') + chalk.gray('- GPT-5 (74.9% coding), Mini (71%, 2× faster), Nano (fastest)'));
+  console.log(chalk.white('  • Anthropic ') + chalk.gray('- Sonnet 4.5 (best coding), Haiku 4.5 (fastest), Opus 4.1 (74.5% coding)'));
+  console.log(chalk.white('  • xAI       ') + chalk.gray('- Grok Code Fast (70.8% coding), Grok 4 (2M context, reasoning)'));
+  console.log(chalk.white('  • Google    ') + chalk.gray('- Gemini Pro (best reasoning), Flash (price/perf), Flash Lite (fastest)'));
   console.log(chalk.white('  • Ollama    ') + chalk.gray('- Local models (llama3, mistral, etc.)'));
   
   console.log(chalk.green('\n💡 Tips:'));

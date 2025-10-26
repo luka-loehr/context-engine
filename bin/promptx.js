@@ -900,12 +900,15 @@ Transform even the messiest developer thoughts into prompts that produce product
     } else if (modelInfo.provider === 'anthropic') {
       const anthropic = new Anthropic({ apiKey });
       
+      // Claude Opus 4.1 has 32K max tokens, others have 64K
+      const maxTokens = selectedModel === 'claude-opus-4-1' ? 32000 : 64000;
+      
       const stream = await anthropic.messages.create({
         model: selectedModel,
         messages: [{ role: 'user', content: messyPrompt }],
         system: systemPrompt,
         temperature: 0.3,
-        max_tokens: 64000, // Standard max tokens for Claude models
+        max_tokens: maxTokens,
         stream: true
       });
       

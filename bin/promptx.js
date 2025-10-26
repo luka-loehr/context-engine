@@ -870,8 +870,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for all models
-      const thinkingSpinner = ora('Thinking...').start();
+      // Show refining spinner for all models
+      const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
       
       const streamWriter = createStreamWriter();
       const stream = await openai.chat.completions.create(completionParams);
@@ -914,8 +914,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for all models
-      const thinkingSpinner = ora('Thinking...').start();
+      // Show refining spinner for all models
+      const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
       
       const streamWriter = createStreamWriter();
       refinedPrompt = '';
@@ -969,8 +969,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for all models
-      const thinkingSpinner = ora('Thinking...').start();
+      // Show refining spinner for all models
+      const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
       
       const streamWriter = createStreamWriter();
       const stream = await xai.chat.completions.create(completionParams);
@@ -1005,8 +1005,8 @@ Transform even the messiest developer thoughts into prompts that produce product
       console.log(chalk.green('REFINED PROMPT:'));
       console.log(chalk.gray('─'.repeat(80)) + '\n');
       
-      // Show thinking spinner for all models
-      const thinkingSpinner = ora('Thinking...').start();
+      // Show refining spinner for all models
+      const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
       
       const streamWriter = createStreamWriter();
       const result = await model.generateContentStream(fullPrompt);
@@ -1053,8 +1053,8 @@ Transform even the messiest developer thoughts into prompts that produce product
         console.log(chalk.green('REFINED PROMPT:'));
         console.log(chalk.gray('─'.repeat(80)) + '\n');
 
-        // Show thinking spinner for all models
-        const thinkingSpinner = ora('Thinking...').start();
+        // Show refining spinner for all models
+        const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
 
         const streamWriter = createStreamWriter();
         const stream = await ollama.chat.completions.create(completionParams);

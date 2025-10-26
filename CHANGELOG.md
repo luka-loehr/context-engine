@@ -2,6 +2,22 @@
 
 All notable changes to promptx will be documented in this file.
 
+## [3.7.1] - 2025-10-26 - PRO MODE FIXES 🔧
+
+### Fixed
+- 🚫 **Better Ignore Patterns** - Now ignores `.idea`, `.vscode`, `.dart_tool`, `__pycache__`, `venv`, `.gradle`, and more
+- 📁 **Smarter File Filtering** - Skips IDE-specific config files (workspace.xml, package_config.json, etc.)
+- 🧠 **Pro Mode Context Handling** - AI now correctly treats project questions as valid prompts when in Pro mode
+- 🎯 **Consistent Behavior** - Questions about "this app" or "this project" are no longer treated as casual chat
+
+### Added
+- 📝 **More File Extensions** - Added support for `.dart`, `.kt`, `.gradle`, `.lua` files
+- 🔒 **Enhanced Security** - Better detection of sensitive files to skip
+
+### Changed
+- 🤖 **Improved System Prompt** - Different behavior for Pro mode vs Normal mode
+- 📦 **Cleaner File Lists** - Significantly fewer unnecessary files in Pro mode scans
+
 ## [3.7.0] - 2025-10-26 - PRO MODE WITH PROJECT CONTEXT 🚀
 
 ### Added

@@ -40,9 +40,20 @@ const IGNORE_PATTERNS = [
   'package-lock.json',
   'yarn.lock',
   'pnpm-lock.yaml',
+  'pubspec.lock',
   '.log',
   '.tmp',
-  '.temp'
+  '.temp',
+  '.idea',
+  '.vscode',
+  '.dart_tool',
+  '__pycache__',
+  '.pytest_cache',
+  'venv',
+  '.venv',
+  'target',
+  'Pods',
+  '.gradle'
 ];
 
 // File extensions to include
@@ -52,7 +63,9 @@ const VALID_EXTENSIONS = [
   '.html', '.css', '.scss', '.sass', '.less',
   '.json', '.yaml', '.yml', '.toml', '.xml',
   '.md', '.txt', '.sql', '.sh', '.bash',
-  '.c', '.cpp', '.h', '.hpp', '.cs'
+  '.c', '.cpp', '.h', '.hpp', '.cs',
+  '.dart', '.kt', '.kts', '.gradle',
+  '.m', '.mm', '.lua'
 ];
 
 // Helper function for streaming with word wrap
@@ -525,6 +538,11 @@ async function scanDirectory(dir, baseDir = dir) {
         continue;
       }
       
+      // Skip specific config files that aren't useful
+      if (entry.name.match(/^(package_config|package_graph|deviceStreaming|workspace)\.(json|xml)$/)) {
+        continue;
+      }
+      
       if (entry.isDirectory()) {
         // Recursively scan subdirectories
         const subFiles = await scanDirectory(fullPath, baseDir);
@@ -921,8 +939,14 @@ async function refinePrompt(messyPrompt, selectedModel, apiKey, projectContext =
   }
   
   const systemPrompt = `You are promptx, an expert prompt engineering tool created by Luka Loehr (https://github.com/luka-loehr). You are part of the @lukaloehr/promptx npm package - a CLI tool that transforms messy, informal developer prompts into meticulously crafted instructions for AI coding assistants.
+
 CRITICAL BEHAVIOR RULES:
-If the user is just chatting, asking about you, or making conversation (e.g., "how are you", "who made you", "what's your npm package", etc.), respond conversationally WITHOUT trying to create a prompt. Answer naturally and always end with: "I can help you with structuring messy prompts into streamlined prompts for AI coding agents like Codex."
+${projectContext ? 
+`PRO MODE IS ACTIVE: The user has provided their project files as context. Questions about "this app", "this project", "this code", or requests to analyze their codebase ARE VALID PROMPT REQUESTS. Treat them as legitimate development tasks and create refined prompts accordingly. Only respond conversationally if they're asking about YOU (promptx itself), not their project.` 
+: 
+`NORMAL MODE: If the user is just chatting, asking about you, or making conversation (e.g., "how are you", "who made you", "what's your npm package", etc.), respond conversationally WITHOUT trying to create a prompt. Answer naturally and always end with: "I can help you with structuring messy prompts into streamlined prompts for AI coding agents like Codex."`
+}
+
 For actual prompt requests, follow these rules:
 ABSOLUTE RULES:
 

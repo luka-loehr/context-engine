@@ -323,7 +323,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
               }
               // Add blank line after tool calls (if any happened)
               if (!isFirstToolCall) {
-                console.log('');
+                console.log();
               }
               console.log(chalk.gray('promptx:'));
               firstChunk = false;

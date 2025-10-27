@@ -112,8 +112,12 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
     
-    // Stop spinner and show success
-    currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)}`);
+    // Calculate tokens from the result
+    const tokens = countTokens(result);
+    const formattedTokens = formatTokenCount(tokens);
+    
+    // Stop spinner and show success with token count
+    currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
     currentToolSpinner = null;
     
     return result;

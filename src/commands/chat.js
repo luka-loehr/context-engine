@@ -98,11 +98,18 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Tool call handler
   let currentToolSpinner = null;
   let thinkingSpinner = null;
+  let isFirstToolCall = true; // Track if this is the first tool call in a batch
   
   async function handleToolCall(toolName, parameters) {
     // Stop thinking spinner if it's running
     if (thinkingSpinner && thinkingSpinner.isSpinning) {
       thinkingSpinner.stop();
+    }
+    
+    // Add blank line before first tool call in a batch
+    if (isFirstToolCall) {
+      console.log('');
+      isFirstToolCall = false;
     }
     
     // Show file loading spinner
@@ -280,6 +287,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Update conversation tokens
       conversationTokens += countTokens(userMessage);
       
+      // Reset tool call tracking for this message
+      isFirstToolCall = true;
+      
       // Build full prompt with conversation history (context already sent once)
       let fullPrompt = '';
       
@@ -310,6 +320,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             if (firstChunk) {
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
                 thinkingSpinner.stop();
+              }
+              // Add blank line after tool calls (if any happened)
+              if (!isFirstToolCall) {
+                console.log('');
               }
               console.log(chalk.gray('promptx:'));
               firstChunk = false;

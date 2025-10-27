@@ -30,9 +30,9 @@ async function getGitStatus() {
 }
 
 /**
- * Start interactive chat session with codebase context
+ * Display welcome banner
  */
-export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
+async function showWelcomeBanner(projectContext) {
   // Show current directory and git status
   console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
   
@@ -57,6 +57,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   console.log(chalk.gray('  1. Ask me anything about your codebase'));
   console.log(chalk.gray('  2. I can help you understand code, find bugs, or implement features'));
   console.log(chalk.gray('  3. I maintain context, so feel free to ask follow-up questions\n'));
+}
+
+/**
+ * Start interactive chat session with codebase context
+ */
+export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
+  // Show welcome banner
+  await showWelcomeBanner(projectContext);
   
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
@@ -96,6 +104,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         conversationHistory.length = 0;
         conversationTokens = 0;
         console.clear();
+        await showWelcomeBanner(projectContext);
         console.log(chalk.green('✓ Conversation history cleared\n'));
         continue;
       }

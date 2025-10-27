@@ -1,4 +1,5 @@
 import inquirer from 'inquirer';
+import autocomplete from 'inquirer-autocomplete-prompt';
 import { 
   validateOpenAIKey, 
   validateAnthropicKey, 
@@ -7,6 +8,9 @@ import {
   validatePrompt 
 } from '../utils/validation.js';
 import { PROVIDER_CHOICES, MODEL_CHOICES } from '../constants/models.js';
+
+// Register autocomplete prompt
+inquirer.registerPrompt('autocomplete', autocomplete);
 
 /**
  * Prompt for provider selection
@@ -94,20 +98,42 @@ export async function promptForAPIKey(provider) {
 }
 
 /**
- * Prompt for user input in chat
+ * Prompt for user input in chat with command autocomplete
  */
 export async function promptForUserInput(promptLabel = 'Message') {
   const { prompt } = await inquirer.prompt([
     {
-      type: 'input',
+      type: 'autocomplete',
       name: 'prompt',
       message: `${promptLabel}:`,
-      validate: validatePrompt,
-      prefix: ''
+      prefix: '',
+      source: async (answersSoFar, input) => {
+        // If input starts with "/", show command suggestions
+        if (input && input.startsWith('/')) {
+          const commands = [
+            '/help - Show help menu',
+            '/exit - Exit chat',
+            '/clear - Clear history',
+            '/model - Switch AI model'
+          ];
+          
+          const filtered = commands.filter(cmd => 
+            cmd.toLowerCase().includes(input.toLowerCase())
+          );
+          
+          return filtered.length > 0 ? filtered : commands;
+        }
+        
+        // Otherwise, return empty array (no suggestions for regular text)
+        return [];
+      },
+      validate: validatePrompt
     }
   ]);
   
-  return prompt;
+  // Extract just the command if a suggestion was selected
+  const cleanPrompt = prompt.includes(' - ') ? prompt.split(' - ')[0] : prompt;
+  return cleanPrompt;
 }
 
 /**

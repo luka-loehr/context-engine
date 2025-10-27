@@ -10,6 +10,7 @@ import { getContextLimit } from '../constants/context-limits.js';
 import { changeModel } from './model.js';
 import { getConfig } from '../config/config.js';
 import { getAllModels } from '../constants/models.js';
+import { clearLines } from '../ui/screen.js';
 
 /**
  * Start interactive chat session with codebase context
@@ -67,6 +68,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       if (userMessage.toLowerCase() === '/help') {
         showChatHelp();
+        
+        // Wait for user to read, then clear
+        await promptForUserInput('Press Enter to continue');
+        clearLines(15); // Clear help menu
         continue;
       }
       
@@ -78,14 +83,27 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       }
       
       if (userMessage.toLowerCase() === '/model') {
+        // Show loading indicator
+        const modelSpinner = ora('Opening model selector...').start();
+        
+        // Small delay to show the spinner
+        await new Promise(resolve => setTimeout(resolve, 300));
+        modelSpinner.stop();
+        
+        // Clear the loading line
+        clearLines(1);
+        
         await changeModel();
+        
+        // Clear the model selection UI (approximately 10-15 lines)
+        clearLines(15);
         
         // Reload configuration with new model
         const newModelId = getConfig('selected_model');
         const newModelInfo = getAllModels()[newModelId];
         
         if (!newModelInfo) {
-          console.log(chalk.red('\n❌ Failed to load new model. Continuing with current model.\n'));
+          console.log(chalk.red('❌ Failed to load new model. Continuing with current model.\n'));
           continue;
         }
         
@@ -104,8 +122,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         contextLimit = getContextLimit(currentModel);
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
         
-        console.log(chalk.green(`\n✅ Switched to ${currentModelInfo.name}`));
-        console.log(chalk.gray('Continuing conversation with new model...\n'));
+        // Show clean confirmation
+        console.log(chalk.green(`✓ Switched to ${currentModelInfo.name}\n`));
         continue;
       }
       

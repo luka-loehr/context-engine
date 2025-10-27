@@ -8,7 +8,7 @@ import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
-import { calculateTokens, formatTokenCount, countTokens } from '../utils/tokenizer.js';
+import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { changeModel } from './model.js';
 import { getConfig } from '../config/config.js';
 import { getAllModels } from '../constants/models.js';
@@ -33,7 +33,7 @@ async function getGitStatus() {
 /**
  * Display welcome banner
  */
-async function showWelcomeBanner(projectContext) {
+async function showWelcomeBanner(projectContext, contextPrefix) {
   // Show current directory and git status
   console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
   
@@ -46,7 +46,8 @@ async function showWelcomeBanner(projectContext) {
   console.log(chalk.gray('cwd: ' + process.cwd()));
   
   if (projectContext && projectContext.length > 0) {
-    const totalTokens = calculateTokens(projectContext);
+    // Calculate tokens from what we actually send (file paths + markdown content)
+    const totalTokens = countTokens(contextPrefix);
     const formattedTokens = formatTokenCount(totalTokens);
     console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})\n`));
   } else {
@@ -64,12 +65,12 @@ async function showWelcomeBanner(projectContext) {
  * Start interactive chat session with codebase context
  */
 export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
-  // Show welcome banner
-  await showWelcomeBanner(projectContext);
-  
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
   const contextPrefix = buildProjectContextPrefix(projectContext);
+  
+  // Show welcome banner
+  await showWelcomeBanner(projectContext, contextPrefix);
   
   // Conversation history
   const conversationHistory = [];
@@ -79,7 +80,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let currentModel = selectedModel;
   let currentModelInfo = modelInfo;
   let currentApiKey = apiKey;
-  const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
+  const baseTokens = countTokens(contextPrefix) + countTokens(systemPrompt);
   let conversationTokens = 0;
   
   // Track lines to clear before next message
@@ -210,7 +211,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         conversationHistory.push(...initialContextMessages);
         conversationTokens = 0;
         console.clear();
-        await showWelcomeBanner(projectContext);
+        await showWelcomeBanner(projectContext, contextPrefix);
         console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
         linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
         continue;

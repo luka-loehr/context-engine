@@ -130,6 +130,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Send initial context to AI ONCE
   await injectContext();
   
+  // Mark context loaded message to be cleared before first user message
+  if (projectContext && projectContext.length > 0) {
+    linesToClearBeforeNextMessage = 2; // "✓ Context loaded" + blank line
+  }
+  
   // Chat loop
   while (true) {
     try {

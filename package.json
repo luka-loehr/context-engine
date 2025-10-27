@@ -1,15 +1,15 @@
 {
   "name": "@lukaloehr/promptx",
-  "version": "3.7.1",
+  "version": "4.0.0",
   "description": "A CLI tool that transforms messy prompts into structured, clear prompts for AI agents",
   "type": "module",
   "main": "bin/promptx.js",
   "files": [
     "bin/",
+    "src/",
     "scripts/",
     "LICENSE",
-    "README.md",
-    "CHANGELOG.md"
+    "ARCHITECTURE.md"
   ],
   "bin": {
     "promptx": "bin/promptx.js"

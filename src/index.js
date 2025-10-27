@@ -49,8 +49,7 @@ export async function main() {
       // Get or setup configuration
       const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig(setupWizard);
       
-      // Always scan project context
-      console.log(chalk.blue('\n🔍 Scanning project files...'));
+      // Scan project context silently
       const projectContext = await getProjectContext(process.cwd());
       
       // Start chat session

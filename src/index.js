@@ -5,7 +5,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import { getOrSetupConfig, clearConfig } from './config/config.js';
-import { setupWizard } from './commands/setup.js';
 import { changeModel } from './commands/model.js';
 import { getProjectContext } from './commands/refine.js';
 import { startChatSession } from './commands/chat.js';
@@ -37,17 +36,17 @@ export async function main() {
   // Reset command
   program
     .command('reset')
-    .description('Reset your configuration and API keys')
+    .description('Reset your model selection')
     .action(async () => {
       clearConfig();
-      console.log(chalk.green('Configuration has been reset. You\'ll go through setup next time.'));
+      console.log(chalk.green('Configuration has been reset. Default model will be used next time.'));
     });
 
   // Main command - interactive chat mode
   program
     .action(async (options) => {
-      // Get or setup configuration
-      const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig(setupWizard);
+      // Get configuration (no setup needed)
+      const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig();
       
       // Scan project context silently
       const projectContext = await getProjectContext(process.cwd());

@@ -35,33 +35,20 @@ export function isSetupComplete() {
 /**
  * Get or setup configuration
  */
-export async function getOrSetupConfig(setupWizardFn) {
-  const setupComplete = config.get('setup_complete');
-  
-  if (!setupComplete) {
-    await setupWizardFn();
-  }
-  
+export async function getOrSetupConfig() {
+  // Get selected model (defaults to 'promptx')
   const selectedModel = config.get('selected_model') || 'promptx';
   let modelInfo = getAllModels()[selectedModel];
 
-  // If still not found, fall back to default
+  // If model not found, fall back to default
   if (!modelInfo) {
     console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to promptx.`));
     config.set('selected_model', 'promptx');
     modelInfo = getAllModels()['promptx'];
   }
 
-  // Get API key from environment variable
+  // Get API key from environment variable (shipped with the app)
   const apiKey = process.env.GOOGLE_API_KEY;
-  
-  if (!apiKey) {
-    console.log(chalk.red('\n❌ Error: GOOGLE_API_KEY environment variable not set'));
-    console.log(chalk.gray('Please set your Google API key:'));
-    console.log(chalk.white('\n  export GOOGLE_API_KEY="your-api-key-here"\n'));
-    console.log(chalk.gray('Get your API key at: https://aistudio.google.com/apikey\n'));
-    process.exit(1);
-  }
   
   return { selectedModel, modelInfo, apiKey };
 }

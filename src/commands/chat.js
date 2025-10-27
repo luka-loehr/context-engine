@@ -119,7 +119,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
     
-    // Calculate tokens from the result
+    // Calculate tokens from the result (which is now a formatted string)
     const tokens = countTokens(result);
     const formattedTokens = formatTokenCount(tokens);
     

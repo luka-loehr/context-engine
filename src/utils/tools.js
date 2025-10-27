@@ -27,7 +27,7 @@ export function executeTool(toolName, parameters, projectContext) {
     case 'getFileContent':
       return getFileContent(parameters.filePath, projectContext);
     default:
-      return { error: `Unknown tool: ${toolName}` };
+      return `Error: Unknown tool "${toolName}"`;
   }
 }
 
@@ -38,15 +38,9 @@ function getFileContent(filePath, projectContext) {
   const file = projectContext.find(f => f.path === filePath);
   
   if (!file) {
-    return {
-      error: `File not found: ${filePath}`,
-      suggestion: 'Check the file path and try again. Use exact paths from the project structure.'
-    };
+    return `Error: File not found at path "${filePath}". Please check the file path and try again. Use exact paths from the project structure.`;
   }
   
-  return {
-    path: file.path,
-    content: file.content
-  };
+  return `File: ${file.path}\n\nContent:\n${file.content}`;
 }
 

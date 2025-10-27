@@ -11,7 +11,7 @@ export class XAIProvider extends BaseProvider {
     this.modelId = modelId;
   }
 
-  async refinePrompt(messyPrompt, systemPrompt, onChunk) {
+  async refinePrompt(messyPrompt, systemPrompt, onChunk, tools = null, onToolCall = null) {
     const completionParams = {
       model: this.modelId,
       messages: [
@@ -20,6 +20,18 @@ export class XAIProvider extends BaseProvider {
       ],
       stream: true
     };
+    
+    // Add tools if provided
+    if (tools) {
+      completionParams.tools = tools.map(tool => ({
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
+      }));
+    }
     
     // Grok 4 Fast Reasoning is a reasoning model - no temperature/frequency/presence penalties
     // Other Grok models support standard parameters
@@ -36,6 +48,18 @@ export class XAIProvider extends BaseProvider {
     let refinedPrompt = '';
     
     for await (const chunk of stream) {
+      // Check for tool calls
+      const toolCalls = chunk.choices[0]?.delta?.tool_calls;
+      if (toolCalls && toolCalls.length > 0 && onToolCall) {
+        for (const toolCall of toolCalls) {
+          if (toolCall.function) {
+            const args = JSON.parse(toolCall.function.arguments || '{}');
+            await onToolCall(toolCall.function.name, args);
+          }
+        }
+        continue;
+      }
+      
       if (chunk.choices[0]?.delta?.content) {
         const content = chunk.choices[0].delta.content;
         if (onChunk) onChunk(content);

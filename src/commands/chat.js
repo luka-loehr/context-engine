@@ -13,6 +13,7 @@ import { changeModel } from './model.js';
 import { getConfig } from '../config/config.js';
 import { getAllModels } from '../constants/models.js';
 import { clearLines } from '../ui/screen.js';
+import { TOOLS, executeTool } from '../utils/tools.js';
 
 const execAsync = promisify(exec);
 
@@ -84,8 +85,31 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Track lines to clear before next message
   let linesToClearBeforeNextMessage = 0;
   
+  // Store full project context for tool calls
+  const fullProjectContext = projectContext;
+  
   // Create provider (use the actual Gemini model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
+  
+  // Tool definitions for AI
+  const tools = [TOOLS.getFileContent];
+  
+  // Tool call handler
+  let currentToolSpinner = null;
+  async function handleToolCall(toolName, parameters) {
+    // Show loading spinner
+    const fileName = parameters.filePath || 'file';
+    currentToolSpinner = ora(`Querying codebase for ${chalk.cyan(fileName)}`).start();
+    
+    // Execute tool
+    const result = executeTool(toolName, parameters, fullProjectContext);
+    
+    // Stop spinner
+    currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)}`);
+    currentToolSpinner = null;
+    
+    return result;
+  }
   
   // Helper function to inject context into AI
   async function injectContext() {
@@ -277,7 +301,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
               firstChunk = false;
             }
             streamWriter.write(content);
-          }
+          },
+          tools,
+          handleToolCall
         );
         
         streamWriter.flush();

@@ -39,13 +39,57 @@ INTERACTION STYLE:
 - Think step-by-step for complex questions
 - Keep responses concise and readable in a terminal chat interface
 
-You have access to the complete project structure and file contents. Use this information to provide accurate, context-aware responses.`;
+ACCESSING FILES:
+- You have access to the complete project structure (all file paths)
+- Documentation files (.md) are provided with full content
+- For other files (code, configs, etc.), use the getFileContent tool to read them
+- Only request files when you actually need to analyze or reference their specific contents
+- You can answer many questions just from the structure and documentation
+
+You have access to the complete project structure. Use the getFileContent tool to read specific files when needed.`;
 
 export function getSystemPrompt() {
   return SYSTEM_PROMPT;
 }
 
 export function buildProjectContextPrefix(projectContext) {
+  if (!projectContext || projectContext.length === 0) {
+    return '\n\nNo project files found in the current directory.\n\n';
+  }
+
+  // Build lightweight structure: paths + MD file contents only
+  const structure = [];
+  const mdFiles = [];
+  
+  for (const file of projectContext) {
+    // Add path to structure
+    structure.push(file.path);
+    
+    // Include full content for markdown files
+    if (file.path.endsWith('.md')) {
+      mdFiles.push({
+        path: file.path,
+        content: file.content
+      });
+    }
+  }
+
+  let prefix = `\n\nPROJECT STRUCTURE:\n`;
+  prefix += `You have access to ${projectContext.length} files from the user's project.\n\n`;
+  prefix += `FILE PATHS:\n${structure.join('\n')}\n\n`;
+  
+  if (mdFiles.length > 0) {
+    prefix += `DOCUMENTATION FILES (full content):\n`;
+    prefix += JSON.stringify(mdFiles, null, 2);
+    prefix += '\n\n';
+  }
+  
+  prefix += `IMPORTANT: To read the contents of any non-markdown file, use the getFileContent tool with the exact file path.\n\n`;
+  
+  return prefix;
+}
+
+export function buildFullProjectContext(projectContext) {
   if (!projectContext || projectContext.length === 0) {
     return '\n\nNo project files found in the current directory.\n\n';
   }

@@ -138,7 +138,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
         
         // Show clean confirmation
-        console.log(chalk.green(`✓ Switched to ${currentModelInfo.name}\n`));
+        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name}\n`));
         continue;
       }
       

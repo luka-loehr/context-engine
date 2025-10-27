@@ -95,7 +95,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       if (userMessage.toLowerCase() === '/clear') {
         conversationHistory.length = 0;
         conversationTokens = 0;
-        console.log(chalk.green('\n✓ Conversation history cleared\n'));
+        console.clear();
+        console.log(chalk.green('✓ Conversation history cleared\n'));
         continue;
       }
       

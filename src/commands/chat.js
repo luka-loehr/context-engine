@@ -1,0 +1,142 @@
+import chalk from 'chalk';
+import ora from 'ora';
+import { promptForUserInput } from '../ui/prompts.js';
+import { createProvider } from '../providers/index.js';
+import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
+import { createStreamWriter } from '../utils/stream-writer.js';
+import { displayError } from '../ui/output.js';
+
+/**
+ * Start interactive chat session with codebase context
+ */
+export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
+  console.log(chalk.blue('\n💬 promptx - Codebase Assistant'));
+  console.log(chalk.gray('─'.repeat(50)));
+  
+  if (projectContext && projectContext.length > 0) {
+    console.log(chalk.green(`\n✓ Loaded ${projectContext.length} files from your project`));
+  } else {
+    console.log(chalk.yellow('\n⚠ No project files found in current directory'));
+  }
+  
+  console.log(chalk.gray('\nAsk me anything about your codebase!'));
+  console.log(chalk.gray('Type /exit to quit, /help for commands\n'));
+  
+  // Build system prompt with project context
+  const systemPrompt = getSystemPrompt();
+  const contextPrefix = buildProjectContextPrefix(projectContext);
+  
+  // Conversation history
+  const conversationHistory = [];
+  
+  // Create provider
+  const provider = createProvider(modelInfo.provider, apiKey, selectedModel);
+  
+  // Chat loop
+  while (true) {
+    try {
+      // Get user input
+      const userMessage = await promptForUserInput(chalk.gray('You'));
+      
+      // Handle commands
+      if (userMessage.toLowerCase() === '/exit') {
+        console.log(chalk.gray('\n👋 Goodbye!\n'));
+        break;
+      }
+      
+      if (userMessage.toLowerCase() === '/help') {
+        showChatHelp();
+        continue;
+      }
+      
+      if (userMessage.toLowerCase() === '/clear') {
+        conversationHistory.length = 0;
+        console.log(chalk.green('\n✓ Conversation history cleared\n'));
+        continue;
+      }
+      
+      // Add user message to history
+      conversationHistory.push({
+        role: 'user',
+        content: userMessage
+      });
+      
+      // Build full prompt with context and history
+      let fullPrompt = contextPrefix;
+      
+      // Add conversation history
+      if (conversationHistory.length > 1) {
+        fullPrompt += '\n\nCONVERSATION HISTORY:\n';
+        conversationHistory.slice(0, -1).forEach(msg => {
+          fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+        });
+        fullPrompt += '\n';
+      }
+      
+      // Add current question
+      fullPrompt += `User: ${userMessage}`;
+      
+      // Show thinking indicator
+      console.log('');
+      const thinkingSpinner = ora('Thinking...').start();
+      
+      // Get response from AI
+      const streamWriter = createStreamWriter();
+      let firstChunk = true;
+      let assistantResponse = '';
+      
+      try {
+        assistantResponse = await provider.refinePrompt(
+          fullPrompt,
+          systemPrompt,
+          (content) => {
+            if (firstChunk) {
+              thinkingSpinner.stop();
+              console.log(chalk.blue('Assistant:'));
+              firstChunk = false;
+            }
+            streamWriter.write(content);
+          }
+        );
+        
+        streamWriter.flush();
+        console.log('\n');
+        
+        // Add assistant response to history
+        conversationHistory.push({
+          role: 'assistant',
+          content: assistantResponse
+        });
+        
+      } catch (error) {
+        if (thinkingSpinner.isSpinning) {
+          thinkingSpinner.stop();
+        }
+        displayError(error, modelInfo);
+        console.log(chalk.gray('\nContinuing chat session...\n'));
+      }
+      
+    } catch (error) {
+      if (error.message.includes('User force closed')) {
+        console.log(chalk.gray('\n\n👋 Goodbye!\n'));
+        break;
+      }
+      console.log(chalk.red('\nError:', error.message));
+      console.log(chalk.gray('Continuing chat session...\n'));
+    }
+  }
+}
+
+/**
+ * Show chat-specific help
+ */
+function showChatHelp() {
+  console.log(chalk.blue('\n📚 Chat Commands'));
+  console.log(chalk.gray('─'.repeat(50)));
+  console.log(chalk.white('  /exit    ') + chalk.gray('- Exit the chat session'));
+  console.log(chalk.white('  /help    ') + chalk.gray('- Show this help'));
+  console.log(chalk.white('  /clear   ') + chalk.gray('- Clear conversation history'));
+  console.log(chalk.white('  /model   ') + chalk.gray('- Switch AI models (requires restart)'));
+  console.log(chalk.gray('\n💡 Just type your questions naturally!\n'));
+}
+

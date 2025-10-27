@@ -7,9 +7,9 @@ import chalk from 'chalk';
 import { getOrSetupConfig, clearConfig } from './config/config.js';
 import { setupWizard } from './commands/setup.js';
 import { changeModel } from './commands/model.js';
-import { refinePrompt, getProjectContext } from './commands/refine.js';
+import { getProjectContext } from './commands/refine.js';
+import { startChatSession } from './commands/chat.js';
 import { showHelp } from './commands/help.js';
-import { promptForUserInput } from './ui/prompts.js';
 import { showUpdateNotification } from './ui/output.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,7 +31,7 @@ export async function main() {
   // Setup CLI
   program
     .name('promptx')
-    .description('Transform messy prompts into structured, clear prompts for AI agents')
+    .description('Interactive AI-powered codebase assistant - chat with your code')
     .version(packageJson.version);
 
   // Reset command
@@ -43,65 +43,18 @@ export async function main() {
       console.log(chalk.green('Configuration has been reset. You\'ll go through setup next time.'));
     });
 
-  // Main command
+  // Main command - interactive chat mode
   program
-    .argument('[prompt...]', 'The messy prompt to refine')
-    .option('--pro', 'Enable Pro mode with full project context awareness')
-    .action(async (promptParts, options) => {
-      // Handle special commands
-      if (promptParts && promptParts.length === 1) {
-        const command = promptParts[0].toLowerCase();
-        
-        if (command === '/help') {
-          showHelp();
-          return;
-        }
-        
-        if (command === '/model') {
-          await changeModel();
-          return;
-        }
-      }
-      
+    .action(async (options) => {
       // Get or setup configuration
       const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig(setupWizard);
       
-      // Get project context if --pro mode is enabled
-      let projectContext = null;
-      if (options.pro) {
-        console.log(chalk.blue('\n🚀 Pro Mode Enabled'));
-        console.log(chalk.gray('Scanning current directory for project files...\n'));
-        projectContext = await getProjectContext(process.cwd());
-        
-        if (!projectContext) {
-          console.log(chalk.gray('Continuing without project context.\n'));
-        } else {
-          console.log(chalk.green(`\n✅ Project context loaded (${projectContext.length} files)\n`));
-        }
-      }
+      // Always scan project context
+      console.log(chalk.blue('\n🔍 Scanning project files...'));
+      const projectContext = await getProjectContext(process.cwd());
       
-      // Get prompt
-      let messyPrompt;
-      
-      if (promptParts && promptParts.length > 0) {
-        messyPrompt = promptParts.join(' ');
-      } else {
-        messyPrompt = await promptForUserInput(chalk.gray(modelInfo.name));
-        
-        // Check for commands in interactive mode
-        if (messyPrompt.toLowerCase() === '/help') {
-          showHelp();
-          return;
-        }
-        
-        if (messyPrompt.toLowerCase() === '/model') {
-          await changeModel();
-          return;
-        }
-      }
-      
-      // Refine the prompt
-      await refinePrompt(messyPrompt, selectedModel, modelInfo, apiKey, projectContext);
+      // Start chat session
+      await startChatSession(selectedModel, modelInfo, apiKey, projectContext);
     });
 
   program.parse();

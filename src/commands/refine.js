@@ -7,35 +7,19 @@ import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts
 import { createProvider } from '../providers/index.js';
 
 /**
- * Get project context for --pro mode
+ * Get project context by scanning current directory
  */
 export async function getProjectContext(currentDir) {
-  const spinner = ora('Scanning project files...').start();
-  
   try {
     const files = await scanDirectory(currentDir);
-    spinner.succeed(`Found ${files.length} files`);
     
     if (files.length === 0) {
-      console.log(chalk.yellow('\nNo valid files found in current directory.'));
-      return null;
-    }
-    
-    // Show file list
-    displayProjectScanResults(files);
-    
-    const totalChars = getTotalCharacterCount(files);
-    const confirmed = await promptForProjectContext(totalChars);
-    
-    if (!confirmed) {
-      console.log(chalk.gray('Cancelled. Running in normal mode without project context.'));
       return null;
     }
     
     return files;
   } catch (err) {
-    spinner.fail('Failed to scan project');
-    console.log(chalk.red('Error:', err.message));
+    console.log(chalk.red('Error scanning project:', err.message));
     return null;
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@lukaloehr/promptx",
   "version": "4.0.0",
-  "description": "A CLI tool that transforms messy prompts into structured, clear prompts for AI agents",
+  "description": "Interactive AI-powered codebase assistant - chat with your code, understand architecture, and get instant answers",
   "type": "module",
   "main": "bin/promptx.js",
   "files": [

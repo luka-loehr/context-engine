@@ -1,8 +1,6 @@
 import Conf from 'conf';
 import { getAllModels } from '../constants/models.js';
-import { discoverOllamaModels } from '../utils/ollama.js';
 import chalk from 'chalk';
-import { updateOllamaModels } from '../constants/models.js';
 
 const config = new Conf({ projectName: 'promptx' });
 
@@ -44,59 +42,25 @@ export async function getOrSetupConfig(setupWizardFn) {
     await setupWizardFn();
   }
   
-  const selectedModel = config.get('selected_model') || 'gpt-5';
+  const selectedModel = config.get('selected_model') || 'promptx';
   let modelInfo = getAllModels()[selectedModel];
-
-  // If model not found and it might be an Ollama model, try to discover Ollama models
-  if (!modelInfo && selectedModel) {
-    const ollamaResult = await discoverOllamaModels();
-    if (!ollamaResult.error) {
-      updateOllamaModels(ollamaResult);
-      modelInfo = getAllModels()[selectedModel];
-    }
-  }
 
   // If still not found, fall back to default
   if (!modelInfo) {
-    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to GPT-5.`));
-    config.set('selected_model', 'gpt-5');
-    modelInfo = getAllModels()['gpt-5'];
+    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to promptx.`));
+    config.set('selected_model', 'promptx');
+    modelInfo = getAllModels()['promptx'];
   }
 
-  const provider = modelInfo.provider;
+  // Get API key from environment variable
+  const apiKey = process.env.GOOGLE_API_KEY;
   
-  let apiKey;
-  if (provider === 'ollama') {
-    // Ollama doesn't need an API key
-    apiKey = null;
-  } else if (provider === 'openai') {
-    apiKey = config.get('openai_api_key');
-    if (!apiKey) {
-      console.log(chalk.yellow('OpenAI API key not found. Running setup...'));
-      await setupWizardFn();
-      apiKey = config.get('openai_api_key');
-    }
-  } else if (provider === 'anthropic') {
-    apiKey = config.get('anthropic_api_key');
-    if (!apiKey) {
-      console.log(chalk.yellow('Anthropic API key not found. Running setup...'));
-      await setupWizardFn();
-      apiKey = config.get('anthropic_api_key');
-    }
-  } else if (provider === 'xai') {
-    apiKey = config.get('xai_api_key');
-    if (!apiKey) {
-      console.log(chalk.yellow('xAI API key not found. Running setup...'));
-      await setupWizardFn();
-      apiKey = config.get('xai_api_key');
-    }
-  } else {
-    apiKey = config.get('google_api_key');
-    if (!apiKey) {
-      console.log(chalk.yellow('Google AI API key not found. Running setup...'));
-      await setupWizardFn();
-      apiKey = config.get('google_api_key');
-    }
+  if (!apiKey) {
+    console.log(chalk.red('\n❌ Error: GOOGLE_API_KEY environment variable not set'));
+    console.log(chalk.gray('Please set your Google API key:'));
+    console.log(chalk.white('\n  export GOOGLE_API_KEY="your-api-key-here"\n'));
+    console.log(chalk.gray('Get your API key at: https://aistudio.google.com/apikey\n'));
+    process.exit(1);
   }
   
   return { selectedModel, modelInfo, apiKey };

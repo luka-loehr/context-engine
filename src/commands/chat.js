@@ -45,8 +45,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
   let conversationTokens = 0;
   
-  // Create provider
-  let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
+  // Create provider (use the actual Gemini model name)
+  let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Track first prompt for hint display
   let isFirstPrompt = true;
@@ -115,19 +115,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           continue;
         }
         
-        // Get API key for new provider
-        let newApiKey;
-        if (newModelInfo.provider === 'ollama') {
-          newApiKey = null;
-        } else {
-          newApiKey = getConfig(`${newModelInfo.provider}_api_key`);
-        }
+        // Get API key from environment (all models use Google)
+        const newApiKey = process.env.GOOGLE_API_KEY;
         
         // Update current model and provider
         currentModel = newModelId;
         currentModelInfo = newModelInfo;
         currentApiKey = newApiKey;
-        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
+        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
         
         // Show clean confirmation
         console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name}\n`));

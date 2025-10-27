@@ -8,6 +8,8 @@ import { displayError } from '../ui/output.js';
 import { calculateTokens, formatTokenCount, countTokens, calculateContextPercentage } from '../utils/tokenizer.js';
 import { getContextLimit } from '../constants/context-limits.js';
 import { changeModel } from './model.js';
+import { getConfig } from '../config/config.js';
+import { getAllModels } from '../constants/models.js';
 
 /**
  * Start interactive chat session with codebase context
@@ -36,12 +38,15 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   const conversationHistory = [];
   
   // Token tracking
-  const contextLimit = getContextLimit(selectedModel);
+  let currentModel = selectedModel;
+  let currentModelInfo = modelInfo;
+  let currentApiKey = apiKey;
+  let contextLimit = getContextLimit(currentModel);
   const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
   let conversationTokens = 0;
   
   // Create provider
-  const provider = createProvider(modelInfo.provider, apiKey, selectedModel);
+  let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
   
   // Chat loop
   while (true) {
@@ -74,8 +79,33 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       if (userMessage.toLowerCase() === '/model') {
         await changeModel();
-        console.log(chalk.yellow('\n⚠️  Please restart promptx to use the new model.\n'));
-        console.log(chalk.gray('Type /exit to quit, then run promptx again.\n'));
+        
+        // Reload configuration with new model
+        const newModelId = getConfig('selected_model');
+        const newModelInfo = getAllModels()[newModelId];
+        
+        if (!newModelInfo) {
+          console.log(chalk.red('\n❌ Failed to load new model. Continuing with current model.\n'));
+          continue;
+        }
+        
+        // Get API key for new provider
+        let newApiKey;
+        if (newModelInfo.provider === 'ollama') {
+          newApiKey = null;
+        } else {
+          newApiKey = getConfig(`${newModelInfo.provider}_api_key`);
+        }
+        
+        // Update current model and provider
+        currentModel = newModelId;
+        currentModelInfo = newModelInfo;
+        currentApiKey = newApiKey;
+        contextLimit = getContextLimit(currentModel);
+        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
+        
+        console.log(chalk.green(`\n✅ Switched to ${currentModelInfo.name}`));
+        console.log(chalk.gray('Continuing conversation with new model...\n'));
         continue;
       }
       
@@ -166,7 +196,7 @@ function showChatHelp() {
   console.log(chalk.white('  /exit    ') + chalk.gray('- Exit the chat session'));
   console.log(chalk.white('  /help    ') + chalk.gray('- Show this help'));
   console.log(chalk.white('  /clear   ') + chalk.gray('- Clear conversation history'));
-  console.log(chalk.white('  /model   ') + chalk.gray('- Change AI model (restart required)'));
+  console.log(chalk.white('  /model   ') + chalk.gray('- Switch AI model on the fly'));
   console.log(chalk.gray('\n💡 Just type your questions naturally!\n'));
 }
 

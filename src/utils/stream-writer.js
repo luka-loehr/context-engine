@@ -1,69 +1,70 @@
 import wrapAnsi from 'wrap-ansi';
 import chalk from 'chalk';
-import { marked } from 'marked';
-import TerminalRenderer from 'marked-terminal';
-
-// Configure marked to use terminal renderer
-marked.setOptions({
-  renderer: new TerminalRenderer({
-    code: chalk.cyan,
-    blockquote: chalk.gray.italic,
-    html: chalk.gray,
-    heading: chalk.green.bold,
-    firstHeading: chalk.magenta.bold,
-    hr: chalk.reset,
-    listitem: chalk.reset,
-    list: chalk.reset,
-    table: chalk.reset,
-    paragraph: chalk.reset,
-    strong: chalk.bold,
-    em: chalk.italic,
-    codespan: chalk.cyan,
-    del: chalk.dim.strikethrough,
-    link: chalk.blue.underline,
-    href: chalk.blue.underline
-  })
-});
 
 /**
- * Helper function for streaming with word wrap and markdown rendering
+ * Helper function for streaming with word wrap and inline markdown
  */
 export function createStreamWriter() {
   const terminalWidth = process.stdout.columns || 80;
   const maxWidth = Math.min(terminalWidth - 4, 76); // Leave some margin
-  let completeMarkdown = '';
-  let isFirstWrite = true;
+  let buffer = '';
   
   return {
     write(text) {
-      completeMarkdown += text;
+      buffer += text;
+      const lines = buffer.split('\n');
       
-      // Show streaming dots for visual feedback (optional)
-      if (isFirstWrite) {
-        isFirstWrite = false;
+      // Process all complete lines
+      for (let i = 0; i < lines.length - 1; i++) {
+        const formatted = formatInline(lines[i]);
+        const wrappedLine = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        console.log(wrappedLine);
       }
-      // Don't print during streaming to avoid messing up markdown blocks
+      
+      // Keep the last incomplete line in buffer
+      buffer = lines[lines.length - 1];
+      
+      // If buffer is getting too long, wrap and flush it
+      if (buffer.length > maxWidth) {
+        const formatted = formatInline(buffer);
+        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        const wrappedLines = wrappedBuffer.split('\n');
+        
+        for (let i = 0; i < wrappedLines.length - 1; i++) {
+          console.log(wrappedLines[i]);
+        }
+        
+        buffer = wrappedLines[wrappedLines.length - 1];
+      }
     },
     
     flush() {
-      if (completeMarkdown) {
-        // Clear any streaming indicators
-        process.stdout.write('\r\x1b[K');
-        
-        // Render the complete markdown at once for proper block handling
-        try {
-          const rendered = marked(completeMarkdown);
-          // Remove extra trailing newlines and print
-          const cleaned = rendered.replace(/\n\n+$/g, '\n');
-          process.stdout.write(cleaned);
-        } catch (err) {
-          // Fallback to plain text if markdown rendering fails
-          console.log(completeMarkdown);
-        }
-        completeMarkdown = '';
+      if (buffer) {
+        const formatted = formatInline(buffer);
+        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        console.log(wrappedBuffer);
+        buffer = '';
       }
     }
   };
+}
+
+/**
+ * Format inline markdown (bold, italic, inline code)
+ */
+function formatInline(text) {
+  let result = text;
+  
+  // **bold** → bold text
+  result = result.replace(/\*\*([^*]+)\*\*/g, (_, content) => chalk.bold(content));
+  
+  // *italic* → italic text  
+  result = result.replace(/\*([^*]+)\*/g, (_, content) => chalk.italic(content));
+  
+  // `code` → cyan inline code
+  result = result.replace(/`([^`]+)`/g, (_, content) => chalk.cyan(content));
+  
+  return result;
 }
 
 

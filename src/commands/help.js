@@ -6,7 +6,8 @@ export function showHelp() {
   
   console.log(chalk.green('\n🚀 Getting Started:'));
   console.log(chalk.white('  promptx                    ') + chalk.gray('- Start interactive chat session'));
-  console.log(chalk.white('  promptx reset              ') + chalk.gray('- Reset configuration'));
+  console.log(chalk.white('  promptx update-key         ') + chalk.gray('- Update API key for a provider'));
+  console.log(chalk.white('  promptx reset              ') + chalk.gray('- Reset all configuration'));
   
   console.log(chalk.green('\n💬 Chat Commands:'));
   console.log(chalk.white('  /help                      ') + chalk.gray('- Show this help menu'));

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 import { getConfig, setConfig } from '../config/config.js';
 import { getAllModels, updateOllamaModels } from '../constants/models.js';
 import { promptForProvider, promptForModel, promptForAPIKey, promptForConfirmation } from '../ui/prompts.js';
@@ -6,15 +7,58 @@ import { discoverOllamaModels, showOllamaNotInstalledError, showOllamaServiceNot
 import { showSuccess } from '../ui/output.js';
 
 /**
+ * Update API key for a provider
+ */
+async function updateAPIKey() {
+  console.log(chalk.blue('\n🔑 Update API Key'));
+  
+  // Ask which provider
+  const provider = await promptForProvider();
+
+  // Ollama doesn't need an API key
+  if (provider === 'ollama') {
+    console.log(chalk.yellow('\n⚠️  Ollama runs locally and doesn\'t require an API key.'));
+    return;
+  }
+
+  // Ask for new API key
+  const apiKey = await promptForAPIKey(provider);
+
+  // Save the new API key
+  const configKey = `${provider}_api_key`;
+  setConfig(configKey, apiKey);
+
+  console.log(chalk.green(`\n✅ API key for ${provider} has been updated!`));
+}
+
+/**
  * Change model command
  */
 export async function changeModel() {
-  console.log(chalk.blue('\n🔄 Change Model'));
+  console.log(chalk.blue('\n🔄 Model & API Key Settings'));
   
   const currentModel = getConfig('selected_model') || 'gpt-5';
   const currentModelInfo = getAllModels()[currentModel] || getAllModels()['gpt-5'];
   
   console.log(chalk.gray(`Current model: ${currentModelInfo.name}\n`));
+  
+  // Ask what they want to do
+  const { action } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to do?',
+      choices: [
+        { name: '🔄 Change AI Model', value: 'change_model' },
+        { name: '🔑 Update API Key', value: 'update_key' }
+      ]
+    }
+  ]);
+  
+  if (action === 'update_key') {
+    await updateAPIKey();
+    return;
+  }
   
   // Provider selection
   let provider = await promptForProvider();

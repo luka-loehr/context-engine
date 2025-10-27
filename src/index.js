@@ -10,7 +10,6 @@ import { changeModel } from './commands/model.js';
 import { getProjectContext } from './commands/refine.js';
 import { startChatSession } from './commands/chat.js';
 import { showHelp } from './commands/help.js';
-import { updateApiKey } from './commands/update-key.js';
 import { showUpdateNotification } from './ui/output.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,14 +33,6 @@ export async function main() {
     .name('promptx')
     .description('Interactive AI-powered codebase assistant - chat with your code')
     .version(packageJson.version);
-
-  // Update API key command
-  program
-    .command('update-key')
-    .description('Update your API key for a specific provider')
-    .action(async () => {
-      await updateApiKey();
-    });
 
   // Reset command
   program

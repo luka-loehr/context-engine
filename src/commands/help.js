@@ -6,14 +6,13 @@ export function showHelp() {
   
   console.log(chalk.green('\n🚀 Getting Started:'));
   console.log(chalk.white('  promptx                    ') + chalk.gray('- Start interactive chat session'));
-  console.log(chalk.white('  promptx update-key         ') + chalk.gray('- Update API key for a provider'));
   console.log(chalk.white('  promptx reset              ') + chalk.gray('- Reset all configuration'));
   
   console.log(chalk.green('\n💬 Chat Commands:'));
   console.log(chalk.white('  /help                      ') + chalk.gray('- Show this help menu'));
   console.log(chalk.white('  /exit                      ') + chalk.gray('- Exit chat session'));
   console.log(chalk.white('  /clear                     ') + chalk.gray('- Clear conversation history'));
-  console.log(chalk.white('  /model                     ') + chalk.gray('- Switch AI models (requires restart)'));
+  console.log(chalk.white('  /model                     ') + chalk.gray('- Switch models or update API keys'));
   
   console.log(chalk.green('\n🔍 How It Works:'));
   console.log(chalk.gray('  • Automatically scans all project files'));

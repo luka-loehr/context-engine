@@ -7,6 +7,7 @@ import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
 import { calculateTokens, formatTokenCount, countTokens, calculateContextPercentage } from '../utils/tokenizer.js';
 import { getContextLimit } from '../constants/context-limits.js';
+import { changeModel } from './model.js';
 
 /**
  * Start interactive chat session with codebase context
@@ -68,6 +69,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         conversationHistory.length = 0;
         conversationTokens = 0;
         console.log(chalk.green('\n✓ Conversation history cleared\n'));
+        continue;
+      }
+      
+      if (userMessage.toLowerCase() === '/model') {
+        await changeModel();
+        console.log(chalk.yellow('\n⚠️  Please restart promptx to use the new model.\n'));
+        console.log(chalk.gray('Type /exit to quit, then run promptx again.\n'));
         continue;
       }
       
@@ -158,7 +166,7 @@ function showChatHelp() {
   console.log(chalk.white('  /exit    ') + chalk.gray('- Exit the chat session'));
   console.log(chalk.white('  /help    ') + chalk.gray('- Show this help'));
   console.log(chalk.white('  /clear   ') + chalk.gray('- Clear conversation history'));
-  console.log(chalk.white('  /model   ') + chalk.gray('- Switch AI models (requires restart)'));
+  console.log(chalk.white('  /model   ') + chalk.gray('- Change AI model (restart required)'));
   console.log(chalk.gray('\n💡 Just type your questions naturally!\n'));
 }
 

@@ -183,7 +183,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           (content) => {
             if (firstChunk) {
               thinkingSpinner.stop();
-              console.log(chalk.cyan.bold('promptx:'));
+              console.log(chalk.gray('promptx:'));
               firstChunk = false;
             }
             streamWriter.write(content);

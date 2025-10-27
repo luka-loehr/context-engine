@@ -1,4 +1,5 @@
 import inquirer from 'inquirer';
+import readline from 'readline';
 import { 
   validateOpenAIKey, 
   validateAnthropicKey, 
@@ -95,25 +96,54 @@ export async function promptForAPIKey(provider) {
 }
 
 /**
- * Prompt for user input in chat - clean input only
+ * Prompt for user input with tab-completion for commands
  */
 export async function promptForUserInput(promptLabel = 'You', showHint = false) {
   // Show command hint on first use
   if (showHint) {
-    console.log(chalk.gray('💡 Tip: Type /help, /exit, /clear, or /model for commands\n'));
+    console.log(chalk.gray('💡 Tip: Type /help, /exit, /clear, or /model for commands (press Tab for autocomplete)\n'));
   }
   
-  const { prompt } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'prompt',
-      message: `${promptLabel}:`,
-      prefix: '',
-      validate: validatePrompt
+  return new Promise((resolve) => {
+    const commands = ['/help', '/exit', '/clear', '/model'];
+    
+    // Completer function for Tab autocomplete
+    function completer(line) {
+      // Only provide completions if line starts with / and has no space
+      if (line.startsWith('/') && !line.includes(' ')) {
+        const hits = commands.filter((c) => c.startsWith(line));
+        return [hits.length ? hits : commands, line];
+      }
+      // No completions for regular text
+      return [[], line];
     }
-  ]);
-  
-  return prompt;
+    
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      completer: completer,
+      prompt: chalk.white(`${promptLabel}: `)
+    });
+    
+    rl.prompt();
+    
+    rl.on('line', (input) => {
+      rl.close();
+      const trimmed = input.trim();
+      if (!trimmed) {
+        console.log(chalk.red('Please enter a message'));
+        resolve(promptForUserInput(promptLabel, false));
+      } else {
+        resolve(trimmed);
+      }
+    });
+    
+    rl.on('SIGINT', () => {
+      rl.close();
+      console.log(chalk.gray('\n👋 Goodbye!\n'));
+      process.exit(0);
+    });
+  });
 }
 
 /**

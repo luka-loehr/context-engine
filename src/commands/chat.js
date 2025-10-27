@@ -92,7 +92,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           (content) => {
             if (firstChunk) {
               thinkingSpinner.stop();
-              console.log(chalk.blue('Assistant:'));
+              console.log(chalk.blue('promptx:'));
               firstChunk = false;
             }
             streamWriter.write(content);

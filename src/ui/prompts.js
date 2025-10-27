@@ -107,8 +107,9 @@ export async function promptForUserInput(promptLabel = 'Message') {
       name: 'prompt',
       message: `${promptLabel}:`,
       prefix: '',
+      suggestOnly: true, // Allow typing anything without requiring a match
       source: async (answersSoFar, input) => {
-        // If input starts with "/", show command suggestions
+        // Only show suggestions if input starts with "/"
         if (input && input.startsWith('/')) {
           const commands = [
             '/help - Show help menu',
@@ -124,8 +125,8 @@ export async function promptForUserInput(promptLabel = 'Message') {
           return filtered.length > 0 ? filtered : commands;
         }
         
-        // Otherwise, return the current input (no autocomplete suggestions)
-        return [input || ''];
+        // Return empty array for regular text (no suggestions)
+        return [];
       },
       validate: validatePrompt
     }

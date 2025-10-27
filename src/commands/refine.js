@@ -1,10 +1,8 @@
-import ora from 'ora';
 import chalk from 'chalk';
-import { scanDirectory, getTotalCharacterCount } from '../utils/scanner.js';
-import { displayProjectScanResults, displayRefinedPrompt, displayError } from '../ui/output.js';
-import { promptForProjectContext } from '../ui/prompts.js';
+import { scanDirectory } from '../utils/scanner.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createProvider } from '../providers/index.js';
+import { displayError } from '../ui/output.js';
 
 /**
  * Get project context by scanning current directory

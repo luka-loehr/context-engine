@@ -5,7 +5,8 @@ import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
-import { calculateTokens, formatTokenCount } from '../utils/tokenizer.js';
+import { calculateTokens, formatTokenCount, countTokens, calculateContextPercentage } from '../utils/tokenizer.js';
+import { getContextLimit } from '../constants/context-limits.js';
 
 /**
  * Start interactive chat session with codebase context
@@ -33,14 +34,24 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Conversation history
   const conversationHistory = [];
   
+  // Token tracking
+  const contextLimit = getContextLimit(selectedModel);
+  const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
+  let conversationTokens = 0;
+  
   // Create provider
   const provider = createProvider(modelInfo.provider, apiKey, selectedModel);
   
   // Chat loop
   while (true) {
     try {
-      // Get user input
-      const userMessage = await promptForUserInput('You');
+      // Calculate current context usage
+      const totalUsedTokens = baseTokens + conversationTokens;
+      const contextPercentage = calculateContextPercentage(totalUsedTokens, contextLimit);
+      
+      // Get user input with context percentage
+      const promptLabel = `You (${contextPercentage}%)`;
+      const userMessage = await promptForUserInput(promptLabel);
       
       // Handle commands
       if (userMessage.toLowerCase() === '/exit') {
@@ -55,6 +66,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       if (userMessage.toLowerCase() === '/clear') {
         conversationHistory.length = 0;
+        conversationTokens = 0;
         console.log(chalk.green('\n✓ Conversation history cleared\n'));
         continue;
       }
@@ -64,6 +76,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         role: 'user',
         content: userMessage
       });
+      
+      // Update conversation tokens
+      conversationTokens += countTokens(userMessage);
       
       // Build full prompt with context and history
       let fullPrompt = contextPrefix;
@@ -111,6 +126,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           role: 'assistant',
           content: assistantResponse
         });
+        
+        // Update conversation tokens
+        conversationTokens += countTokens(assistantResponse);
         
       } catch (error) {
         if (thinkingSpinner.isSpinning) {

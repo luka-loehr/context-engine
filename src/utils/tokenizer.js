@@ -25,6 +25,20 @@ export function calculateTokens(projectContext) {
 }
 
 /**
+ * Calculate tokens from a string
+ */
+export function countTokens(text) {
+  if (!text) return 0;
+  
+  try {
+    const tokens = encode(text);
+    return tokens.length;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
  * Format numbers with k/M suffix for nice display
  * Examples: 100, 1.2k, 10k, 100k, 1.5M
  */
@@ -44,5 +58,21 @@ export function formatTokenCount(count) {
     // 10M, 100M
     return Math.floor(count / 1000000) + 'M';
   }
+}
+
+/**
+ * Calculate context usage percentage
+ */
+export function calculateContextPercentage(usedTokens, totalLimit) {
+  if (totalLimit === 0) return 0;
+  const percentage = (usedTokens / totalLimit) * 100;
+  return Math.min(100, Math.round(percentage));
+}
+
+/**
+ * Format context percentage with color coding
+ */
+export function formatContextUsage(percentage) {
+  return `${percentage}%`;
 }
 

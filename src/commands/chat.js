@@ -119,8 +119,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
     
-    // Calculate tokens from the result (which is now a formatted string)
-    const tokens = countTokens(result);
+    // Calculate tokens from the file content (result is now an object)
+    const tokens = result.content ? countTokens(result.content) : 0;
     const formattedTokens = formatTokenCount(tokens);
     
     // Stop spinner and show success with token count

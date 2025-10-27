@@ -5,7 +5,7 @@
 export const TOOLS = {
   getFileContent: {
     name: 'getFileContent',
-    description: 'Get the full content of a specific file from the codebase. Use this when you need to read or analyze a specific file.',
+    description: 'Get the full content of a specific file from the codebase. Returns an object with success status, filePath, and content (if successful) or error message (if failed). Use this when you need to read or analyze a specific file.',
     parameters: {
       type: 'object',
       properties: {
@@ -27,7 +27,10 @@ export function executeTool(toolName, parameters, projectContext) {
     case 'getFileContent':
       return getFileContent(parameters.filePath, projectContext);
     default:
-      return `Error: Unknown tool "${toolName}"`;
+      return {
+        success: false,
+        error: `Unknown tool: ${toolName}`
+      };
   }
 }
 
@@ -38,9 +41,17 @@ function getFileContent(filePath, projectContext) {
   const file = projectContext.find(f => f.path === filePath);
   
   if (!file) {
-    return `Error: File not found at path "${filePath}". Please check the file path and try again. Use exact paths from the project structure.`;
+    return {
+      success: false,
+      error: `File not found at path "${filePath}". Please check the file path and try again.`,
+      filePath: filePath
+    };
   }
   
-  return `File: ${file.path}\n\nContent:\n${file.content}`;
+  return {
+    success: true,
+    filePath: file.path,
+    content: file.content
+  };
 }
 

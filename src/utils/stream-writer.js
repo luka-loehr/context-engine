@@ -31,70 +31,39 @@ marked.setOptions({
 export function createStreamWriter() {
   const terminalWidth = process.stdout.columns || 80;
   const maxWidth = Math.min(terminalWidth - 4, 76); // Leave some margin
-  let buffer = '';
+  let completeMarkdown = '';
+  let isFirstWrite = true;
   
   return {
     write(text) {
-      buffer += text;
-      const lines = buffer.split('\n');
+      completeMarkdown += text;
       
-      // Process all complete lines
-      for (let i = 0; i < lines.length - 1; i++) {
-        // Render markdown inline for the line
-        const rendered = renderInlineMarkdown(lines[i]);
-        const wrappedLine = wrapAnsi(rendered, maxWidth, { hard: true, wordWrap: true });
-        console.log(wrappedLine);
+      // Show streaming dots for visual feedback (optional)
+      if (isFirstWrite) {
+        isFirstWrite = false;
       }
-      
-      // Keep the last incomplete line in buffer
-      buffer = lines[lines.length - 1];
-      
-      // If buffer is getting too long, wrap and flush it
-      if (buffer.length > maxWidth) {
-        const rendered = renderInlineMarkdown(buffer);
-        const wrappedBuffer = wrapAnsi(rendered, maxWidth, { hard: true, wordWrap: true });
-        const wrappedLines = wrappedBuffer.split('\n');
-        
-        for (let i = 0; i < wrappedLines.length - 1; i++) {
-          console.log(wrappedLines[i]);
-        }
-        
-        buffer = wrappedLines[wrappedLines.length - 1];
-      }
+      // Don't print during streaming to avoid messing up markdown blocks
     },
     
     flush() {
-      if (buffer) {
-        const rendered = renderInlineMarkdown(buffer);
-        const wrappedBuffer = wrapAnsi(rendered, maxWidth, { hard: true, wordWrap: true });
-        console.log(wrappedBuffer);
-        buffer = '';
+      if (completeMarkdown) {
+        // Clear any streaming indicators
+        process.stdout.write('\r\x1b[K');
+        
+        // Render the complete markdown at once for proper block handling
+        try {
+          const rendered = marked(completeMarkdown);
+          // Remove extra trailing newlines and print
+          const cleaned = rendered.replace(/\n\n+$/g, '\n');
+          process.stdout.write(cleaned);
+        } catch (err) {
+          // Fallback to plain text if markdown rendering fails
+          console.log(completeMarkdown);
+        }
+        completeMarkdown = '';
       }
     }
   };
 }
 
-/**
- * Render inline markdown (bold, italic, code) for streaming
- */
-function renderInlineMarkdown(text) {
-  // Apply inline markdown formatting using chalk
-  let result = text;
-  
-  // **bold** → bold text
-  result = result.replace(/\*\*([^*]+)\*\*/g, (_, content) => chalk.bold(content));
-  
-  // *italic* → italic text
-  result = result.replace(/\*([^*]+)\*/g, (_, content) => chalk.italic(content));
-  
-  // `code` → cyan code
-  result = result.replace(/`([^`]+)`/g, (_, content) => chalk.cyan(content));
-  
-  // # Headings → green bold
-  if (result.startsWith('#')) {
-    result = result.replace(/^#+\s+(.+)$/, (_, content) => chalk.green.bold(content));
-  }
-  
-  return result;
-}
 

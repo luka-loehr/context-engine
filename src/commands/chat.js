@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
+import { promisify } from 'util';
+import { exec } from 'child_process';
 import { promptForUserInput } from '../ui/prompts.js';
 import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
@@ -12,24 +14,48 @@ import { getConfig } from '../config/config.js';
 import { getAllModels } from '../constants/models.js';
 import { clearLines } from '../ui/screen.js';
 
+const execAsync = promisify(exec);
+
+/**
+ * Get git status for current directory
+ */
+async function getGitStatus() {
+  try {
+    const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD 2>/dev/null');
+    const branch = stdout.trim();
+    return branch ? ` git:(${branch})` : '';
+  } catch (err) {
+    return '';
+  }
+}
+
 /**
  * Start interactive chat session with codebase context
  */
 export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
-  console.log(chalk.blue('\n💬 promptx - Codebase Assistant'));
-  console.log(chalk.gray('─'.repeat(50)));
+  // Show current directory and git status
+  console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
+  
+  // Welcome box
+  console.log(chalk.cyan.bold('promptx'));
+  console.log('');
+  console.log(chalk.white('Welcome to promptx - Your AI codebase assistant'));
+  console.log(chalk.gray('/help for help, /model to switch models\n'));
   
   if (projectContext && projectContext.length > 0) {
     const totalTokens = calculateTokens(projectContext);
     const formattedTokens = formatTokenCount(totalTokens);
-    console.log(chalk.green(`\n✓ Loaded ${projectContext.length} files from your project`));
-    console.log(chalk.gray(`  ${formattedTokens} tokens`));
+    console.log(chalk.gray(`cwd: ${process.cwd()}`));
+    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})`));
   } else {
-    console.log(chalk.yellow('\n⚠ No project files found in current directory'));
+    console.log(chalk.gray('cwd: ' + process.cwd()));
+    console.log(chalk.yellow('warning: no project files found\n'));
   }
   
-  console.log(chalk.gray('\nAsk me anything about your codebase!'));
-  console.log(chalk.gray('Type /exit to quit, /help for commands\n'));
+  console.log(chalk.gray('Getting started:'));
+  console.log(chalk.gray('  1. Ask me anything about your codebase'));
+  console.log(chalk.gray('  2. Use /help to see available commands'));
+  console.log(chalk.gray('  3. Use /model to switch between AI models\n'));
   
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
@@ -55,7 +81,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   while (true) {
     try {
       // Get user input
-      const userMessage = await promptForUserInput('You', isFirstPrompt);
+      const userMessage = await promptForUserInput('>', isFirstPrompt);
       
       // Clear hint on first prompt
       if (isFirstPrompt) {
@@ -71,15 +97,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       if (userMessage.toLowerCase() === '/help') {
         showChatHelp();
-        
-        // Wait for user to read, then clear
-        await inquirer.prompt([{
-          type: 'input',
-          name: 'continue',
-          message: 'Press Enter to continue:',
-          prefix: ''
-        }]);
-        clearLines(16); // Clear help menu + press enter prompt
         continue;
       }
       
@@ -216,12 +233,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
  * Show chat-specific help
  */
 function showChatHelp() {
-  console.log(chalk.blue('\n📚 Chat Commands'));
-  console.log(chalk.gray('─'.repeat(50)));
-  console.log(chalk.white('  /exit    ') + chalk.gray('- Exit the chat session'));
-  console.log(chalk.white('  /help    ') + chalk.gray('- Show this help'));
-  console.log(chalk.white('  /clear   ') + chalk.gray('- Clear conversation history'));
-  console.log(chalk.white('  /model   ') + chalk.gray('- Switch AI model on the fly'));
-  console.log(chalk.gray('\n💡 Just type your questions naturally!\n'));
+  console.log('');
+  console.log(chalk.cyan('Available commands:'));
+  console.log('');
+  console.log(chalk.gray('  /exit     Exit promptx'));
+  console.log(chalk.gray('  /help     Show this help'));
+  console.log(chalk.gray('  /clear    Clear conversation history'));
+  console.log(chalk.gray('  /model    Switch AI model'));
+  console.log('');
 }
 

@@ -5,16 +5,16 @@ import chalk from 'chalk';
  * Simple input with command hints - no fancy autocomplete
  * Just clean, simple input that works reliably
  */
-export async function autocompleteInput(promptLabel = 'You', showHint = false) {
+export async function autocompleteInput(promptLabel = '>', showHint = false) {
   if (showHint) {
-    console.log(chalk.gray('💡 Commands: /help /exit /clear /model\n'));
+    console.log(chalk.gray('💡 Tip: Type /help to see available commands\n'));
   }
 
   const { input } = await inquirer.prompt([
     {
       type: 'input',
       name: 'input',
-      message: `${promptLabel}:`,
+      message: promptLabel,
       prefix: ''
     }
   ]);

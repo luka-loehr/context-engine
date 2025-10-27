@@ -141,6 +141,16 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Get user input
       const userMessage = await promptForUserInput('>');
       
+      // Clear any pending confirmation messages immediately after user input
+      // This clears messages that are ABOVE the user's input line
+      if (linesToClearBeforeNextMessage > 0) {
+        // Move up past the user's input line, clear confirmation messages, then come back
+        process.stdout.write('\x1b[1A'); // Move up 1 line (past user input)
+        clearLines(linesToClearBeforeNextMessage); // Clear the confirmation messages
+        process.stdout.write('\n'); // Add the newline back
+        linesToClearBeforeNextMessage = 0;
+      }
+      
       // Handle commands
       if (userMessage.toLowerCase() === '/exit') {
         console.log(chalk.gray('\n👋 Goodbye!\n'));
@@ -235,12 +245,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       // Add current question
       fullPrompt += `User: ${userMessage}`;
-      
-      // Clear any pending confirmation messages before showing response
-      if (linesToClearBeforeNextMessage > 0) {
-        clearLines(linesToClearBeforeNextMessage);
-        linesToClearBeforeNextMessage = 0;
-      }
       
       // Show thinking indicator
       console.log('');

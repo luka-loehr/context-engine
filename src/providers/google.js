@@ -24,49 +24,50 @@ export class GoogleProvider extends BaseProvider {
     const chat = model.startChat({ history: [] });
     
     // Send initial message
-    const result = await chat.sendMessageStream(fullPrompt);
+    let currentMessage = fullPrompt;
     let refinedPrompt = '';
-    let functionCalls = [];
+    let continueLoop = true;
     
-    // Process initial response
-    for await (const chunk of result.stream) {
-      const candidate = chunk.candidates?.[0];
+    // Loop until AI is done (no more function calls)
+    while (continueLoop) {
+      const result = await chat.sendMessageStream(currentMessage);
+      let functionCalls = [];
       
-      if (candidate?.content?.parts) {
-        for (const part of candidate.content.parts) {
-          if (part.functionCall) {
-            functionCalls.push(part.functionCall);
-          } else if (part.text) {
-            if (onChunk) onChunk(part.text);
-            refinedPrompt += part.text;
+      // Process response
+      for await (const chunk of result.stream) {
+        const candidate = chunk.candidates?.[0];
+        
+        if (candidate?.content?.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.functionCall) {
+              functionCalls.push(part.functionCall);
+            } else if (part.text) {
+              if (onChunk) onChunk(part.text);
+              refinedPrompt += part.text;
+            }
           }
         }
       }
-    }
-    
-    // If there were function calls, execute them and continue
-    if (functionCalls.length > 0 && onToolCall) {
-      const functionResponses = [];
       
-      for (const functionCall of functionCalls) {
-        const toolResult = await onToolCall(functionCall.name, functionCall.args);
-        functionResponses.push({
-          functionResponse: {
-            name: functionCall.name,
-            response: toolResult
-          }
-        });
-      }
-      
-      // Send function results back and get final response
-      const followUpResult = await chat.sendMessageStream(functionResponses);
-      
-      for await (const chunk of followUpResult.stream) {
-        const text = chunk.text();
-        if (text) {
-          if (onChunk) onChunk(text);
-          refinedPrompt += text;
+      // If there were function calls, execute them and continue loop
+      if (functionCalls.length > 0 && onToolCall) {
+        const functionResponses = [];
+        
+        for (const functionCall of functionCalls) {
+          const toolResult = await onToolCall(functionCall.name, functionCall.args);
+          functionResponses.push({
+            functionResponse: {
+              name: functionCall.name,
+              response: toolResult
+            }
+          });
         }
+        
+        // Set function responses as next message
+        currentMessage = functionResponses;
+      } else {
+        // No more function calls, we're done
+        continueLoop = false;
       }
     }
     

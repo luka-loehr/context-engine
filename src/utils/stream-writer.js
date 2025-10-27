@@ -55,14 +55,14 @@ export function createStreamWriter() {
 function formatInline(text) {
   let result = text;
   
-  // **bold** → bold text
-  result = result.replace(/\*\*([^*]+)\*\*/g, (_, content) => chalk.bold(content));
+  // **bold** → bold white text (distinct from cyan header)
+  result = result.replace(/\*\*([^*]+)\*\*/g, (_, content) => chalk.white.bold(content));
   
   // *italic* → italic text  
   result = result.replace(/\*([^*]+)\*/g, (_, content) => chalk.italic(content));
   
-  // `code` → cyan inline code
-  result = result.replace(/`([^`]+)`/g, (_, content) => chalk.cyan(content));
+  // `code` → yellow inline code (changed from cyan to avoid confusion with header)
+  result = result.replace(/`([^`]+)`/g, (_, content) => chalk.yellow(content));
   
   return result;
 }

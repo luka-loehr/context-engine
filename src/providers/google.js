@@ -20,22 +20,53 @@ export class GoogleProvider extends BaseProvider {
     // Combine system prompt and user prompt for Google AI
     const fullPrompt = `${systemPrompt}\n\nUser Prompt: ${messyPrompt}`;
     
-    const result = await model.generateContentStream(fullPrompt);
-    let refinedPrompt = '';
+    // Start chat session for tool support
+    const chat = model.startChat({ history: [] });
     
+    // Send initial message
+    const result = await chat.sendMessageStream(fullPrompt);
+    let refinedPrompt = '';
+    let functionCalls = [];
+    
+    // Process initial response
     for await (const chunk of result.stream) {
-      // Check for function calls
-      const functionCall = chunk.functionCalls?.()?.[0];
-      if (functionCall && onToolCall) {
+      const candidate = chunk.candidates?.[0];
+      
+      if (candidate?.content?.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.functionCall) {
+            functionCalls.push(part.functionCall);
+          } else if (part.text) {
+            if (onChunk) onChunk(part.text);
+            refinedPrompt += part.text;
+          }
+        }
+      }
+    }
+    
+    // If there were function calls, execute them and continue
+    if (functionCalls.length > 0 && onToolCall) {
+      const functionResponses = [];
+      
+      for (const functionCall of functionCalls) {
         const toolResult = await onToolCall(functionCall.name, functionCall.args);
-        // Tool results will be handled by the caller
-        continue;
+        functionResponses.push({
+          functionResponse: {
+            name: functionCall.name,
+            response: toolResult
+          }
+        });
       }
       
-      const text = chunk.text();
-      if (text) {
-        if (onChunk) onChunk(text);
-        refinedPrompt += text;
+      // Send function results back and get final response
+      const followUpResult = await chat.sendMessageStream(functionResponses);
+      
+      for await (const chunk of followUpResult.stream) {
+        const text = chunk.text();
+        if (text) {
+          if (onChunk) onChunk(text);
+          refinedPrompt += text;
+        }
       }
     }
     

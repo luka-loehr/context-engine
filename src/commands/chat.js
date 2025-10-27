@@ -96,15 +96,22 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   
   // Tool call handler
   let currentToolSpinner = null;
+  let thinkingSpinner = null;
+  
   async function handleToolCall(toolName, parameters) {
-    // Show loading spinner
+    // Stop thinking spinner if it's running
+    if (thinkingSpinner && thinkingSpinner.isSpinning) {
+      thinkingSpinner.stop();
+    }
+    
+    // Show file loading spinner
     const fileName = parameters.filePath || 'file';
     currentToolSpinner = ora(`Querying codebase for ${chalk.cyan(fileName)}`).start();
     
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
     
-    // Stop spinner
+    // Stop spinner and show success
     currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)}`);
     currentToolSpinner = null;
     
@@ -283,7 +290,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       // Show thinking indicator
       console.log('');
-      const thinkingSpinner = ora('Thinking...').start();
+      thinkingSpinner = ora('Thinking...').start();
       
       // Get response from AI
       const streamWriter = createStreamWriter();
@@ -296,7 +303,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           systemPrompt,
           (content) => {
             if (firstChunk) {
-              thinkingSpinner.stop();
+              if (thinkingSpinner && thinkingSpinner.isSpinning) {
+                thinkingSpinner.stop();
+              }
               console.log(chalk.gray('promptx:'));
               firstChunk = false;
             }

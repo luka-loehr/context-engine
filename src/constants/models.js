@@ -6,20 +6,21 @@ export const MODELS = {
   'promptx-fast': {
     name: 'promptx-fast',
     provider: 'google',
-    model: 'gemini-2.0-flash-thinking-exp-1219',
+    model: 'gemini-flash-lite-latest',
     description: 'Fastest, lowest cost'
   },
   'promptx': {
     name: 'promptx',
     provider: 'google',
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-flash-latest',
     description: 'Fast & balanced (default)'
   },
   'promptx-pro': {
     name: 'promptx-pro',
     provider: 'google',
-    model: 'gemini-2.5-pro-002',
-    description: 'Most capable, 1M context'
+    model: 'gemini-2.5-pro',
+    description: 'Most capable, 1M context',
+    isThinkingModel: true
   }
 };
 

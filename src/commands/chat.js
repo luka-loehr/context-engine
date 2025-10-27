@@ -5,6 +5,7 @@ import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
+import { calculateTokens, formatTokenCount } from '../utils/tokenizer.js';
 
 /**
  * Start interactive chat session with codebase context
@@ -14,7 +15,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   console.log(chalk.gray('─'.repeat(50)));
   
   if (projectContext && projectContext.length > 0) {
+    const totalTokens = calculateTokens(projectContext);
+    const formattedTokens = formatTokenCount(totalTokens);
     console.log(chalk.green(`\n✓ Loaded ${projectContext.length} files from your project`));
+    console.log(chalk.gray(`  ${formattedTokens} tokens`));
   } else {
     console.log(chalk.yellow('\n⚠ No project files found in current directory'));
   }

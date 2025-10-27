@@ -124,8 +124,8 @@ export async function promptForUserInput(promptLabel = 'Message') {
           return filtered.length > 0 ? filtered : commands;
         }
         
-        // Otherwise, return empty array (no suggestions for regular text)
-        return [];
+        // Otherwise, return the current input (no autocomplete suggestions)
+        return [input || ''];
       },
       validate: validatePrompt
     }

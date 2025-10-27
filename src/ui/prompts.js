@@ -3,10 +3,10 @@ import { validatePrompt } from '../utils/validation.js';
 import { autocompleteInput } from './autocomplete.js';
 
 /**
- * Prompt for user input with custom autocomplete for commands
+ * Prompt for user input
  */
-export async function promptForUserInput(promptLabel = 'You', showHint = false) {
-  return autocompleteInput(promptLabel, showHint);
+export async function promptForUserInput(promptLabel = '>') {
+  return autocompleteInput(promptLabel);
 }
 
 /**

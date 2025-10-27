@@ -2,14 +2,9 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 
 /**
- * Simple input with command hints - no fancy autocomplete
- * Just clean, simple input that works reliably
+ * Simple input - clean and minimal
  */
-export async function autocompleteInput(promptLabel = '>', showHint = false) {
-  if (showHint) {
-    console.log(chalk.gray('💡 Tip: Type /help to see available commands\n'));
-  }
-
+export async function autocompleteInput(promptLabel = '>') {
   const { input } = await inquirer.prompt([
     {
       type: 'input',

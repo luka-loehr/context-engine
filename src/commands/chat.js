@@ -36,26 +36,27 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Show current directory and git status
   console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
   
-  // Welcome box
-  console.log(chalk.cyan.bold('promptx'));
+  // Welcome header
+  console.log(chalk.cyan.bold('* Welcome to promptx!'));
   console.log('');
-  console.log(chalk.white('Welcome to promptx - Your AI codebase assistant'));
-  console.log(chalk.gray('/help for help, /model to switch models\n'));
+  console.log(chalk.gray('  /help for help, /model for models\n'));
+  
+  // Show project info
+  console.log(chalk.gray('cwd: ' + process.cwd()));
   
   if (projectContext && projectContext.length > 0) {
     const totalTokens = calculateTokens(projectContext);
     const formattedTokens = formatTokenCount(totalTokens);
-    console.log(chalk.gray(`cwd: ${process.cwd()}`));
-    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})`));
+    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})\n`));
   } else {
-    console.log(chalk.gray('cwd: ' + process.cwd()));
-    console.log(chalk.yellow('warning: no project files found\n'));
+    console.log(chalk.yellow('loaded: 0 files (no project detected)\n'));
   }
   
-  console.log(chalk.gray('Getting started:'));
+  console.log(chalk.gray('Tips for getting started:'));
+  console.log('');
   console.log(chalk.gray('  1. Ask me anything about your codebase'));
-  console.log(chalk.gray('  2. Use /help to see available commands'));
-  console.log(chalk.gray('  3. Use /model to switch between AI models\n'));
+  console.log(chalk.gray('  2. I can help you understand code, find bugs, or implement features'));
+  console.log(chalk.gray('  3. I maintain context, so feel free to ask follow-up questions\n'));
   
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
@@ -74,20 +75,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider (use the actual Gemini model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
-  // Track first prompt for hint display
-  let isFirstPrompt = true;
-  
   // Chat loop
   while (true) {
     try {
       // Get user input
-      const userMessage = await promptForUserInput('>', isFirstPrompt);
-      
-      // Clear hint on first prompt
-      if (isFirstPrompt) {
-        clearLines(1); // Clear the hint line
-        isFirstPrompt = false;
-      }
+      const userMessage = await promptForUserInput('>');
       
       // Handle commands
       if (userMessage.toLowerCase() === '/exit') {

@@ -4,13 +4,11 @@
  */
 
 export const CONTEXT_LIMITS = {
-  // promptx models
-  'promptx-fast': 1000000,  // 1M context (Gemini Flash Lite)
-  'promptx': 1000000,  // 1M context (Gemini Flash)
-  'promptx-pro': 2000000,  // 2M context (Grok 4 Fast)
+  // promptx model
+  'promptx': 2000000,  // 2M context (Grok 4 Fast)
   
-  // Default for unknown models
-  'default': 1000000
+  // Default
+  'default': 2000000
 };
 
 /**

@@ -18,14 +18,6 @@ export function showHelp() {
   console.log(chalk.gray('  /help             Show available commands'));
   console.log(chalk.gray('  /exit             Exit chat session'));
   console.log(chalk.gray('  /clear            Clear conversation history'));
-  console.log(chalk.gray('  /model            Switch AI model'));
-  console.log('');
-  
-  console.log(chalk.cyan('Available models:'));
-  console.log('');
-  console.log(chalk.gray('  promptx-fast      Fastest, 1M context'));
-  console.log(chalk.gray('  promptx           Balanced, 1M context (default)'));
-  console.log(chalk.gray('  promptx-pro       Most capable, 2M context'));
   console.log('');
 }
 

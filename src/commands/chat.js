@@ -9,10 +9,6 @@ import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
-import { changeModel } from './model.js';
-import { getConfig } from '../config/config.js';
-import { getAllModels } from '../constants/models.js';
-import { clearLines } from '../ui/screen.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 
 const execAsync = promisify(exec);
@@ -40,7 +36,7 @@ async function showWelcomeBanner(projectContext, contextPrefix) {
   // Welcome header
   console.log(chalk.cyan.bold('* Welcome to promptx!'));
   console.log('');
-  console.log(chalk.gray('  /help for help, /model for models\n'));
+  console.log(chalk.gray('  /help for commands\n'));
   
   // Show project info
   console.log(chalk.gray('cwd: ' + process.cwd()));
@@ -218,56 +214,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         await showWelcomeBanner(projectContext, contextPrefix);
         console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
         linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
-        continue;
-      }
-      
-      if (userMessage.toLowerCase() === '/model') {
-        // Show loading indicator
-        const modelSpinner = ora('Opening model selector...').start();
-        
-        // Small delay to show the spinner
-        await new Promise(resolve => setTimeout(resolve, 300));
-        modelSpinner.stop();
-        
-        // Clear the loading line
-        clearLines(1);
-        
-        await changeModel();
-        
-        // Clear the model selection UI (approximately 10-15 lines)
-        clearLines(15);
-        
-        // Reload configuration with new model
-        const newModelId = getConfig('selected_model');
-        const newModelInfo = getAllModels()[newModelId];
-        
-        if (!newModelInfo) {
-          console.log(chalk.red('❌ Failed to load new model. Continuing with current model.\n'));
-          continue;
-        }
-        
-        // Get API key from environment based on provider
-        let newApiKey;
-        if (newModelInfo.provider === 'xai') {
-          newApiKey = process.env.XAI_API_KEY;
-        } else {
-          newApiKey = process.env.GOOGLE_API_KEY;
-        }
-        
-        // Update current model and provider
-        currentModel = newModelId;
-        currentModelInfo = newModelInfo;
-        currentApiKey = newApiKey;
-        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
-        
-        // Show clean confirmation
-        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name}`));
-        
-        // Re-inject context into new model
-        await injectContext();
-        
-        // Track lines to clear before next message (confirmation + context loaded + blank line)
-        linesToClearBeforeNextMessage = 3;
         continue;
       }
       

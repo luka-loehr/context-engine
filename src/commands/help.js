@@ -25,8 +25,7 @@ export function showHelp() {
   console.log('');
   console.log(chalk.gray('  promptx-fast      Fastest, 1M context'));
   console.log(chalk.gray('  promptx           Balanced, 1M context (default)'));
-  console.log(chalk.gray('  promptx-pro       Most capable, 1M context'));
-  console.log(chalk.gray('  promptx-ultra     Ultra-fast, 2M context'));
+  console.log(chalk.gray('  promptx-pro       Most capable, 2M context'));
   console.log('');
 }
 

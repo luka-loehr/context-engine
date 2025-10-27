@@ -134,8 +134,8 @@ export async function promptForUserInput(promptLabel = 'You', showHint = false) 
           return filtered.length > 0 ? filtered : [];
         }
         
-        // No suggestions for regular text or commands with spaces
-        return [];
+        // Return current input to prevent "No results..." message
+        return [input || ''];
       },
       validate: validatePrompt
     }

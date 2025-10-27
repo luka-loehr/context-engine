@@ -72,6 +72,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   
   // Conversation history
   const conversationHistory = [];
+  const initialContextMessages = []; // Store initial context separately
   
   // Token tracking
   let currentModel = selectedModel;
@@ -82,6 +83,49 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   
   // Create provider (use the actual Gemini model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
+  
+  // Helper function to inject context into AI
+  async function injectContext() {
+    if (!projectContext || projectContext.length === 0) return;
+    
+    const contextSpinner = ora('Injecting context into AI model...').start();
+    
+    try {
+      const initialContextMessage = contextPrefix + '\n\nPlease respond with just "ready" when you have processed all the project files and are ready to answer questions.';
+      
+      const acknowledgment = await provider.refinePrompt(
+        initialContextMessage,
+        systemPrompt,
+        null // No streaming for this initial message
+      );
+      
+      contextSpinner.succeed('Context loaded');
+      
+      // Store initial context messages
+      initialContextMessages.length = 0;
+      initialContextMessages.push({
+        role: 'user',
+        content: contextPrefix
+      });
+      initialContextMessages.push({
+        role: 'assistant',
+        content: acknowledgment
+      });
+      
+      // Add to conversation history
+      conversationHistory.length = 0;
+      conversationHistory.push(...initialContextMessages);
+      
+      console.log('');
+    } catch (error) {
+      contextSpinner.fail('Failed to load context');
+      displayError(error, modelInfo);
+      console.log(chalk.yellow('\nContinuing without context...\n'));
+    }
+  }
+  
+  // Send initial context to AI ONCE
+  await injectContext();
   
   // Chat loop
   while (true) {
@@ -101,11 +145,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       }
       
       if (userMessage.toLowerCase() === '/clear') {
+        // Keep initial context, clear user conversation
         conversationHistory.length = 0;
+        conversationHistory.push(...initialContextMessages);
         conversationTokens = 0;
         console.clear();
         await showWelcomeBanner(projectContext);
-        console.log(chalk.green('✓ Conversation history cleared\n'));
+        console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
         continue;
       }
       
@@ -149,7 +195,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
         
         // Show clean confirmation
-        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name}\n`));
+        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name}`));
+        
+        // Re-inject context into new model
+        await injectContext();
         continue;
       }
       
@@ -162,16 +211,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Update conversation tokens
       conversationTokens += countTokens(userMessage);
       
-      // Build full prompt with context and history
-      let fullPrompt = contextPrefix;
+      // Build full prompt with conversation history (context already sent once)
+      let fullPrompt = '';
       
-      // Add conversation history
-      if (conversationHistory.length > 1) {
-        fullPrompt += '\n\nCONVERSATION HISTORY:\n';
-        conversationHistory.slice(0, -1).forEach(msg => {
-          fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+      // Add conversation history (which includes the initial context)
+      if (conversationHistory.length > 0) {
+        conversationHistory.forEach(msg => {
+          fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
         });
-        fullPrompt += '\n';
       }
       
       // Add current question

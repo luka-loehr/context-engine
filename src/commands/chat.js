@@ -36,7 +36,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   while (true) {
     try {
       // Get user input
-      const userMessage = await promptForUserInput(chalk.gray('You'));
+      const userMessage = await promptForUserInput('You');
       
       // Handle commands
       if (userMessage.toLowerCase() === '/exit') {

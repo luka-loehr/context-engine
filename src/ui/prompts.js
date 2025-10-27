@@ -94,17 +94,16 @@ export async function promptForAPIKey(provider) {
 }
 
 /**
- * Prompt for user input (messy prompt)
+ * Prompt for user input in chat
  */
-export async function promptForUserInput(modelName) {
-  console.log(`Using ${modelName}\n`);
-  
+export async function promptForUserInput(promptLabel = 'Message') {
   const { prompt } = await inquirer.prompt([
     {
       type: 'input',
       name: 'prompt',
-      message: 'Enter your messy prompt:',
-      validate: validatePrompt
+      message: `${promptLabel}:`,
+      validate: validatePrompt,
+      prefix: ''
     }
   ]);
   

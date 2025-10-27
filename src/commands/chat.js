@@ -144,10 +144,26 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Clear any pending confirmation messages immediately after user input
       // This clears messages that are ABOVE the user's input line
       if (linesToClearBeforeNextMessage > 0) {
-        // Move up past the user's input line, clear confirmation messages, then come back
-        process.stdout.write('\x1b[1A'); // Move up 1 line (past user input)
-        clearLines(linesToClearBeforeNextMessage); // Clear the confirmation messages
-        process.stdout.write('\n'); // Add the newline back
+        // Save current position (after user input)
+        process.stdout.write('\x1b[s'); // Save cursor position
+        
+        // Move up to the confirmation messages
+        // User input line (1) + lines to clear
+        for (let i = 0; i < 1 + linesToClearBeforeNextMessage; i++) {
+          process.stdout.write('\x1b[1A'); // Move up
+        }
+        
+        // Clear each confirmation line
+        for (let i = 0; i < linesToClearBeforeNextMessage; i++) {
+          process.stdout.write('\x1b[2K'); // Clear line
+          if (i < linesToClearBeforeNextMessage - 1) {
+            process.stdout.write('\x1b[1B'); // Move down for next line to clear
+          }
+        }
+        
+        // Restore cursor position (after user input)
+        process.stdout.write('\x1b[u'); // Restore cursor position
+        
         linesToClearBeforeNextMessage = 0;
       }
       

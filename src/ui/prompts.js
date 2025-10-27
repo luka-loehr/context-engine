@@ -1,5 +1,4 @@
 import inquirer from 'inquirer';
-import autocomplete from 'inquirer-autocomplete-prompt';
 import { 
   validateOpenAIKey, 
   validateAnthropicKey, 
@@ -8,9 +7,7 @@ import {
   validatePrompt 
 } from '../utils/validation.js';
 import { PROVIDER_CHOICES, MODEL_CHOICES } from '../constants/models.js';
-
-// Register autocomplete prompt
-inquirer.registerPrompt('autocomplete', autocomplete);
+import chalk from 'chalk';
 
 /**
  * Prompt for provider selection
@@ -98,43 +95,25 @@ export async function promptForAPIKey(provider) {
 }
 
 /**
- * Prompt for user input in chat with command autocomplete
+ * Prompt for user input in chat (clean input with command hints)
  */
-export async function promptForUserInput(promptLabel = 'Message') {
+export async function promptForUserInput(promptLabel = 'Message', showHint = false) {
+  // Show command hint on first use
+  if (showHint) {
+    console.log(chalk.gray('💡 Tip: Type /help, /exit, /clear, or /model for commands\n'));
+  }
+  
   const { prompt } = await inquirer.prompt([
     {
-      type: 'autocomplete',
+      type: 'input',
       name: 'prompt',
       message: `${promptLabel}:`,
       prefix: '',
-      suggestOnly: true, // Allow typing anything without requiring a match
-      source: async (answersSoFar, input) => {
-        // Only show suggestions if input starts with "/"
-        if (input && input.startsWith('/')) {
-          const commands = [
-            '/help - Show help menu',
-            '/exit - Exit chat',
-            '/clear - Clear history',
-            '/model - Switch AI model'
-          ];
-          
-          const filtered = commands.filter(cmd => 
-            cmd.toLowerCase().includes(input.toLowerCase())
-          );
-          
-          return filtered.length > 0 ? filtered : commands;
-        }
-        
-        // Return empty array for regular text (no suggestions)
-        return [];
-      },
       validate: validatePrompt
     }
   ]);
   
-  // Extract just the command if a suggestion was selected
-  const cleanPrompt = prompt.includes(' - ') ? prompt.split(' - ')[0] : prompt;
-  return cleanPrompt;
+  return prompt;
 }
 
 /**

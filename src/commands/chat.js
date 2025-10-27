@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
+import inquirer from 'inquirer';
 import { promptForUserInput } from '../ui/prompts.js';
 import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
@@ -49,6 +50,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
   
+  // Track first prompt for hint display
+  let isFirstPrompt = true;
+  
   // Chat loop
   while (true) {
     try {
@@ -58,7 +62,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       // Get user input with context percentage
       const promptLabel = `You (${contextPercentage}%)`;
-      const userMessage = await promptForUserInput(promptLabel);
+      const userMessage = await promptForUserInput(promptLabel, isFirstPrompt);
+      
+      // Clear hint on first prompt
+      if (isFirstPrompt) {
+        clearLines(1); // Clear the hint line
+        isFirstPrompt = false;
+      }
       
       // Handle commands
       if (userMessage.toLowerCase() === '/exit') {
@@ -70,8 +80,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         showChatHelp();
         
         // Wait for user to read, then clear
-        await promptForUserInput('Press Enter to continue');
-        clearLines(15); // Clear help menu
+        await inquirer.prompt([{
+          type: 'input',
+          name: 'continue',
+          message: 'Press Enter to continue:',
+          prefix: ''
+        }]);
+        clearLines(16); // Clear help menu + press enter prompt
         continue;
       }
       

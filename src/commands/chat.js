@@ -6,8 +6,7 @@ import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
-import { calculateTokens, formatTokenCount, countTokens, calculateContextPercentage } from '../utils/tokenizer.js';
-import { getContextLimit } from '../constants/context-limits.js';
+import { calculateTokens, formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { changeModel } from './model.js';
 import { getConfig } from '../config/config.js';
 import { getAllModels } from '../constants/models.js';
@@ -43,7 +42,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let currentModel = selectedModel;
   let currentModelInfo = modelInfo;
   let currentApiKey = apiKey;
-  let contextLimit = getContextLimit(currentModel);
   const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
   let conversationTokens = 0;
   
@@ -56,13 +54,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Chat loop
   while (true) {
     try {
-      // Calculate current context usage
-      const totalUsedTokens = baseTokens + conversationTokens;
-      const contextPercentage = calculateContextPercentage(totalUsedTokens, contextLimit);
-      
-      // Get user input with context percentage
-      const promptLabel = `You (${contextPercentage}%)`;
-      const userMessage = await promptForUserInput(promptLabel, isFirstPrompt);
+      // Get user input
+      const userMessage = await promptForUserInput('You', isFirstPrompt);
       
       // Clear hint on first prompt
       if (isFirstPrompt) {
@@ -134,7 +127,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         currentModel = newModelId;
         currentModelInfo = newModelInfo;
         currentApiKey = newApiKey;
-        contextLimit = getContextLimit(currentModel);
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModel);
         
         // Show clean confirmation

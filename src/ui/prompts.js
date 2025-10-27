@@ -1,4 +1,5 @@
 import inquirer from 'inquirer';
+import autocomplete from 'inquirer-autocomplete-prompt';
 import { 
   validateOpenAIKey, 
   validateAnthropicKey, 
@@ -8,6 +9,9 @@ import {
 } from '../utils/validation.js';
 import { PROVIDER_CHOICES, MODEL_CHOICES } from '../constants/models.js';
 import chalk from 'chalk';
+
+// Register autocomplete prompt
+inquirer.registerPrompt('autocomplete', autocomplete);
 
 /**
  * Prompt for provider selection
@@ -95,9 +99,9 @@ export async function promptForAPIKey(provider) {
 }
 
 /**
- * Prompt for user input in chat (clean input with command hints)
+ * Prompt for user input in chat with smart command autocomplete
  */
-export async function promptForUserInput(promptLabel = 'Message', showHint = false) {
+export async function promptForUserInput(promptLabel = 'You', showHint = false) {
   // Show command hint on first use
   if (showHint) {
     console.log(chalk.gray('💡 Tip: Type /help, /exit, /clear, or /model for commands\n'));
@@ -105,10 +109,34 @@ export async function promptForUserInput(promptLabel = 'Message', showHint = fal
   
   const { prompt } = await inquirer.prompt([
     {
-      type: 'input',
+      type: 'autocomplete',
       name: 'prompt',
       message: `${promptLabel}:`,
       prefix: '',
+      suggestOnly: true,
+      source: async (answersSoFar, input) => {
+        // Only show suggestions if:
+        // 1. Input starts with "/"
+        // 2. AND there's no space in the input
+        if (input && input.startsWith('/') && !input.includes(' ')) {
+          const commands = [
+            '/help',
+            '/exit',
+            '/clear',
+            '/model'
+          ];
+          
+          // Filter commands that match the input
+          const filtered = commands.filter(cmd => 
+            cmd.toLowerCase().startsWith(input.toLowerCase())
+          );
+          
+          return filtered.length > 0 ? filtered : [];
+        }
+        
+        // No suggestions for regular text or commands with spaces
+        return [];
+      },
       validate: validatePrompt
     }
   ]);

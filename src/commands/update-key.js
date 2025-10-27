@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { promptForProvider, promptForApiKey } from '../ui/prompts.js';
+import { promptForProvider, promptForAPIKey } from '../ui/prompts.js';
 import { setConfig } from '../config/config.js';
 
 /**
@@ -19,7 +19,7 @@ export async function updateApiKey() {
   }
 
   // Ask for new API key
-  const apiKey = await promptForApiKey(provider);
+  const apiKey = await promptForAPIKey(provider);
 
   // Save the new API key
   const configKey = `${provider}_api_key`;

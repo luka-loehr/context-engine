@@ -21,9 +21,10 @@ export function showHelp() {
   console.log(chalk.gray('  • Answers follow-up questions'));
   
   console.log(chalk.green('\n🤖 Available Models:'));
-  console.log(chalk.white('  • promptx-fast ') + chalk.gray('- Fastest, lowest cost'));
-  console.log(chalk.white('  • promptx      ') + chalk.gray('- Fast & balanced (default)'));
+  console.log(chalk.white('  • promptx-fast ') + chalk.gray('- Fastest, lowest cost, 1M context'));
+  console.log(chalk.white('  • promptx      ') + chalk.gray('- Fast & balanced, 1M context (default)'));
   console.log(chalk.white('  • promptx-pro  ') + chalk.gray('- Most capable, 1M context'));
+  console.log(chalk.white('  • promptx-ultra') + chalk.gray('- Ultra-fast, 2M context'));
   
   console.log(chalk.green('\n💡 Example Questions:'));
   console.log(chalk.gray('  • "What does this project do?"'));

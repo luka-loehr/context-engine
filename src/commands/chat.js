@@ -115,8 +115,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           continue;
         }
         
-        // Get API key from environment (all models use Google)
-        const newApiKey = process.env.GOOGLE_API_KEY;
+        // Get API key from environment based on provider
+        let newApiKey;
+        if (newModelInfo.provider === 'xai') {
+          newApiKey = process.env.XAI_API_KEY;
+        } else {
+          newApiKey = process.env.GOOGLE_API_KEY;
+        }
         
         // Update current model and provider
         currentModel = newModelId;

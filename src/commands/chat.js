@@ -81,6 +81,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   const baseTokens = calculateTokens(projectContext) + countTokens(systemPrompt);
   let conversationTokens = 0;
   
+  // Track lines to clear before next message
+  let linesToClearBeforeNextMessage = 0;
+  
   // Create provider (use the actual Gemini model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
@@ -152,6 +155,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         console.clear();
         await showWelcomeBanner(projectContext);
         console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
+        linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
         continue;
       }
       
@@ -199,6 +203,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         
         // Re-inject context into new model
         await injectContext();
+        
+        // Track lines to clear before next message (confirmation + context loaded + blank line)
+        linesToClearBeforeNextMessage = 3;
         continue;
       }
       
@@ -223,6 +230,12 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       // Add current question
       fullPrompt += `User: ${userMessage}`;
+      
+      // Clear any pending confirmation messages before showing response
+      if (linesToClearBeforeNextMessage > 0) {
+        clearLines(linesToClearBeforeNextMessage);
+        linesToClearBeforeNextMessage = 0;
+      }
       
       // Show thinking indicator
       console.log('');

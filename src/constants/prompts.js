@@ -46,6 +46,12 @@ ACCESSING FILES:
 - Only request files when you actually need to analyze or reference their specific contents
 - You can answer many questions just from the structure and documentation
 
+TOOL CALLING:
+- When making multiple tool calls (e.g., reading multiple files), DO NOT simulate user responses
+- DO NOT add fake "User:" messages between tool calls
+- Continue your analysis seamlessly without pretending the user is responding
+- Just state what you're doing next and call the tool (e.g., "Next, I'll check file X" then call getFileContent)
+
 You have access to the complete project structure. Use the getFileContent tool to read specific files when needed.`;
 
 export function getSystemPrompt() {

@@ -5,14 +5,14 @@ import chalk from 'chalk';
  */
 
 export const MODELS = {
-  // Default: Cheapest XAI model as "context"
+  // Default: Fast model as "context"
   'context': {
     name: 'context',
     provider: 'xai',
     model: 'grok-4-fast-non-reasoning',
-    description: 'Cheapest XAI model – fastest responses with minimal reasoning overhead'
+    description: 'Fast model – fastest responses with minimal reasoning overhead'
   },
-  // Ultra: xAI Grok-4 reasoning as "context-ultra"
+  // Ultra: Premium reasoning model as "context-ultra"
   'context-ultra': {
     name: 'context-ultra',
     provider: 'xai',
@@ -22,8 +22,8 @@ export const MODELS = {
 };
 
 export const MODEL_CHOICES = [
-  { name: `${chalk.magenta('context-ultra')} (Premium reasoning model)`, value: 'context-ultra' },
-  { name: `${chalk.white('context')} (Cheapest XAI model)`, value: 'context' }
+  { name: `${chalk.white('context')} (Fast model)`, value: 'context' },
+  { name: `${chalk.magenta('context-ultra')} (Premium reasoning model)`, value: 'context-ultra' }
 ];
 
 /**

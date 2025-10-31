@@ -6,9 +6,9 @@ import { createStreamWriter } from '../utils/stream-writer.js';
  * Colorize model names for display
  */
 export function colorizeModelName(modelName) {
-  if (modelName === 'context-engine-ultra') {
+  if (modelName === 'context-ultra') {
     return chalk.magenta(modelName);
-  } else if (modelName === 'context-engine') {
+  } else if (modelName === 'context') {
     return chalk.white(modelName);
   }
   return modelName; // fallback for any other models

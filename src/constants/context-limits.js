@@ -4,9 +4,12 @@
  */
 
 export const CONTEXT_LIMITS = {
-  // context-engine model
-  'context-engine': 2000000,  // 2M context (Grok 4 Fast)
-  
+  // context model
+  'context': 2000000,  // 2M context (Grok 4 Fast)
+
+  // context-ultra model
+  'context-ultra': 2000000,  // 2M context (Grok 4 Fast)
+
   // Default
   'default': 2000000
 };

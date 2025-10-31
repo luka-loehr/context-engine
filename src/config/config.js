@@ -36,15 +36,15 @@ export function isSetupComplete() {
  * Get or setup configuration
  */
 export async function getOrSetupConfig() {
-  // Get selected model (defaults to 'context-engine')
-  const selectedModel = config.get('selected_model') || 'context-engine';
+  // Get selected model (defaults to 'context')
+  const selectedModel = config.get('selected_model') || 'context';
   let modelInfo = getAllModels()[selectedModel];
 
   // If model not found, fall back to default
   if (!modelInfo) {
-    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to context-engine.`));
-    config.set('selected_model', 'context-engine');
-    modelInfo = getAllModels()['context-engine'];
+    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to context.`));
+    config.set('selected_model', 'context');
+    modelInfo = getAllModels()['context'];
   }
 
   // Get API key from config or environment

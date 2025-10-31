@@ -17,5 +17,5 @@ if (!isGlobal) {
   console.log('\n⚠️  Warning: @lukaloehr/context-engine is a CLI tool and should be installed globally!\n');
   console.log('To install it globally, run:');
   console.log('\n  npm install -g @lukaloehr/context-engine\n');
-  console.log('This will make the "context-engine" command available in your terminal.\n');
+  console.log('This will make the "context" command available in your terminal.\n');
 }

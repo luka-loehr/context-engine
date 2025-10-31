@@ -29,7 +29,7 @@ export async function main() {
   
   // Setup CLI
   program
-    .name('context-engine')
+    .name('context')
     .description('Interactive AI-powered codebase assistant using XAI Grok - chat with your code')
     .version(packageJson.version);
 

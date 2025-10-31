@@ -1,8 +1,8 @@
-# context-engine
+# context
 
 > Interactive AI-powered codebase assistant - chat with your XAI Grok models
 
-context-engine is a command-line tool that helps you interact with your codebase using XAI's Grok AI models. Ask questions about your code, understand architecture, and get instant answers powered by Grok.
+context is a command-line tool that helps you interact with your codebase using XAI's Grok AI models. Ask questions about your code, understand architecture, and get instant answers powered by Grok.
 
 ## ✨ Features
 
@@ -26,10 +26,10 @@ Visit [XAI Platform](https://x.ai) to get your API key.
 
 ### 2. Import your API Key
 
-Run context-engine and use the `/api` command to import your key from a `.env` file:
+Run context and use the `/api` command to import your key from a `.env` file:
 
 ```bash
-context-engine
+context
 ```
 
 Then in the chat:
@@ -54,7 +54,7 @@ export XAI_API_KEY="xai-your_api_key_here"
 ### Start Interactive Chat
 
 ```bash
-context-engine
+context
 ```
 
 ### Available Commands
@@ -63,20 +63,20 @@ context-engine
 - `/model` - Switch between XAI Grok models
 - `/api` - Manage your XAI API key
 - `/clear` - Clear conversation history
-- `/exit` - Exit context-engine
+- `/exit` - Exit context
 
 ### Example Interaction
 
 ```bash
-$ context-engine
+$ context
 
-context-engine v4.0.0 - Interactive AI-powered codebase assistant
+context v4.0.0 - Interactive AI-powered codebase assistant
 
 Context loaded (15k tokens)
 
 > What does this project do?
 
-The project appears to be a command-line tool called "context-engine" that serves as an
+The project appears to be a command-line tool called "context" that serves as an
 interactive AI-powered codebase assistant. It allows users to chat with their
 codebase using XAI Grok models to understand architecture, ask questions, and
 get instant answers about their code.
@@ -84,11 +84,11 @@ get instant answers about their code.
 > /model
 
 Change Model
-Current model: context-engine
+Current model: context
 
-? Select a model: context-engine-ultra (Premium reasoning model)
+? Select a model: context-ultra (Premium reasoning model)
 
-Switched to context-engine-ultra
+Switched to context-ultra
 
 > Now analyze the authentication flow
 
@@ -99,8 +99,8 @@ Based on the code structure, the authentication appears to be handled through...
 
 | Model | Description | Best For |
 |-------|-------------|----------|
-| **context-engine** | Grok 4 Fast (non-reasoning) | Fast responses, cost-effective |
-| **context-engine-ultra** | Grok 4 Fast (reasoning) | Deep analysis, complex reasoning |w
+| **context** | Grok 4 Fast (non-reasoning) | Fast responses, cost-effective |
+| **context-ultra** | Grok 4 Fast (reasoning) | Deep analysis, complex reasoning |
 
 ## 📁 Project Structure
 

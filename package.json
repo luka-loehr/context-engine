@@ -3,7 +3,7 @@
   "version": "4.0.0",
   "description": "Interactive AI-powered codebase assistant using XAI Grok - chat with your code and get instant answers",
   "type": "module",
-  "main": "bin/context-engine.js",
+  "main": "bin/context.js",
   "files": [
     "bin/",
     "src/",
@@ -11,7 +11,7 @@
     "LICENSE"
   ],
   "bin": {
-    "context-engine": "bin/context-engine.js"
+    "context": "bin/context.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

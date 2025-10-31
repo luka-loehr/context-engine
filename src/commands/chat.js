@@ -241,11 +241,23 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             name: 'action',
             message: 'API Key Management:',
             choices: [
+              { name: 'Show current API keys', value: 'show_keys' },
               { name: 'Import from .env file', value: 'import_env' },
               { name: 'Cancel', value: 'cancel' }
             ]
           }
         ]);
+
+        if (action === 'show_keys') {
+          const googleKey = getConfig('google_api_key');
+          const xaiKey = getConfig('xai_api_key');
+
+          console.log(chalk.cyan('\nCurrent API Keys:'));
+          console.log(chalk.gray('  Google API Key: ') + (googleKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
+          console.log(chalk.gray('  XAI API Key: ') + (xaiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
+          console.log('');
+          continue;
+        }
 
         if (action === 'import_env') {
           const envPath = path.join(process.cwd(), '.env');
@@ -274,15 +286,17 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             let importedCount = 0;
 
             if (envVars.GOOGLE_API_KEY) {
+              const existing = getConfig('google_api_key');
               setConfig('google_api_key', envVars.GOOGLE_API_KEY);
               importedCount++;
-              console.log(chalk.green(`✓ Imported Google API key`));
+              console.log(chalk.green(`✓ ${existing ? 'Updated' : 'Imported'} Google API key`));
             }
 
             if (envVars.XAI_API_KEY) {
+              const existing = getConfig('xai_api_key');
               setConfig('xai_api_key', envVars.XAI_API_KEY);
               importedCount++;
-              console.log(chalk.green(`✓ Imported XAI API key`));
+              console.log(chalk.green(`✓ ${existing ? 'Updated' : 'Imported'} XAI API key`));
             }
 
             if (importedCount === 0) {
@@ -402,7 +416,7 @@ function showChatHelp() {
   console.log(chalk.gray('  /help     Show this help'));
   console.log(chalk.gray('  /clear    Clear conversation history'));
   console.log(chalk.gray('  /model    Switch AI model'));
-  console.log(chalk.gray('  /api      Import API keys from .env file'));
+  console.log(chalk.gray('  /api      Manage API keys (show/import from .env)'));
   console.log('');
 }
 

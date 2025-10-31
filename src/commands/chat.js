@@ -115,9 +115,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 
     // Special handling for exit tool
     if (toolName === 'exit') {
-      const result = executeTool(toolName, parameters, fullProjectContext);
-      console.log(chalk.cyan('context-engine:'));
-      console.log(chalk.gray(result.message));
+      console.log(chalk.gray('\n👋 Goodbye!\n'));
       process.exit(0);
     }
 

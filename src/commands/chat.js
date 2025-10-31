@@ -121,7 +121,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 
     if (toolName === 'help') {
       showChatHelp();
-      return;
+      return { success: true, message: 'Help displayed', stopLoop: true };
     }
 
     if (toolName === 'model') {
@@ -136,7 +136,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set XAI_API_KEY environment variable.`));
       }
       provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
-      return;
+      return { success: true, message: 'Model changed', stopLoop: true };
     }
 
     if (toolName === 'api') {
@@ -190,7 +190,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           }
         }
       }
-      return;
+      return { success: true, message: 'API key management completed', stopLoop: true };
     }
 
     if (toolName === 'clear') {
@@ -202,7 +202,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       await showWelcomeBanner(projectContext, contextPrefix);
       console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
       linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
-      return;
+      return { success: true, message: 'Conversation cleared', stopLoop: true };
     }
 
     // Show file loading spinner

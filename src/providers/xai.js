@@ -54,21 +54,40 @@ export class XAIProvider extends BaseProvider {
       const stream = await this.client.chat.completions.create(completionParams);
       let currentToolCalls = [];
       let currentContent = '';
-      
+      let toolCallMap = new Map(); // Track tool calls by index
+
       for await (const chunk of stream) {
         // Check for tool calls
         const toolCalls = chunk.choices[0]?.delta?.tool_calls;
         if (toolCalls && toolCalls.length > 0) {
           for (const toolCall of toolCalls) {
-            if (toolCall.function) {
-              currentToolCalls.push({
+            const index = toolCall.index;
+            if (!toolCallMap.has(index)) {
+              toolCallMap.set(index, {
                 id: toolCall.id,
                 type: 'function',
                 function: {
-                  name: toolCall.function.name,
-                  arguments: toolCall.function.arguments || '{}'
+                  name: '',
+                  arguments: ''
                 }
               });
+            }
+
+            const existingCall = toolCallMap.get(index);
+
+            // Update ID if present (only in first chunk)
+            if (toolCall.id) {
+              existingCall.id = toolCall.id;
+            }
+
+            // Accumulate function data
+            if (toolCall.function) {
+              if (toolCall.function.name) {
+                existingCall.function.name += toolCall.function.name;
+              }
+              if (toolCall.function.arguments) {
+                existingCall.function.arguments += toolCall.function.arguments;
+              }
             }
           }
         }
@@ -80,25 +99,43 @@ export class XAIProvider extends BaseProvider {
           refinedPrompt += content;
         }
       }
+
+      // Convert tool call map to array, filtering out incomplete tool calls
+      currentToolCalls = Array.from(toolCallMap.values()).filter(call =>
+        call.id && call.function.name && call.function.arguments
+      );
       
       // If there were tool calls, execute them and continue
       if (currentToolCalls.length > 0 && onToolCall) {
         // Add assistant message with tool calls
+        // XAI API requires content to be null (not empty string) when only tool_calls are present
         messages.push({
           role: 'assistant',
+          content: currentContent || null,
           tool_calls: currentToolCalls
         });
         
         // Execute tools and add responses
+        let shouldStopLoop = false;
         for (const toolCall of currentToolCalls) {
           const args = JSON.parse(toolCall.function.arguments);
           const toolResult = await onToolCall(toolCall.function.name, args);
+          
+          // Check if tool wants to stop the loop
+          if (toolResult && toolResult.stopLoop) {
+            shouldStopLoop = true;
+          }
           
           messages.push({
             role: 'tool',
             tool_call_id: toolCall.id,
             content: JSON.stringify(toolResult)
           });
+        }
+        
+        // If any tool requested to stop, exit the loop
+        if (shouldStopLoop) {
+          continueLoop = false;
         }
       } else {
         // No more tool calls, we're done

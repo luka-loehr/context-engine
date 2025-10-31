@@ -55,6 +55,7 @@ export class XAIProvider extends BaseProvider {
       let currentToolCalls = [];
       let currentContent = '';
       let toolCallMap = new Map(); // Track tool calls by index
+      let contentChunks = []; // Buffer content chunks
 
       for await (const chunk of stream) {
         // Check for tool calls
@@ -95,8 +96,8 @@ export class XAIProvider extends BaseProvider {
         if (chunk.choices[0]?.delta?.content) {
           const content = chunk.choices[0].delta.content;
           currentContent += content;
-          if (onChunk) onChunk(content);
-          refinedPrompt += content;
+          contentChunks.push(content);
+          // Don't output yet - wait to see if we have tool calls
         }
       }
 
@@ -133,12 +134,26 @@ export class XAIProvider extends BaseProvider {
           });
         }
         
-        // If any tool requested to stop, exit the loop
+        // If any tool requested to stop, exit the loop without outputting content
         if (shouldStopLoop) {
           continueLoop = false;
+        } else {
+          // Output buffered content chunks and add to refined prompt
+          if (onChunk && contentChunks.length > 0) {
+            for (const chunk of contentChunks) {
+              onChunk(chunk);
+            }
+          }
+          refinedPrompt += currentContent;
         }
       } else {
-        // No more tool calls, we're done
+        // No tool calls - output buffered content and we're done
+        if (onChunk && contentChunks.length > 0) {
+          for (const chunk of contentChunks) {
+            onChunk(chunk);
+          }
+        }
+        refinedPrompt += currentContent;
         continueLoop = false;
       }
     }

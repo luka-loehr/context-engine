@@ -112,18 +112,26 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     if (thinkingSpinner && thinkingSpinner.isSpinning) {
       thinkingSpinner.stop();
     }
-    
+
+    // Special handling for exit tool
+    if (toolName === 'exit') {
+      const result = executeTool(toolName, parameters, fullProjectContext);
+      console.log(chalk.cyan('context-engine:'));
+      console.log(chalk.gray(result.message));
+      process.exit(0);
+    }
+
     // Show file loading spinner
     const fileName = parameters.filePath || 'file';
     currentToolSpinner = ora(`Querying codebase for ${chalk.cyan(fileName)}`).start();
-    
+
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
-    
+
     // Calculate tokens from the file content (result is now an object)
     const tokens = result.content ? countTokens(result.content) : 0;
     const formattedTokens = formatTokenCount(tokens);
-    
+
     // Stop spinner and show success with token count
     currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
     currentToolSpinner = null;

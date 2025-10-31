@@ -16,6 +16,15 @@ export const TOOLS = {
       },
       required: ['filePath']
     }
+  },
+  exit: {
+    name: 'exit',
+    description: 'Exit the context-engine CLI session. Use this when the user wants to close or quit the interactive chat.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 };
 
@@ -26,6 +35,12 @@ export function executeTool(toolName, parameters, projectContext) {
   switch (toolName) {
     case 'getFileContent':
       return getFileContent(parameters.filePath, projectContext);
+    case 'exit':
+      return {
+        success: true,
+        action: 'exit',
+        message: 'Exiting context-engine session...'
+      };
     default:
       return {
         success: false,

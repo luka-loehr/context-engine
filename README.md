@@ -1,144 +1,135 @@
-# context
+# context-engine
 
-> Interactive AI-powered codebase assistant - chat with your XAI Grok models
+> Chat with your codebase using XAI Grok AI – instant answers, intelligent context
 
-context is a command-line tool that helps you interact with your codebase using XAI's Grok AI models. Ask questions about your code, understand architecture, and get instant answers powered by Grok.
+**context-engine** is a terminal-based AI assistant that understands your entire codebase. Ask questions in natural language and get instant, contextually-aware answers powered by XAI's Grok models.
 
 ## ✨ Features
 
-- **Natural Language Queries**: Ask questions about your codebase in plain English
-- **Multi-Model Support**: Choose between Grok models optimized for different use cases
-- **Persistent API Keys**: Store your XAI API key securely for easy access
-- **Interactive Chat**: Conversational interface for exploring your code
-- **Smart Context**: Automatically includes relevant code files in your queries
+- 🤖 **Smart Context Loading** – Automatically scans and loads your project structure
+- 💬 **Interactive Chat** – Natural conversation with your codebase
+- 🚀 **Multi-Model Support** – Switch between fast and reasoning models
+- 🎨 **Beautiful Output** – Color-coded, formatted responses with code highlighting
+- 🔒 **Secure** – API keys stored in system keychain
+- ⚡ **Fast** – Lightweight CLI with instant startup
 
-## 🚀 Installation
+## 📦 Installation
 
 ```bash
 npm install -g @lukaloehr/context-engine
 ```
 
-## 🔧 Setup
+## 🚀 Quick Start
 
-### 1. Get your XAI API Key
+### 1. Set your XAI API Key
 
-Visit [XAI Platform](https://x.ai) to get your API key.
-
-### 2. Import your API Key
-
-Run context and use the `/api` command to import your key from a `.env` file:
-
-```bash
-context
-```
-
-Then in the chat:
-```
-/api
-# Select "Import from .env file"
-```
-
-Your `.env` file should contain:
-```env
-XAI_API_KEY=xai-your_api_key_here
-```
-
-### 3. Alternative: Set Environment Variable
+Get your API key from [x.ai](https://x.ai), then:
 
 ```bash
 export XAI_API_KEY="xai-your_api_key_here"
 ```
 
-## 💬 Usage
+Or create a `.env` file in your project:
+```env
+XAI_API_KEY=xai-your_api_key_here
+```
 
-### Start Interactive Chat
+### 2. Start chatting
 
 ```bash
+cd your-project
 context
 ```
 
-### Available Commands
+That's it! The tool will load your project and start an interactive chat session.
 
-- `/help` - Show available commands
-- `/model` - Switch between XAI Grok models
-- `/api` - Manage your XAI API key
-- `/clear` - Clear conversation history
-- `/exit` - Exit context
+## 💬 Usage
 
-### Example Interaction
+### Commands
+
+- `/help` – Show available commands
+- `/model` – Switch between models
+- `/api` – Import API key from .env
+- `/clear` – Clear conversation history
+- `/exit` – Exit the chat
+
+### Example Session
 
 ```bash
 $ context
 
-context v4.0.0 - Interactive AI-powered codebase assistant
+/home/user/my-project git:(main)
 
-Context loaded (15k tokens)
+* Welcome to context-engine!
+
+cwd: /home/user/my-project
+loaded: 42 files (8.2k)
 
 > What does this project do?
 
-The project appears to be a command-line tool called "context" that serves as an
-interactive AI-powered codebase assistant. It allows users to chat with their
-codebase using XAI Grok models to understand architecture, ask questions, and
-get instant answers about their code.
+Project Overview
 
-> /model
+This is a web application built with React and Express...
 
-Change Model
-Current model: context
+> Show me the authentication flow
 
-? Select a model: context-ultra (Premium reasoning model)
+[Authentication Flow]
 
-Switched to context-ultra
+The app uses JWT tokens for authentication...
 
-> Now analyze the authentication flow
-
-Based on the code structure, the authentication appears to be handled through...
+> /exit
 ```
 
-## 🤖 Available Models
+## 🤖 Models
 
-| Model | Description | Best For |
+| Model | Description | Use Case |
 |-------|-------------|----------|
-| **context** | Grok 4 Fast (non-reasoning) | Fast responses, cost-effective |
-| **context-ultra** | Grok 4 Fast (reasoning) | Deep analysis, complex reasoning |
+| **context** | Grok 4 Fast (non-reasoning) | Quick answers, general queries |
+| **context-ultra** | Grok 4 Fast (reasoning) | Deep analysis, complex problems |
+
+Switch models anytime with `/model` during a chat session.
+
+## 🎨 Output Formatting
+
+Responses are beautifully formatted with:
+
+- **Headlines** – Bold section headers
+- **Code blocks** – Blue syntax highlighting
+- **Inline code** – Yellow/orange for commands and filenames
+- **Horizontal rules** – Clean section separators
+- **Smart wrapping** – Proper indentation for lists
+
+## 🔧 Configuration
+
+API keys are stored securely using your system's keychain via the `conf` package. Use `/api` in the chat to manage keys or set the `XAI_API_KEY` environment variable.
 
 ## 📁 Project Structure
 
 ```
 src/
-├── commands/          # CLI commands
-├── config/           # Configuration management
-├── constants/        # Model definitions & prompts
-├── providers/        # XAI integration
-├── ui/              # User interface components
-└── utils/           # Helper utilities
+├── commands/       # CLI commands (chat, model, help)
+├── config/         # Configuration management
+├── constants/      # Models, prompts, patterns
+├── providers/      # XAI API integration
+├── ui/             # Terminal UI components
+└── utils/          # Tokenizer, scanner, tools
 ```
-
-## 🔒 Privacy
-
-- API keys are stored securely using your system's keychain
-- Only necessary code files are sent to XAI's servers
-- No data is collected or stored by promptx
 
 ## 🛠️ Development
 
 ```bash
-git clone https://github.com/luka-loehr/promptx-cli.git
-cd promptx-cli
+git clone https://github.com/luka-loehr/context-engine.git
+cd context-engine
 npm install
-npm run build  # if needed
+npm link  # Test locally
 ```
 
 ## 📄 License
 
-MIT - see [LICENSE](LICENSE) for details
-
-## 🤝 Contributing
-
-Contributions welcome! Please feel free to submit a Pull Request.
+MIT © [Luka Loehr](https://github.com/luka-loehr)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/luka-loehr/context-engine)
-- [XAI Platform](https://x.ai)
+- [GitHub](https://github.com/luka-loehr/context-engine)
 - [Issues](https://github.com/luka-loehr/context-engine/issues)
+- [XAI Platform](https://x.ai)

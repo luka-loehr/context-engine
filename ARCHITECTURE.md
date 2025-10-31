@@ -79,9 +79,6 @@ promptx-cli/
 │   │
 │   ├── providers/         # AI integrations
 │   │   ├── base.js        # Base class
-│   │   ├── anthropic.js   # Claude
-│   │   ├── ollama.js      # Local models
-│   │   ├── openai.js      # GPT
 │   │   ├── xai.js         # Grok
 │   │   └── index.js       # Factory
 │   │

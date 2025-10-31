@@ -1,7 +1,7 @@
 {
   "name": "@lukaloehr/promptx",
   "version": "4.0.0",
-  "description": "Interactive AI-powered codebase assistant - chat with your code, understand architecture, and get instant answers",
+  "description": "Interactive AI-powered codebase assistant using XAI Grok - chat with your code and get instant answers",
   "type": "module",
   "main": "bin/promptx.js",
   "files": [
@@ -22,10 +22,6 @@
     "cli",
     "prompt",
     "ai",
-    "gpt",
-    "openai",
-    "anthropic",
-    "claude",
     "grok",
     "xai",
     "prompt-engineering",
@@ -50,7 +46,6 @@
     "dotenv": "^17.2.3",
     "gpt-tokenizer": "^3.2.0",
     "inquirer": "^9.2.12",
-    "openai": "^4.24.1",
     "ora": "^7.0.1",
     "update-notifier": "^7.3.1",
     "wrap-ansi": "^9.0.0"

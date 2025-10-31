@@ -92,14 +92,19 @@ export function createStreamWriter() {
           } else if (line.trim().startsWith('[QUOTE]')) {
             // Extract quote text, wrap it, then format as magenta with proper indentation
             const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
-            const wrappedQuote = wrapAnsi(quoteText, maxWidth - 2, options); // Reserve 2 chars for icon
+            const wrappedQuote = wrapAnsi(quoteText, maxWidth - 4, options); // Reserve space for icons
             const quoteLines = wrappedQuote.split('\n');
-            // Format with icon on first line, indent continuation lines
+            // Format with opening icon on first line, closing icon on last line
             line = chalk.magenta('❝ ' + quoteLines[0]);
             if (quoteLines.length > 1) {
-              for (let j = 1; j < quoteLines.length; j++) {
+              for (let j = 1; j < quoteLines.length - 1; j++) {
                 line += '\n' + chalk.magenta('  ' + quoteLines[j]); // Indent continuations
               }
+              // Last line with closing quote
+              line += '\n' + chalk.magenta('  ' + quoteLines[quoteLines.length - 1] + ' ❞');
+            } else {
+              // Single line - add closing quote at the end
+              line = chalk.magenta('❝ ' + quoteLines[0] + ' ❞');
             }
           } else if (line.trim() === '---' || line.trim() === '___') {
             // Horizontal rule - render as gray line
@@ -151,13 +156,16 @@ export function createStreamWriter() {
             line = chalk.red('⚠ ' + warningText);
           } else if (line.trim().startsWith('[QUOTE]')) {
             const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
-            const wrappedQuote = wrapAnsi(quoteText, maxWidth - 2, options);
+            const wrappedQuote = wrapAnsi(quoteText, maxWidth - 4, options);
             const quoteLines = wrappedQuote.split('\n');
             line = chalk.magenta('❝ ' + quoteLines[0]);
             if (quoteLines.length > 1) {
-              for (let j = 1; j < quoteLines.length; j++) {
+              for (let j = 1; j < quoteLines.length - 1; j++) {
                 line += '\n' + chalk.magenta('  ' + quoteLines[j]);
               }
+              line += '\n' + chalk.magenta('  ' + quoteLines[quoteLines.length - 1] + ' ❞');
+            } else {
+              line = chalk.magenta('❝ ' + quoteLines[0] + ' ❞');
             }
           } else if (line.trim() === '---' || line.trim() === '___') {
             line = chalk.gray('─'.repeat(maxWidth));
@@ -212,13 +220,16 @@ export function createStreamWriter() {
           line = chalk.red('⚠ ' + warningText);
         } else if (line.trim().startsWith('[QUOTE]')) {
           const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
-          const wrappedQuote = wrapAnsi(quoteText, maxWidth - 2, options);
+          const wrappedQuote = wrapAnsi(quoteText, maxWidth - 4, options);
           const quoteLines = wrappedQuote.split('\n');
           line = chalk.magenta('❝ ' + quoteLines[0]);
           if (quoteLines.length > 1) {
-            for (let j = 1; j < quoteLines.length; j++) {
+            for (let j = 1; j < quoteLines.length - 1; j++) {
               line += '\n' + chalk.magenta('  ' + quoteLines[j]);
             }
+            line += '\n' + chalk.magenta('  ' + quoteLines[quoteLines.length - 1] + ' ❞');
+          } else {
+            line = chalk.magenta('❝ ' + quoteLines[0] + ' ❞');
           }
         } else if (line.trim() === '---' || line.trim() === '___') {
           line = chalk.gray('─'.repeat(maxWidth));

@@ -29,7 +29,7 @@ TEXT FORMATTING:
 
 SPECIAL FORMATTING:
 - Use [NOTE] prefix for important notes (renders in cyan)
-- Use [WARNING] prefix for cautions (renders in yellow)
+- Use [WARNING] prefix for cautions (renders in red)
 - Use [QUOTE] prefix for quotes or citations (renders in magenta)
 - Use --- on its own line for horizontal separators (renders as gray line)
 - Examples:

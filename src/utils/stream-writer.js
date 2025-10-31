@@ -86,9 +86,9 @@ export function createStreamWriter() {
             const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
             line = chalk.cyan('ℹ ' + noteText);
           } else if (line.trim().startsWith('[WARNING]')) {
-            // Extract warning text and format as yellow
+            // Extract warning text and format as red
             const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-            line = chalk.yellow('⚠ ' + warningText);
+            line = chalk.red('⚠ ' + warningText);
           } else if (line.trim().startsWith('[QUOTE]')) {
             // Extract quote text and format as magenta
             const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
@@ -137,7 +137,7 @@ export function createStreamWriter() {
             line = chalk.cyan('ℹ ' + noteText);
           } else if (line.trim().startsWith('[WARNING]')) {
             const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-            line = chalk.yellow('⚠ ' + warningText);
+            line = chalk.red('⚠ ' + warningText);
           } else if (line.trim().startsWith('[QUOTE]')) {
             const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
             line = chalk.magenta('❝ ' + quoteText);
@@ -191,7 +191,7 @@ export function createStreamWriter() {
           line = chalk.cyan('ℹ ' + noteText);
         } else if (line.trim().startsWith('[WARNING]')) {
           const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-          line = chalk.yellow('⚠ ' + warningText);
+          line = chalk.red('⚠ ' + warningText);
         } else if (line.trim().startsWith('[QUOTE]')) {
           const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
           line = chalk.magenta('❝ ' + quoteText);

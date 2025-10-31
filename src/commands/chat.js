@@ -85,7 +85,15 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Store full project context for tool calls
   const fullProjectContext = projectContext;
   
-  // Create provider (use the actual Gemini model name)
+  // Ensure API key is present for selected provider
+  if (!currentApiKey) {
+    const requiredVar = currentModelInfo.provider === 'google' ? 'GOOGLE_API_KEY' : 'XAI_API_KEY';
+    console.log(chalk.red(`\nMissing API key. Please set ${requiredVar} in your environment or .env file.`));
+    console.log(chalk.gray('Example:'));
+    console.log(chalk.gray(`  export ${requiredVar}="your_key_here"`));
+    process.exit(1);
+  }
+  // Create provider (use the actual model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Tool definitions for AI

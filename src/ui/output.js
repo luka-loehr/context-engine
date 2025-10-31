@@ -69,19 +69,11 @@ export function displayError(error, modelInfo) {
     console.log(chalk.red('Invalid API key. Please run "promptx reset" to update your API key.'));
   } else if (error.status === 429) {
     console.log(chalk.red('Rate limit exceeded. Please try again later.'));
-  } else if (modelInfo.provider === 'ollama') {
-    // Ollama errors are already handled in the provider
-    console.log(chalk.gray('\n💡 Consider using a cloud provider as a backup:'));
-    console.log(chalk.cyan('  /model') + chalk.gray(' - Switch to OpenAI, Anthropic, xAI, or Google'));
   } else {
     console.log(chalk.red('Error:', error.message));
 
     // Provide helpful suggestions based on provider
-    if (modelInfo.provider === 'openai') {
-      console.log(chalk.gray('\n💡 Check your OpenAI API key and account status.'));
-    } else if (modelInfo.provider === 'anthropic') {
-      console.log(chalk.gray('\n💡 Check your Anthropic API key and account status.'));
-    } else if (modelInfo.provider === 'xai') {
+    if (modelInfo.provider === 'xai') {
       console.log(chalk.gray('\n💡 Check your xAI API key and account status.'));
     } else if (modelInfo.provider === 'google') {
       console.log(chalk.gray('\n💡 Check your Google AI API key and account status.'));

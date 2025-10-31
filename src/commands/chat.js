@@ -101,7 +101,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Tool definitions for AI
-  const tools = [TOOLS.getFileContent];
+  const tools = [TOOLS.getFileContent, TOOLS.exit];
   
   // Tool call handler
   let currentToolSpinner = null;

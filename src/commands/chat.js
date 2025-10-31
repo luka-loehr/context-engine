@@ -101,7 +101,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Tool definitions for AI
-  const tools = [TOOLS.getFileContent, TOOLS.exit];
+  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear];
   
   // Tool call handler
   let currentToolSpinner = null;
@@ -113,10 +113,96 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       thinkingSpinner.stop();
     }
 
-    // Special handling for exit tool
+    // Special handling for various tools
     if (toolName === 'exit') {
       console.log(chalk.gray('\n👋 Goodbye!\n'));
       process.exit(0);
+    }
+
+    if (toolName === 'help') {
+      showChatHelp();
+      return;
+    }
+
+    if (toolName === 'model') {
+      // Interactive model switcher
+      await changeModel();
+      // Reload configuration (provider, model, api key) - changeModel() already shows success message
+      const updated = await getOrSetupConfig();
+      currentModel = updated.selectedModel;
+      currentModelInfo = updated.modelInfo;
+      currentApiKey = updated.apiKey;
+      if (!currentApiKey) {
+        console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set XAI_API_KEY environment variable.`));
+      }
+      provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
+      return;
+    }
+
+    if (toolName === 'api') {
+      // API key management
+      const { action } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: 'API Key Management:',
+          choices: [
+            { name: 'Show current API keys', value: 'show_keys' },
+            { name: 'Import from .env file', value: 'import_env' },
+            { name: 'Cancel', value: 'cancel' }
+          ]
+        }
+      ]);
+
+      if (action === 'show_keys') {
+        const xaiKey = getConfig('xai_api_key');
+
+        console.log(chalk.cyan('\nCurrent API Keys:'));
+        console.log(chalk.gray('  XAI API Key: ') + (xaiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
+        console.log('');
+      }
+
+      if (action === 'import_env') {
+        const envPath = path.join(process.cwd(), '.env');
+
+        if (!fs.existsSync(envPath)) {
+          console.log(chalk.red(`No .env file found in current directory: ${process.cwd()}`));
+        } else {
+          try {
+            const envContent = fs.readFileSync(envPath, 'utf8');
+            const envVars = dotenv.parse(envContent);
+
+            let importedCount = 0;
+
+            if (envVars.XAI_API_KEY) {
+              setConfig('xai_api_key', envVars.XAI_API_KEY);
+              importedCount++;
+            }
+
+            if (importedCount === 0) {
+              console.log(chalk.yellow('No API keys found in .env file (looking for XAI_API_KEY)'));
+            } else {
+              console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
+              console.log(chalk.gray('You can now run context-engine in directories without .env files'));
+            }
+          } catch (error) {
+            console.log(chalk.red(`Error reading .env file: ${error.message}`));
+          }
+        }
+      }
+      return;
+    }
+
+    if (toolName === 'clear') {
+      // Keep initial context, clear user conversation
+      conversationHistory.length = 0;
+      conversationHistory.push(...initialContextMessages);
+      conversationTokens = 0;
+      console.clear();
+      await showWelcomeBanner(projectContext, contextPrefix);
+      console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
+      linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
+      return;
     }
 
     // Show file loading spinner
@@ -218,108 +304,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         break;
       }
       
-      if (userMessage.toLowerCase() === '/help') {
-        showChatHelp();
-        continue;
-      }
-      if (userMessage.toLowerCase() === '/model') {
-        // Interactive model switcher
-        await changeModel();
-        // Reload configuration (provider, model, api key) - changeModel() already shows success message
-        const updated = await getOrSetupConfig();
-        currentModel = updated.selectedModel;
-        currentModelInfo = updated.modelInfo;
-        currentApiKey = updated.apiKey;
-        if (!currentApiKey) {
-          console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set XAI_API_KEY environment variable.`));
-          continue;
-        }
-        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
-        continue;
-      }
 
-      if (userMessage.toLowerCase() === '/api') {
-        // API key management
-        const { action } = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'action',
-            message: 'API Key Management:',
-            choices: [
-              { name: 'Show current API keys', value: 'show_keys' },
-              { name: 'Import from .env file', value: 'import_env' },
-              { name: 'Cancel', value: 'cancel' }
-            ]
-          }
-        ]);
 
-        if (action === 'show_keys') {
-          const xaiKey = getConfig('xai_api_key');
-
-          console.log(chalk.cyan('\nCurrent API Keys:'));
-          console.log(chalk.gray('  XAI API Key: ') + (xaiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
-          console.log('');
-          continue;
-        }
-
-        if (action === 'import_env') {
-          const envPath = path.join(process.cwd(), '.env');
-
-          if (!fs.existsSync(envPath)) {
-            console.log(chalk.red(`No .env file found in current directory: ${process.cwd()}`));
-            continue;
-          }
-
-          try {
-            const envContent = fs.readFileSync(envPath, 'utf8');
-            const envVars = {};
-
-            // Parse .env file (simple parser)
-            envContent.split('\n').forEach(line => {
-              const trimmed = line.trim();
-              if (trimmed && !trimmed.startsWith('#')) {
-                const [key, ...valueParts] = trimmed.split('=');
-                if (key && valueParts.length > 0) {
-                  const value = valueParts.join('=').replace(/^["']|["']$/g, ''); // Remove quotes
-                  envVars[key.trim()] = value;
-                }
-              }
-            });
-
-            let importedCount = 0;
-
-            if (envVars.XAI_API_KEY) {
-              const existing = getConfig('xai_api_key');
-              setConfig('xai_api_key', envVars.XAI_API_KEY);
-              importedCount++;
-              console.log(chalk.green(`✓ ${existing ? 'Updated' : 'Imported'} XAI API key`));
-            }
-
-            if (importedCount === 0) {
-              console.log(chalk.yellow('No API keys found in .env file (looking for XAI_API_KEY)'));
-            } else {
-              console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
-              console.log(chalk.gray('You can now run context-engine in directories without .env files'));
-            }
-
-          } catch (error) {
-            console.log(chalk.red(`Error reading .env file: ${error.message}`));
-          }
-        }
-        continue;
-      }
-
-      if (userMessage.toLowerCase() === '/clear') {
-        // Keep initial context, clear user conversation
-        conversationHistory.length = 0;
-        conversationHistory.push(...initialContextMessages);
-        conversationTokens = 0;
-        console.clear();
-        await showWelcomeBanner(projectContext, contextPrefix);
-        console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
-        linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
-        continue;
-      }
       
       // Add user message to history
       conversationHistory.push({
@@ -406,13 +392,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
  */
 function showChatHelp() {
   console.log('');
-  console.log(chalk.cyan('Available commands:'));
+  console.log(chalk.cyan('Context-Engine v4.0.0'));
   console.log('');
-  console.log(chalk.gray('  /exit     Exit context-engine'));
-  console.log(chalk.gray('  /help     Show this help'));
-  console.log(chalk.gray('  /clear    Clear conversation history'));
-  console.log(chalk.gray('  /model    Switch AI model'));
-  console.log(chalk.gray('  /api      Manage API keys (show/import from .env)'));
+  console.log(chalk.gray('Tips for getting started:'));
+  console.log('');
+  console.log(chalk.gray('  • Ask me anything about your codebase - I have instant access to all files'));
+  console.log(chalk.gray('  • Say "change model" or "manage API keys" to access settings'));
+  console.log(chalk.gray('  • Say "clear chat" to reset conversation or "exit" to close'));
+  console.log(chalk.gray('  • I automatically load relevant files when you ask questions'));
   console.log('');
 }
 

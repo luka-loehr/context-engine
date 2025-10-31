@@ -25,6 +25,42 @@ export const TOOLS = {
       properties: {},
       required: []
     }
+  },
+  help: {
+    name: 'help',
+    description: 'Show context-engine version and tips. Use this when the user asks for help or information about the tool.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  model: {
+    name: 'model',
+    description: 'Open model selection dialog to change the AI model. Use this when the user wants to switch between available AI models.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  api: {
+    name: 'api',
+    description: 'Manage API keys - show current status or import from .env file. Use this when the user wants to check or update API key configuration.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+  clear: {
+    name: 'clear',
+    description: 'Clear the conversation history. Use this when the user wants to start fresh or reset the chat context.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 };
 
@@ -40,6 +76,26 @@ export function executeTool(toolName, parameters, projectContext) {
         success: true,
         action: 'exit',
         message: 'Exiting context-engine session...'
+      };
+    case 'help':
+      return {
+        success: true,
+        action: 'help'
+      };
+    case 'model':
+      return {
+        success: true,
+        action: 'model'
+      };
+    case 'api':
+      return {
+        success: true,
+        action: 'api'
+      };
+    case 'clear':
+      return {
+        success: true,
+        action: 'clear'
       };
     default:
       return {

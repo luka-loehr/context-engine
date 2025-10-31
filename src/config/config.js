@@ -36,8 +36,8 @@ export function isSetupComplete() {
  * Get or setup configuration
  */
 export async function getOrSetupConfig() {
-  // Get selected model (defaults to 'default')
-  const selectedModel = config.get('selected_model') || 'default';
+  // Get selected model (defaults to 'context')
+  const selectedModel = config.get('selected_model') || 'context';
   let modelInfo = getAllModels()[selectedModel];
 
   // If model not found, fall back to default

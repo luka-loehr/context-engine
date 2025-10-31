@@ -24,7 +24,17 @@ HEADLINES:
 
 TEXT FORMATTING:
 - Use **bold** for filenames/key terms within regular text
+- Use *italic* for emphasis or variable names
 - Example: **package.json**: Dependencies include chalk, commander, inquirer
+
+SPECIAL FORMATTING:
+- Use [NOTE] prefix for important notes (renders in cyan)
+- Use [WARNING] prefix for cautions (renders in yellow)
+- Use --- on its own line for horizontal separators (renders as gray line)
+- Examples:
+  [NOTE] Keys are stored in system keychain
+  [WARNING] This will overwrite existing configuration
+  ---
 
 CODE FORMATTING (MANDATORY):
 - ALWAYS use triple backticks for ANY code, commands, or technical snippets

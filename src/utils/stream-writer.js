@@ -76,11 +76,22 @@ export function createStreamWriter() {
           // Inside code block - color blue, no inline formatting
           line = chalk.blue(line);
         } else {
-          // Check for headline prefix
+          // Check for special prefixes
           if (line.trim().startsWith('[HEADLINE]')) {
             // Extract headline text and format as bold white
             const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
             line = chalk.bold.white(headlineText);
+          } else if (line.trim().startsWith('[NOTE]')) {
+            // Extract note text and format as cyan
+            const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
+            line = chalk.cyan('ℹ ' + noteText);
+          } else if (line.trim().startsWith('[WARNING]')) {
+            // Extract warning text and format as yellow
+            const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
+            line = chalk.yellow('⚠ ' + warningText);
+          } else if (line.trim() === '---' || line.trim() === '___') {
+            // Horizontal rule - render as gray line
+            line = chalk.gray('─'.repeat(maxWidth));
           } else {
             // Outside code block - apply inline markdown formatting
             line = formatInline(line);
@@ -113,10 +124,18 @@ export function createStreamWriter() {
         if (isInCodeBlock) {
           line = chalk.blue(line);
         } else {
-          // Check for headline prefix
+          // Check for special prefixes
           if (line.trim().startsWith('[HEADLINE]')) {
             const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
             line = chalk.bold.white(headlineText);
+          } else if (line.trim().startsWith('[NOTE]')) {
+            const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
+            line = chalk.cyan('ℹ ' + noteText);
+          } else if (line.trim().startsWith('[WARNING]')) {
+            const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
+            line = chalk.yellow('⚠ ' + warningText);
+          } else if (line.trim() === '---' || line.trim() === '___') {
+            line = chalk.gray('─'.repeat(maxWidth));
           } else {
             line = formatInline(line);
           }
@@ -156,10 +175,18 @@ export function createStreamWriter() {
       if (isInCodeBlock) {
         line = chalk.blue(line);
       } else {
-        // Check for headline prefix
+        // Check for special prefixes
         if (line.trim().startsWith('[HEADLINE]')) {
           const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
           line = chalk.bold.white(headlineText);
+        } else if (line.trim().startsWith('[NOTE]')) {
+          const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
+          line = chalk.cyan('ℹ ' + noteText);
+        } else if (line.trim().startsWith('[WARNING]')) {
+          const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
+          line = chalk.yellow('⚠ ' + warningText);
+        } else if (line.trim() === '---' || line.trim() === '___') {
+          line = chalk.gray('─'.repeat(maxWidth));
         } else {
           line = formatInline(line);
         }

@@ -81,14 +81,6 @@ export function createStreamWriter() {
             // Extract headline text and format as bold white
             const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
             line = chalk.bold.white(headlineText);
-          } else if (line.trim().startsWith('[NOTE]')) {
-            // Extract note text and format as cyan
-            const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
-            line = chalk.cyan('ℹ ' + noteText);
-          } else if (line.trim().startsWith('[WARNING]')) {
-            // Extract warning text and format as red
-            const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-            line = chalk.red('⚠ ' + warningText);
           } else if (line.trim() === '---' || line.trim() === '___') {
             // Horizontal rule - render as gray line
             line = chalk.gray('─'.repeat(maxWidth));
@@ -131,12 +123,6 @@ export function createStreamWriter() {
           if (line.trim().startsWith('[HEADLINE]')) {
             const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
             line = chalk.bold.white(headlineText);
-          } else if (line.trim().startsWith('[NOTE]')) {
-            const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
-            line = chalk.cyan('ℹ ' + noteText);
-          } else if (line.trim().startsWith('[WARNING]')) {
-            const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-            line = chalk.red('⚠ ' + warningText);
           } else if (line.trim() === '---' || line.trim() === '___') {
             line = chalk.gray('─'.repeat(maxWidth));
           } else {
@@ -182,12 +168,6 @@ export function createStreamWriter() {
         if (line.trim().startsWith('[HEADLINE]')) {
           const headlineText = line.replace(/\[HEADLINE\]\s*/i, '').trim();
           line = chalk.bold.white(headlineText);
-        } else if (line.trim().startsWith('[NOTE]')) {
-          const noteText = line.replace(/\[NOTE\]\s*/i, '').trim();
-          line = chalk.cyan('ℹ ' + noteText);
-        } else if (line.trim().startsWith('[WARNING]')) {
-          const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
-          line = chalk.red('⚠ ' + warningText);
         } else if (line.trim() === '---' || line.trim() === '___') {
           line = chalk.gray('─'.repeat(maxWidth));
         } else {

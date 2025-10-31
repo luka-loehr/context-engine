@@ -89,6 +89,10 @@ export function createStreamWriter() {
             // Extract warning text and format as yellow
             const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
             line = chalk.yellow('⚠ ' + warningText);
+          } else if (line.trim().startsWith('[QUOTE]')) {
+            // Extract quote text and format as magenta
+            const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
+            line = chalk.magenta('❝ ' + quoteText);
           } else if (line.trim() === '---' || line.trim() === '___') {
             // Horizontal rule - render as gray line
             line = chalk.gray('─'.repeat(maxWidth));
@@ -134,6 +138,9 @@ export function createStreamWriter() {
           } else if (line.trim().startsWith('[WARNING]')) {
             const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
             line = chalk.yellow('⚠ ' + warningText);
+          } else if (line.trim().startsWith('[QUOTE]')) {
+            const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
+            line = chalk.magenta('❝ ' + quoteText);
           } else if (line.trim() === '---' || line.trim() === '___') {
             line = chalk.gray('─'.repeat(maxWidth));
           } else {
@@ -185,6 +192,9 @@ export function createStreamWriter() {
         } else if (line.trim().startsWith('[WARNING]')) {
           const warningText = line.replace(/\[WARNING\]\s*/i, '').trim();
           line = chalk.yellow('⚠ ' + warningText);
+        } else if (line.trim().startsWith('[QUOTE]')) {
+          const quoteText = line.replace(/\[QUOTE\]\s*/i, '').trim();
+          line = chalk.magenta('❝ ' + quoteText);
         } else if (line.trim() === '---' || line.trim() === '___') {
           line = chalk.gray('─'.repeat(maxWidth));
         } else {

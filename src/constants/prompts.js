@@ -30,10 +30,12 @@ TEXT FORMATTING:
 SPECIAL FORMATTING:
 - Use [NOTE] prefix for important notes (renders in cyan)
 - Use [WARNING] prefix for cautions (renders in yellow)
+- Use [QUOTE] prefix for quotes or citations (renders in magenta)
 - Use --- on its own line for horizontal separators (renders as gray line)
 - Examples:
   [NOTE] Keys are stored in system keychain
   [WARNING] This will overwrite existing configuration
+  [QUOTE] From the documentation: "All API calls require authentication"
   ---
 
 CODE FORMATTING (MANDATORY):

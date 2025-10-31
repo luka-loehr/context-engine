@@ -3,6 +3,8 @@ import ora from 'ora';
 import inquirer from 'inquirer';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 import { promptForUserInput } from '../ui/prompts.js';
 import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
@@ -11,7 +13,7 @@ import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
-import { getOrSetupConfig } from '../config/config.js';
+import { getOrSetupConfig, setConfig } from '../config/config.js';
 
 const execAsync = promisify(exec);
 
@@ -224,14 +226,79 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         currentApiKey = updated.apiKey;
         if (!currentApiKey) {
           const requiredVar = currentModelInfo.provider === 'google' ? 'GOOGLE_API_KEY' : 'XAI_API_KEY';
-          console.log(chalk.red(`\nMissing API key. Please set ${requiredVar} for the selected model.`));
+          console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set ${requiredVar} environment variable.`));
           continue;
         }
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
         continue;
       }
 
-      
+      if (userMessage.toLowerCase() === '/api') {
+        // API key management
+        const { action } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'action',
+            message: 'API Key Management:',
+            choices: [
+              { name: 'Import from .env file', value: 'import_env' },
+              { name: 'Cancel', value: 'cancel' }
+            ]
+          }
+        ]);
+
+        if (action === 'import_env') {
+          const envPath = path.join(process.cwd(), '.env');
+
+          if (!fs.existsSync(envPath)) {
+            console.log(chalk.red(`No .env file found in current directory: ${process.cwd()}`));
+            continue;
+          }
+
+          try {
+            const envContent = fs.readFileSync(envPath, 'utf8');
+            const envVars = {};
+
+            // Parse .env file (simple parser)
+            envContent.split('\n').forEach(line => {
+              const trimmed = line.trim();
+              if (trimmed && !trimmed.startsWith('#')) {
+                const [key, ...valueParts] = trimmed.split('=');
+                if (key && valueParts.length > 0) {
+                  const value = valueParts.join('=').replace(/^["']|["']$/g, ''); // Remove quotes
+                  envVars[key.trim()] = value;
+                }
+              }
+            });
+
+            let importedCount = 0;
+
+            if (envVars.GOOGLE_API_KEY) {
+              setConfig('google_api_key', envVars.GOOGLE_API_KEY);
+              importedCount++;
+              console.log(chalk.green(`✓ Imported Google API key`));
+            }
+
+            if (envVars.XAI_API_KEY) {
+              setConfig('xai_api_key', envVars.XAI_API_KEY);
+              importedCount++;
+              console.log(chalk.green(`✓ Imported XAI API key`));
+            }
+
+            if (importedCount === 0) {
+              console.log(chalk.yellow('No API keys found in .env file (looking for GOOGLE_API_KEY or XAI_API_KEY)'));
+            } else {
+              console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
+              console.log(chalk.gray('You can now run promptx in directories without .env files'));
+            }
+
+          } catch (error) {
+            console.log(chalk.red(`Error reading .env file: ${error.message}`));
+          }
+        }
+        continue;
+      }
+
       if (userMessage.toLowerCase() === '/clear') {
         // Keep initial context, clear user conversation
         conversationHistory.length = 0;
@@ -335,6 +402,7 @@ function showChatHelp() {
   console.log(chalk.gray('  /help     Show this help'));
   console.log(chalk.gray('  /clear    Clear conversation history'));
   console.log(chalk.gray('  /model    Switch AI model'));
+  console.log(chalk.gray('  /api      Import API keys from .env file'));
   console.log('');
 }
 

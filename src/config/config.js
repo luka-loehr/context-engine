@@ -47,12 +47,12 @@ export async function getOrSetupConfig() {
     modelInfo = getAllModels()['promptx'];
   }
 
-  // Get API key from environment based on provider
+  // Get API key from config or environment based on provider
   let apiKey;
   if (modelInfo.provider === 'xai') {
-    apiKey = process.env.XAI_API_KEY;
+    apiKey = config.get('xai_api_key') || process.env.XAI_API_KEY;
   } else {
-    apiKey = process.env.GOOGLE_API_KEY;
+    apiKey = config.get('google_api_key') || process.env.GOOGLE_API_KEY;
   }
   
   return { selectedModel, modelInfo, apiKey };

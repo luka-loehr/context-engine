@@ -2,7 +2,7 @@ import Conf from 'conf';
 import { getAllModels } from '../constants/models.js';
 import chalk from 'chalk';
 
-const config = new Conf({ projectName: 'promptx' });
+const config = new Conf({ projectName: 'context-engine' });
 
 /**
  * Get configuration value

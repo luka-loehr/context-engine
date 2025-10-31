@@ -6,9 +6,9 @@ import { createStreamWriter } from '../utils/stream-writer.js';
  * Colorize model names for display
  */
 export function colorizeModelName(modelName) {
-  if (modelName === 'promptx-ultra') {
+  if (modelName === 'context-engine-ultra') {
     return chalk.magenta(modelName);
-  } else if (modelName === 'promptx') {
+  } else if (modelName === 'context-engine') {
     return chalk.white(modelName);
   }
   return modelName; // fallback for any other models
@@ -67,7 +67,7 @@ export function showUpdateNotification(notifier) {
     console.log(chalk.yellow('│                                                             │'));
     console.log(chalk.yellow('│  ') + chalk.bold.green('Update available! ') + chalk.gray(`${notifier.update.current} → ${notifier.update.latest}`) + chalk.yellow('                      │'));
     console.log(chalk.yellow('│                                                             │'));
-    console.log(chalk.yellow('│  ') + chalk.cyan('Run ') + chalk.bold.white('npm install -g @lukaloehr/promptx') + chalk.cyan(' to update') + chalk.yellow('      │'));
+    console.log(chalk.yellow('│  ') + chalk.cyan('Run ') + chalk.bold.white('npm install -g @lukaloehr/context-engine') + chalk.cyan(' to update') + chalk.yellow('      │'));
     console.log(chalk.yellow('│                                                             │'));
     console.log(chalk.yellow('╰─────────────────────────────────────────────────────────────╯\n'));
   }
@@ -78,7 +78,7 @@ export function showUpdateNotification(notifier) {
  */
 export function displayError(error, modelInfo) {
   if (error.status === 401) {
-    console.log(chalk.red('Invalid API key. Please run "promptx reset" to update your API key.'));
+    console.log(chalk.red('Invalid API key. Please run "context reset" to update your API key.'));
   } else if (error.status === 429) {
     console.log(chalk.red('Rate limit exceeded. Please try again later.'));
   } else {

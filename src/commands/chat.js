@@ -36,15 +36,14 @@ async function getGitStatus() {
 async function showWelcomeBanner(projectContext, contextPrefix) {
   // Show current directory and git status
   console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
-  
+
   // Welcome header
-  console.log(chalk.cyan.bold('* Welcome to promptx!'));
+  console.log(chalk.cyan.bold('* Welcome to context-engine!'));
   console.log('');
-  console.log(chalk.gray('  /help for commands\n'));
-  
+
   // Show project info
   console.log(chalk.gray('cwd: ' + process.cwd()));
-  
+
   if (projectContext && projectContext.length > 0) {
     // Calculate tokens from what we actually send (file paths + markdown content)
     const totalTokens = countTokens(contextPrefix);
@@ -53,12 +52,14 @@ async function showWelcomeBanner(projectContext, contextPrefix) {
   } else {
     console.log(chalk.yellow('loaded: 0 files (no project detected)\n'));
   }
-  
-  console.log(chalk.gray('Tips for getting started:'));
+
+  console.log(chalk.cyan('🚀 Smart Context Engine Features:'));
   console.log('');
-  console.log(chalk.gray('  1. Ask me anything about your codebase'));
-  console.log(chalk.gray('  2. I can help you understand code, find bugs, or implement features'));
-  console.log(chalk.gray('  3. I maintain context, so feel free to ask follow-up questions\n'));
+  console.log(chalk.gray('  • Instant whole-folder structure preload & injection'));
+  console.log(chalk.gray('  • AI-powered context retrieval - loads exactly what you need'));
+  console.log(chalk.gray('  • Multi-file analysis with intelligent file selection'));
+  console.log(chalk.gray('  • Real-time code understanding & bug detection'));
+  console.log(chalk.gray('  • Ask anything about your codebase - from architecture to implementation\n'));
 }
 
 /**
@@ -145,7 +146,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         null // No streaming for this initial message
       );
       
-      contextSpinner.succeed('Context loaded');
+      contextSpinner.succeed('Context-engine initialized');
       
       // Store initial context messages
       initialContextMessages.length = 0;
@@ -292,7 +293,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
               console.log(chalk.yellow('No API keys found in .env file (looking for XAI_API_KEY)'));
             } else {
               console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
-              console.log(chalk.gray('You can now run promptx in directories without .env files'));
+              console.log(chalk.gray('You can now run context-engine in directories without .env files'));
             }
 
           } catch (error) {
@@ -354,7 +355,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
                 thinkingSpinner.stop();
               }
-              console.log(chalk.gray('promptx:'));
+              console.log(chalk.gray('context-engine:'));
               firstChunk = false;
             }
             streamWriter.write(content);
@@ -401,7 +402,7 @@ function showChatHelp() {
   console.log('');
   console.log(chalk.cyan('Available commands:'));
   console.log('');
-  console.log(chalk.gray('  /exit     Exit promptx'));
+  console.log(chalk.gray('  /exit     Exit context-engine'));
   console.log(chalk.gray('  /help     Show this help'));
   console.log(chalk.gray('  /clear    Clear conversation history'));
   console.log(chalk.gray('  /model    Switch AI model'));

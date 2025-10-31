@@ -2,15 +2,15 @@ import chalk from 'chalk';
 
 export function showHelp() {
   console.log('');
-  console.log(chalk.cyan.bold('promptx'));
+  console.log(chalk.cyan.bold('context-engine'));
   console.log('');
   console.log(chalk.white('AI-powered codebase assistant'));
   console.log('');
   
   console.log(chalk.cyan('Commands:'));
   console.log('');
-  console.log(chalk.gray('  promptx           Start interactive chat'));
-  console.log(chalk.gray('  promptx reset     Reset configuration'));
+  console.log(chalk.gray('  context           Start interactive chat'));
+  console.log(chalk.gray('  context reset     Reset configuration'));
   console.log('');
   
   console.log(chalk.cyan('Chat commands:'));

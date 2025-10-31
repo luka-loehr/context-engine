@@ -4,8 +4,8 @@
  */
 
 export const CONTEXT_LIMITS = {
-  // promptx model
-  'promptx': 2000000,  // 2M context (Grok 4 Fast)
+  // context-engine model
+  'context-engine': 2000000,  // 2M context (Grok 4 Fast)
   
   // Default
   'default': 2000000

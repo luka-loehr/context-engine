@@ -315,9 +315,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         break;
       }
       
-
-
-      
       // Add user message to history
       conversationHistory.push({
         role: 'user',
@@ -340,8 +337,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Add current question
       fullPrompt += `User: ${userMessage}`;
       
-      // Show thinking indicator
-      console.log('');
+      // Show thinking indicator - directly after user input for single spacing
       thinkingSpinner = ora('Thinking...').start();
       
       // Get response from AI
@@ -360,8 +356,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
                 thinkingSpinner.stop();
                 thinkingSpinner = null;
               }
-              // Tool spinners are managed locally now, so no need to check
+              // Add one empty line for spacing
               console.log('');
+              // Print header
               console.log(chalk.gray('context-engine:'));
               firstChunk = false;
             }
@@ -372,7 +369,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         );
         
         streamWriter.flush();
-        console.log('\n');
+        console.log('\n');  // Single empty line after response
         
         // Add assistant response to history
         conversationHistory.push({
@@ -384,7 +381,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         conversationTokens += countTokens(assistantResponse);
         
       } catch (error) {
-        if (thinkingSpinner.isSpinning) {
+        if (thinkingSpinner && thinkingSpinner.isSpinning) {
           thinkingSpinner.stop();
         }
         displayError(error, modelInfo);

@@ -10,6 +10,8 @@ import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
+import { changeModel } from './model.js';
+import { getOrSetupConfig } from '../config/config.js';
 
 const execAsync = promisify(exec);
 
@@ -212,6 +214,24 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         showChatHelp();
         continue;
       }
+      if (userMessage.toLowerCase() === '/model') {
+        // Interactive model switcher
+        await changeModel();
+        // Reload configuration (provider, model, api key)
+        const updated = await getOrSetupConfig();
+        currentModel = updated.selectedModel;
+        currentModelInfo = updated.modelInfo;
+        currentApiKey = updated.apiKey;
+        if (!currentApiKey) {
+          const requiredVar = currentModelInfo.provider === 'google' ? 'GOOGLE_API_KEY' : 'XAI_API_KEY';
+          console.log(chalk.red(`\nMissing API key. Please set ${requiredVar} for the selected model.`));
+          continue;
+        }
+        provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
+        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name} (${currentModelInfo.model})\n`));
+        continue;
+      }
+
       
       if (userMessage.toLowerCase() === '/clear') {
         // Keep initial context, clear user conversation

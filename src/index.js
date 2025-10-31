@@ -42,6 +42,14 @@ export async function main() {
       console.log(chalk.green('Configuration has been reset. Default model will be used next time.'));
     });
 
+  // Model selection command
+  program
+    .command('model')
+    .description('Select a model (xAI or Google)')
+    .action(async () => {
+      await changeModel();
+    });
+
   // Main command - interactive chat mode
   program
     .action(async (options) => {

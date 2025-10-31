@@ -25,6 +25,8 @@ HEADLINES:
 TEXT FORMATTING:
 - Use **bold** for filenames/key terms within regular text
 - Use *italic* for emphasis or variable names
+- Use relevant emojis/icons in bullet lists when they enhance clarity (e.g., 📅 for dates, 📄 for documents, 🌤️ for weather, 🎨 for design, 📝 for forms)
+- Keep emoji use tasteful and contextual - not in every response, only when it fits naturally
 - Example: **package.json**: Dependencies include chalk, commander, inquirer
 
 SPECIAL FORMATTING:

@@ -7,21 +7,21 @@ export const MODELS = {
   'promptx': {
     name: 'promptx',
     provider: 'google',
-    model: 'gemini-1.5-flash-8b',
-    description: 'Google Gemini 1.5 Flash 8B (fast, cost-effective)'
+    model: 'gemini-flash-lite-latest',
+    description: 'Google Gemini 2.5 Flash‑Lite (latest) – fastest, lowest cost'
   },
   // Ultra: xAI Grok-4 as "promptx-ultra"
   'promptx-ultra': {
     name: 'promptx-ultra',
     provider: 'xai',
-    model: 'grok-4',
-    description: 'xAI Grok-4 (higher quality)'
+    model: 'grok-4-fast-non-reasoning',
+    description: 'xAI Grok‑4 Fast (non‑reasoning) – current normal set model'
   }
 };
 
 export const MODEL_CHOICES = [
-  { name: 'promptx (Google Gemini 1.5 Flash 8B)', value: 'promptx' },
-  { name: 'promptx-ultra (xAI Grok-4)', value: 'promptx-ultra' }
+  { name: 'promptx (Google Gemini Flash‑Lite latest)', value: 'promptx' },
+  { name: 'promptx-ultra (xAI Grok‑4 Fast non‑reasoning)', value: 'promptx-ultra' }
 ];
 
 /**

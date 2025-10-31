@@ -32,13 +32,6 @@ export function validateXAIKey(input) {
   return true;
 }
 
-export function validateGoogleKey(input) {
-  if (!input || input.trim() === '') {
-    return 'API key cannot be empty';
-  }
-  return true;
-}
-
 export function validatePrompt(input) {
   if (!input || input.trim() === '') {
     return 'Prompt cannot be empty';

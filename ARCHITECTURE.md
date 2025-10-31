@@ -80,7 +80,6 @@ promptx-cli/
 │   ├── providers/         # AI integrations
 │   │   ├── base.js        # Base class
 │   │   ├── anthropic.js   # Claude
-│   │   ├── google.js      # Gemini
 │   │   ├── ollama.js      # Local models
 │   │   ├── openai.js      # GPT
 │   │   ├── xai.js         # Grok

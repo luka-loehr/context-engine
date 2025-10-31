@@ -89,12 +89,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Store full project context for tool calls
   const fullProjectContext = projectContext;
   
-  // Ensure API key is present for selected provider
+  // Ensure API key is present
   if (!currentApiKey) {
-    const requiredVar = currentModelInfo.provider === 'google' ? 'GOOGLE_API_KEY' : 'XAI_API_KEY';
-    console.log(chalk.red(`\nMissing API key. Please set ${requiredVar} in your environment or .env file.`));
+    console.log(chalk.red(`\nMissing API key. Please set XAI_API_KEY in your environment or use /api to import from .env file.`));
     console.log(chalk.gray('Example:'));
-    console.log(chalk.gray(`  export ${requiredVar}="your_key_here"`));
+    console.log(chalk.gray('  export XAI_API_KEY="xai-your_key_here"'));
     process.exit(1);
   }
   // Create provider (use the actual model name)
@@ -225,8 +224,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         currentModelInfo = updated.modelInfo;
         currentApiKey = updated.apiKey;
         if (!currentApiKey) {
-          const requiredVar = currentModelInfo.provider === 'google' ? 'GOOGLE_API_KEY' : 'XAI_API_KEY';
-          console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set ${requiredVar} environment variable.`));
+          console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set XAI_API_KEY environment variable.`));
           continue;
         }
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
@@ -249,11 +247,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         ]);
 
         if (action === 'show_keys') {
-          const googleKey = getConfig('google_api_key');
           const xaiKey = getConfig('xai_api_key');
 
           console.log(chalk.cyan('\nCurrent API Keys:'));
-          console.log(chalk.gray('  Google API Key: ') + (googleKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
           console.log(chalk.gray('  XAI API Key: ') + (xaiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
           console.log('');
           continue;
@@ -285,13 +281,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 
             let importedCount = 0;
 
-            if (envVars.GOOGLE_API_KEY) {
-              const existing = getConfig('google_api_key');
-              setConfig('google_api_key', envVars.GOOGLE_API_KEY);
-              importedCount++;
-              console.log(chalk.green(`✓ ${existing ? 'Updated' : 'Imported'} Google API key`));
-            }
-
             if (envVars.XAI_API_KEY) {
               const existing = getConfig('xai_api_key');
               setConfig('xai_api_key', envVars.XAI_API_KEY);
@@ -300,7 +289,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             }
 
             if (importedCount === 0) {
-              console.log(chalk.yellow('No API keys found in .env file (looking for GOOGLE_API_KEY or XAI_API_KEY)'));
+              console.log(chalk.yellow('No API keys found in .env file (looking for XAI_API_KEY)'));
             } else {
               console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
               console.log(chalk.gray('You can now run promptx in directories without .env files'));

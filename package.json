@@ -8,8 +8,7 @@
     "bin/",
     "src/",
     "scripts/",
-    "LICENSE",
-    "ARCHITECTURE.md"
+    "LICENSE"
   ],
   "bin": {
     "context-engine": "bin/context-engine.js"

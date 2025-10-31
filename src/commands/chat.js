@@ -111,6 +111,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     // Stop thinking spinner if it's running
     if (thinkingSpinner && thinkingSpinner.isSpinning) {
       thinkingSpinner.stop();
+      thinkingSpinner = null;
     }
 
     // Special handling for various tools
@@ -207,7 +208,15 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 
     // Show file loading spinner
     const fileName = parameters.filePath || 'file';
-    currentToolSpinner = ora(`Querying codebase for ${chalk.cyan(fileName)}`).start();
+    
+    // Stop thinking spinner first if running (only once for first tool call)
+    if (thinkingSpinner && thinkingSpinner.isSpinning) {
+      thinkingSpinner.stop();
+      thinkingSpinner = null;
+    }
+    
+    // Create a local spinner for this specific tool call (for concurrent execution)
+    const localSpinner = ora(`Loading ${chalk.cyan(fileName)}`).start();
 
     // Execute tool
     const result = executeTool(toolName, parameters, fullProjectContext);
@@ -216,9 +225,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     const tokens = result.content ? countTokens(result.content) : 0;
     const formattedTokens = formatTokenCount(tokens);
 
-    // Stop spinner and show success with token count
-    currentToolSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
-    currentToolSpinner = null;
+    // Complete spinner asynchronously with random delay (don't block tool return)
+    const delay = 500 + Math.random() * 500;
+    setTimeout(() => {
+      localSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
+    }, delay);
     
     return result;
   }
@@ -344,9 +355,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           systemPrompt,
           (content) => {
             if (firstChunk) {
+              // Stop any running spinners
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
                 thinkingSpinner.stop();
+                thinkingSpinner = null;
               }
+              // Tool spinners are managed locally now, so no need to check
+              console.log('');
               console.log(chalk.gray('context-engine:'));
               firstChunk = false;
             }

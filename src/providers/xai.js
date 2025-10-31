@@ -116,12 +116,19 @@ export class XAIProvider extends BaseProvider {
           tool_calls: currentToolCalls
         });
         
-        // Execute tools and add responses
+        // Execute tools concurrently
         let shouldStopLoop = false;
-        for (const toolCall of currentToolCalls) {
+        const toolPromises = currentToolCalls.map(async (toolCall) => {
           const args = JSON.parse(toolCall.function.arguments);
           const toolResult = await onToolCall(toolCall.function.name, args);
-          
+          return { toolCall, toolResult };
+        });
+        
+        // Wait for all tools to complete
+        const toolResults = await Promise.all(toolPromises);
+        
+        // Add tool responses to messages
+        for (const { toolCall, toolResult } of toolResults) {
           // Check if tool wants to stop the loop
           if (toolResult && toolResult.stopLoop) {
             shouldStopLoop = true;

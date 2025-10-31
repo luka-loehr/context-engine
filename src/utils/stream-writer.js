@@ -17,7 +17,11 @@ export function createStreamWriter() {
       // Process all complete lines
       for (let i = 0; i < lines.length - 1; i++) {
         const formatted = formatInline(lines[i]);
-        const wrappedLine = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        const wrappedLine = wrapAnsi(formatted, maxWidth, { 
+          hard: true, 
+          wordWrap: true,
+          trim: false
+        });
         console.log(wrappedLine);
       }
       
@@ -27,7 +31,11 @@ export function createStreamWriter() {
       // If buffer is getting too long, wrap and flush it
       if (buffer.length > maxWidth) {
         const formatted = formatInline(buffer);
-        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { 
+          hard: true, 
+          wordWrap: true,
+          trim: false
+        });
         const wrappedLines = wrappedBuffer.split('\n');
         
         for (let i = 0; i < wrappedLines.length - 1; i++) {
@@ -41,7 +49,11 @@ export function createStreamWriter() {
     flush() {
       if (buffer) {
         const formatted = formatInline(buffer);
-        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { hard: true, wordWrap: true });
+        const wrappedBuffer = wrapAnsi(formatted, maxWidth, { 
+          hard: true, 
+          wordWrap: true,
+          trim: false
+        });
         console.log(wrappedBuffer);
         buffer = '';
       }

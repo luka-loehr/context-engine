@@ -13,7 +13,7 @@ import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
-import { getOrSetupConfig, setConfig } from '../config/config.js';
+import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
 
 const execAsync = promisify(exec);
 

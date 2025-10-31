@@ -27,7 +27,7 @@ export function validateXAIKey(input) {
     return 'API key cannot be empty';
   }
   if (!input.startsWith('xai-')) {
-    return 'Invalid API key format. xAI API keys start with "xai-"';
+    return 'Invalid API key format';
   }
   return true;
 }

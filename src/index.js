@@ -45,7 +45,7 @@ export async function main() {
   // Model selection command
   program
     .command('model')
-    .description('Select a model (xAI or Google)')
+    .description('Select a model')
     .action(async () => {
       await changeModel();
     });

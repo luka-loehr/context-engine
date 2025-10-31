@@ -3,10 +3,22 @@ import ora from 'ora';
 import { createStreamWriter } from '../utils/stream-writer.js';
 
 /**
+ * Colorize model names for display
+ */
+export function colorizeModelName(modelName) {
+  if (modelName === 'promptx-ultra') {
+    return chalk.magenta(modelName);
+  } else if (modelName === 'promptx') {
+    return chalk.white(modelName);
+  }
+  return modelName; // fallback for any other models
+}
+
+/**
  * Display refined prompt output with streaming
  */
 export async function displayRefinedPrompt(provider, modelInfo, systemPrompt, messyPrompt, onComplete) {
-  const spinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
+  const spinner = ora(`Refining your prompt with ${colorizeModelName(modelInfo.name)}...`).start();
   
   try {
     spinner.stop();
@@ -14,7 +26,7 @@ export async function displayRefinedPrompt(provider, modelInfo, systemPrompt, me
     console.log(chalk.green('REFINED PROMPT:'));
     console.log(chalk.gray('─'.repeat(80)) + '\n');
     
-    const thinkingSpinner = ora(`Refining your prompt with ${modelInfo.name}...`).start();
+    const thinkingSpinner = ora(`Refining your prompt with ${colorizeModelName(modelInfo.name)}...`).start();
     const streamWriter = createStreamWriter();
     let firstChunk = true;
     
@@ -72,12 +84,8 @@ export function displayError(error, modelInfo) {
   } else {
     console.log(chalk.red('Error:', error.message));
 
-    // Provide helpful suggestions based on provider
-    if (modelInfo.provider === 'xai') {
-      console.log(chalk.gray('\n💡 Check your xAI API key and account status.'));
-    } else if (modelInfo.provider === 'google') {
-      console.log(chalk.gray('\n💡 Check your Google AI API key and account status.'));
-    }
+    // Provide helpful suggestions
+    console.log(chalk.gray('\n💡 Check your API key and account status.'));
   }
 }
 

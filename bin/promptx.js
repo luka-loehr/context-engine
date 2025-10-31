@@ -10,7 +10,7 @@
 
 // Load environment variables from .env file
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 
 import { main } from '../src/index.js';
 

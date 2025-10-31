@@ -7,7 +7,7 @@ import { promptForUserInput } from '../ui/prompts.js';
 import { createProvider } from '../providers/index.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
 import { createStreamWriter } from '../utils/stream-writer.js';
-import { displayError } from '../ui/output.js';
+import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
@@ -217,7 +217,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       if (userMessage.toLowerCase() === '/model') {
         // Interactive model switcher
         await changeModel();
-        // Reload configuration (provider, model, api key)
+        // Reload configuration (provider, model, api key) - changeModel() already shows success message
         const updated = await getOrSetupConfig();
         currentModel = updated.selectedModel;
         currentModelInfo = updated.modelInfo;
@@ -228,7 +228,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           continue;
         }
         provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
-        console.log(chalk.green(`\n✓ Switched to ${currentModelInfo.name} (${currentModelInfo.model})\n`));
         continue;
       }
 

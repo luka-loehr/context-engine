@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 /**
  * AI Model definitions
  */
@@ -8,20 +10,20 @@ export const MODELS = {
     name: 'promptx',
     provider: 'google',
     model: 'gemini-flash-lite-latest',
-    description: 'Google Gemini 2.5 Flash‑Lite (latest) – fastest, lowest cost'
+    description: 'Fast & affordable – optimized for speed and cost efficiency'
   },
   // Ultra: xAI Grok-4 as "promptx-ultra"
   'promptx-ultra': {
     name: 'promptx-ultra',
     provider: 'xai',
     model: 'grok-4-fast-non-reasoning',
-    description: 'xAI Grok‑4 Fast (non‑reasoning) – current normal set model'
+    description: 'Premium reasoning model – advanced capabilities with deep analysis'
   }
 };
 
 export const MODEL_CHOICES = [
-  { name: 'promptx (Google Gemini Flash‑Lite latest)', value: 'promptx' },
-  { name: 'promptx-ultra (xAI Grok‑4 Fast non‑reasoning)', value: 'promptx-ultra' }
+  { name: `${chalk.magenta('promptx-ultra')} (Premium reasoning model)`, value: 'promptx-ultra' },
+  { name: `${chalk.white('promptx')} (Fast & affordable)`, value: 'promptx' }
 ];
 
 /**

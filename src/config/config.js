@@ -36,15 +36,15 @@ export function isSetupComplete() {
  * Get or setup configuration
  */
 export async function getOrSetupConfig() {
-  // Get selected model (defaults to 'promptx')
-  const selectedModel = config.get('selected_model') || 'promptx';
+  // Get selected model (defaults to 'context-engine')
+  const selectedModel = config.get('selected_model') || 'context-engine';
   let modelInfo = getAllModels()[selectedModel];
 
   // If model not found, fall back to default
   if (!modelInfo) {
-    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to promptx.`));
-    config.set('selected_model', 'promptx');
-    modelInfo = getAllModels()['promptx'];
+    console.log(chalk.yellow(`Model ${selectedModel} not found. Falling back to context-engine.`));
+    config.set('selected_model', 'context-engine');
+    modelInfo = getAllModels()['context-engine'];
   }
 
   // Get API key from config or environment

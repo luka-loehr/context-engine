@@ -10,8 +10,8 @@ import { colorizeModelName } from '../ui/output.js';
 export async function changeModel() {
   console.log(chalk.blue('\nChange Model'));
 
-  const currentModel = getConfig('selected_model') || 'promptx';
-  const currentModelInfo = getAllModels()[currentModel] || getAllModels()['promptx'];
+  const currentModel = getConfig('selected_model') || 'context-engine';
+  const currentModelInfo = getAllModels()[currentModel] || getAllModels()['context-engine'];
 
   console.log(chalk.gray(`Current model: ${colorizeModelName(currentModelInfo.name)}\n`));
 

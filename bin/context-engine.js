@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * promptx CLI entry point
- * A CLI tool that transforms messy prompts into structured, clear prompts for AI agents
- * 
+ * context-engine CLI entry point
+ * Interactive AI-powered codebase assistant using XAI Grok
+ *
  * @author Luka Loehr
  * @license MIT
  */

@@ -1,9 +1,9 @@
 {
-  "name": "@lukaloehr/promptx",
+  "name": "@lukaloehr/context-engine",
   "version": "4.0.0",
   "description": "Interactive AI-powered codebase assistant using XAI Grok - chat with your code and get instant answers",
   "type": "module",
-  "main": "bin/promptx.js",
+  "main": "bin/context-engine.js",
   "files": [
     "bin/",
     "src/",
@@ -12,7 +12,7 @@
     "ARCHITECTURE.md"
   ],
   "bin": {
-    "promptx": "bin/promptx.js"
+    "context-engine": "bin/context-engine.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -31,12 +31,12 @@
   "author": "Luka Loehr",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/luka-loehr/promptx-cli.git"
+    "url": "git+https://github.com/luka-loehr/context-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/luka-loehr/promptx-cli/issues"
+    "url": "https://github.com/luka-loehr/context-engine/issues"
   },
-  "homepage": "https://github.com/luka-loehr/promptx-cli#readme",
+  "homepage": "https://github.com/luka-loehr/context-engine#readme",
   "license": "MIT",
   "dependencies": {
     "ansi-escapes": "^7.1.1",

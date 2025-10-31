@@ -14,8 +14,8 @@ const isGlobal = process.env.npm_config_global === 'true' ||
                  !existsSync(resolve(__dirname, '../../package.json'));
 
 if (!isGlobal) {
-  console.log('\n⚠️  Warning: @lukaloehr/promptx is a CLI tool and should be installed globally!\n');
+  console.log('\n⚠️  Warning: @lukaloehr/context-engine is a CLI tool and should be installed globally!\n');
   console.log('To install it globally, run:');
-  console.log('\n  npm install -g @lukaloehr/promptx\n');
-  console.log('This will make the "promptx" command available in your terminal.\n');
+  console.log('\n  npm install -g @lukaloehr/context-engine\n');
+  console.log('This will make the "context-engine" command available in your terminal.\n');
 }

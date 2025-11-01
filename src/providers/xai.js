@@ -55,7 +55,6 @@ export class XAIProvider extends BaseProvider {
       let currentToolCalls = [];
       let currentContent = '';
       let toolCallMap = new Map(); // Track tool calls by index
-      let contentChunks = []; // Buffer content chunks
 
       for await (const chunk of stream) {
         // Check for tool calls
@@ -92,12 +91,11 @@ export class XAIProvider extends BaseProvider {
             }
           }
         }
-        
+
         if (chunk.choices[0]?.delta?.content) {
           const content = chunk.choices[0].delta.content;
           currentContent += content;
-          contentChunks.push(content);
-          // Don't output yet - wait to see if we have tool calls
+          if (onChunk) onChunk(content); // Stream content immediately for real-time experience
         }
       }
 
@@ -105,7 +103,7 @@ export class XAIProvider extends BaseProvider {
       currentToolCalls = Array.from(toolCallMap.values()).filter(call =>
         call.id && call.function.name && call.function.arguments
       );
-      
+
       // If there were tool calls, execute them and continue
       if (currentToolCalls.length > 0 && onToolCall) {
         // Add assistant message with tool calls
@@ -115,7 +113,7 @@ export class XAIProvider extends BaseProvider {
           content: currentContent || null,
           tool_calls: currentToolCalls
         });
-        
+
         // Execute tools concurrently
         let shouldStopLoop = false;
         const toolPromises = currentToolCalls.map(async (toolCall) => {
@@ -123,43 +121,33 @@ export class XAIProvider extends BaseProvider {
           const toolResult = await onToolCall(toolCall.function.name, args);
           return { toolCall, toolResult };
         });
-        
+
         // Wait for all tools to complete
         const toolResults = await Promise.all(toolPromises);
-        
+
         // Add tool responses to messages
         for (const { toolCall, toolResult } of toolResults) {
           // Check if tool wants to stop the loop
           if (toolResult && toolResult.stopLoop) {
             shouldStopLoop = true;
           }
-          
+
           messages.push({
             role: 'tool',
             tool_call_id: toolCall.id,
             content: JSON.stringify(toolResult)
           });
         }
-        
-        // If any tool requested to stop, exit the loop without outputting content
+
+        // If any tool requested to stop, exit the loop
         if (shouldStopLoop) {
           continueLoop = false;
         } else {
-          // Output buffered content chunks and add to refined prompt
-          if (onChunk && contentChunks.length > 0) {
-            for (const chunk of contentChunks) {
-              onChunk(chunk);
-            }
-          }
+          // Continue with the content we already streamed
           refinedPrompt += currentContent;
         }
       } else {
-        // No tool calls - output buffered content and we're done
-        if (onChunk && contentChunks.length > 0) {
-          for (const chunk of contentChunks) {
-            onChunk(chunk);
-          }
-        }
+        // No tool calls - we're done with the content we already streamed
         refinedPrompt += currentContent;
         continueLoop = false;
       }

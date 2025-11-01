@@ -3,130 +3,189 @@
 Context Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using XAI Grok, providing instant answers and insights about code structure, dependencies, and functionality.
 
 ## Project Overview
-
-Context Engine (@lukaloehr/context-engine) is a Node.js CLI application designed as an intelligent assistant for codebases. It leverages AI (XAI Grok) to analyze code, answer developer queries, and provide contextual insights. The tool supports interactive sessions where users can ask questions about their project's structure, dependencies, and implementation details. Built with modern ES modules and a modular architecture, it emphasizes ease of use and extensibility.
+Context Engine (@lukaloehr/context-engine) is a command-line interface (CLI) application designed to assist developers in understanding and navigating complex codebases. It leverages AI (XAI Grok) to provide contextual explanations, code analysis, and interactive Q&A sessions about the codebase. The tool processes project files, extracts relevant context, and generates intelligent responses to developer queries. Built with modern Node.js modules, it supports tokenization, syntax highlighting, and interactive prompts for seamless developer experience.
 
 ## Setup commands
-
 ### Installation
-- Global installation (recommended for CLI usage): `npm install -g @lukaloehr/context-engine`
-- Local installation: `npm install @lukaloehr/context-engine`
+```bash
+# Install globally via npm
+npm install -g @lukaloehr/context-engine
 
-### Environment Setup
-- Create a `.env` file in your project root with your XAI API credentials (e.g., `XAI_API_KEY=your_key_here`).
-- Ensure Node.js >=16.0.0 is installed.
+# Or clone and install locally
+git clone https://github.com/luka-loehr/context-engine.git
+cd context-engine
+npm install
+```
+
+### Development Setup
+- Ensure Node.js >=16.0.0 is installed
+- Create a `.env` file in your project root with API keys:
+  ```
+  XAI_API_KEY=your_xai_grok_api_key
+  ```
+- Run postinstall script automatically handles initial setup
 
 ### Starting the Application
-- Run the CLI: `context` (after global install) or `npx context-engine`.
-- The tool will initialize an interactive session in the current directory.
+```bash
+# Global CLI usage (in any project directory)
+context
 
-### Post-Installation
-- A postinstall script warns if not installed globally and guides users to reinstall with `-g`.
+# Local development
+npm start
+# Or directly
+node bin/context.js
+```
 
 ### Running Tests
-- Basic test script is placeholder: `npm test` (currently echoes error; implement tests as needed).
+```bash
+npm test
+```
+Note: Current test suite is placeholder; implement comprehensive tests for core functionality.
+
+### Additional Setup
+- The tool auto-configures via `conf` package for user settings
+- Update notifier checks for new versions on startup
 
 ## Code style
-
 ### Language and Module System
-- ES Modules (\"type\": \"module\" in package.json).
-- Node.js runtime with async/await patterns for I/O operations.
+- ES6+ JavaScript with ES modules (`"type": "module"`)
+- Node.js runtime targeting >=16.0.0
 
 ### Naming Conventions
-- CamelCase for variables, functions, and methods.
-- PascalCase for classes and exported modules.
-- Kebab-case for package names and CLI commands.
+- CamelCase for variables, functions, and methods
+- PascalCase for classes and components
+- kebab-case for CLI flags and file names where appropriate
 
 ### Import/Export Patterns
-- Named exports for modular components (e.g., `export { startApp } from './core/app.js'`).
-- Relative imports for internal modules (e.g., `import { main } from '../src/index.js'`).
-- Avoid default exports; use named exports for clarity.
+- Named exports for modular components: `export { functionName } from './module.js'`
+- Default exports for main entry points: `export default className`
+- Relative imports for local modules, absolute for node_modules
+- Group imports: external packages first, then internal modules
 
 ### Code Organization Principles
-- Modular structure: `bin/` for CLI entry, `src/core/` for application logic, `scripts/` for utilities.
-- Separation of concerns: Core app logic in `src/core/app.js`, entry points in `src/index.js`.
-- JSDoc comments for documentation (e.g., `@author`, `@license`).
+- Modular architecture: `src/core/` for business logic, `bin/` for CLI entry
+- Separation of concerns: each module handles specific functionality (e.g., AI integration, file processing, UI)
+- Configuration-driven: uses `dotenv` for environment, `conf` for user settings
+- Error handling: async/await with try-catch blocks, graceful CLI exits
 
 ### Linting and Formatting
-- No explicit linter specified; follow Node.js best practices.
-- Use consistent indentation (2 spaces) and ES module syntax.
-- Validate with ESLint or Prettier for contributions.
+- No explicit linter configured; follow Airbnb JavaScript style guide
+- Use consistent indentation (2 spaces) and semicolons
+- Code should be self-documenting with JSDoc comments for public APIs
 
 ## Dev environment tips
-
 ### Common Development Commands
-- Start dev server: Not applicable (CLI tool); use `node bin/context.js` for direct execution.
-- Check updates: The tool includes `update-notifier` for version checks.
-- Debug mode: Run with `NODE_DEBUG=context` for verbose logging.
+```bash
+# Development server/watch mode (implement if needed)
+npm run dev
 
-### Build and Deployment
-- No build step required; publish directly via `npm publish`.
-- Global installation makes `context` command available system-wide.
+# Build for production
+npm run build  # Currently not configured; add if bundling required
+
+# Lint code
+npm run lint   # Add ESLint configuration
+
+# Check dependencies
+npm outdated
+```
 
 ### Environment Setup Requirements
-- `.env` file for API keys (loaded via `dotenv`).
-- Ensure `preferGlobal: true` in package.json for CLI behavior.
+- Set `XAI_API_KEY` in `.env` for Grok integration
+- Global installation requires write permissions for `~/.config/context-engine`
+- For local dev, use `npm link` to test CLI globally
+
+### Build and Deployment
+- Publishing: Use `npm publish` from root (ensure `files` in package.json)
+- The `postinstall` script runs automatically for setup
+- Version updates via semantic versioning in package.json
 
 ### Troubleshooting Tips
-- If `context` command not found: Reinstall globally with `npm install -g`.
-- API errors: Verify `XAI_API_KEY` in `.env` and network connectivity.
-- Module resolution issues: Use Node.js >=16 and check ES module compatibility.
+- If CLI not found after global install: Check PATH or use `npx context`
+- API rate limits: Monitor token usage via `gpt-tokenizer`
+- File access issues: Ensure read permissions for codebase analysis
+- Module resolution errors: Verify `"type": "module"` and .mjs extensions if needed
 
 ### Performance Considerations
-- Token limits handled via `gpt-tokenizer`.
-- Use `ora` for spinners to improve UX during AI processing.
-- Minimize file reads; cache codebase analysis where possible.
+- Large codebases: Tool processes files incrementally to manage memory
+- Token limits: Uses `gpt-tokenizer` to optimize context windows
+- Caching: User configurations persist via `conf` to avoid repeated setups
 
 ## Testing instructions
-
 ### Test Commands
-- Run tests: `npm test` (placeholder; extend with actual test suite).
-- No tests currently implemented; add using a framework like Jest or Mocha.
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (add to scripts if needed)
+npm run test:watch
+```
 
 ### Test Structure and Organization
-- Tests should be placed in a `tests/` or `__tests__/` directory.
-- Focus on unit tests for core modules (e.g., app initialization, command handling).
-- Integration tests for CLI interactions using tools like `execa`.
+- Tests should be co-located with source files (e.g., `src/module.test.js`)
+- Use descriptive test names following `describe/it` pattern
+- Mock external dependencies (OpenAI/XAI APIs, file system) for unit tests
+
+### Testing Frameworks
+- Currently no tests implemented; recommend Jest or Node.js `test` runner
+- Integration tests for CLI: Use `execa` to spawn processes
+- Unit tests for core logic: Mock AI responses and file I/O
 
 ### CI/CD Setup
-- Integrate with GitHub Actions for automated testing on pull requests.
-- No current CI configuration; add `.github/workflows/` for Node.js testing.
-
-### Testing Frameworks Used
-- None specified; recommend Jest for ES modules and async testing.
-- Mock external dependencies (e.g., OpenAI/XAI API) for reliable tests.
+- Add GitHub Actions workflow for automated testing on PRs
+- Include linting, test coverage, and security scans
+- Sample `.github/workflows/test.yml`:
+  ```yaml
+  name: Test
+  on: [push, pull_request]
+  jobs:
+    test:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-node@v3
+          with: { node-version: 18 }
+        - run: npm ci
+        - run: npm test
+  ```
 
 ### Coverage Requirements
-- Aim for >80% coverage on core logic.
-- Use `nyc` or Jest coverage for reports.
-- Test edge cases like invalid API keys and empty codebases.
+- Aim for >80% coverage on core modules
+- Focus on AI prompt generation, file parsing, and CLI interactions
+- Exclude node_modules and build artifacts from coverage reports
 
 ## PR instructions
-
 ### Pull Request Process
-- Fork the repository and create a feature branch: `git checkout -b feature/description`.
-- Make changes and ensure code passes manual review (no automated tests yet).
-- Commit with clear messages: `git commit -m "feat: add description"`.
+1. Fork the repository and create a feature branch: `git checkout -b feature/description`
+2. Ensure code passes linting and tests: `npm run lint && npm test`
+3. Commit with conventional messages: `feat: add new feature` or `fix: resolve bug`
+4. Push and open PR against `main` branch
+5. Reference any related issues: `Fixes #123`
 
 ### Code Review Requirements
-- Follow existing code style (ES modules, JSDoc comments).
-- Update documentation for new features.
-- Test changes locally with `node bin/context.js`.
+- All PRs require at least one approval from maintainers
+- Changes must include tests for new features or bug fixes
+- Update documentation (README, this AGENTS.md) for user-facing changes
+- No breaking changes without deprecation warnings and migration guide
 
 ### Versioning Strategy
-- Semantic versioning (SemVer) via `package.json` (current: 4.0.0).
-- Major: Breaking changes; Minor: New features; Patch: Bug fixes.
-- Update changelog in README or separate CHANGELOG.md.
+- Semantic versioning (SemVer): MAJOR.MINOR.PATCH
+- MAJOR for breaking changes, MINOR for new features, PATCH for bug fixes
+- Update `package.json` version and changelog before merging to main
+- Tag releases: `git tag v4.0.1 && git push --tags`
 
 ### Release Process
-- Bump version: `npm version [major|minor|patch]`.
-- Publish: `npm publish` (requires npm access).
-- Tag releases on GitHub for versioning.
+1. Merge PR to `main` and ensure tests pass
+2. Update version in `package.json`
+3. Create release tag and push
+4. Publish to npm: `npm publish --access public`
+5. Update GitHub release notes with changelog
+6. Notify users via update-notifier integration
 
 ### Documentation Requirements
-- Update README.md with new features and usage examples.
-- Add JSDoc comments to new/existing code.
-- Ensure package.json keywords and description reflect changes.
+- All public APIs must have JSDoc comments
+- Update README.md for CLI usage examples and new features
+- Add examples in codebase comments for complex logic
+- Ensure AGENTS.md reflects any development workflow changes
 
 ---
 

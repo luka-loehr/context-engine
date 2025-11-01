@@ -60,10 +60,10 @@ export class SubAgent {
             },
             successMessage: {
               type: 'string',
-              description: 'Optional custom success message to display when the file is created (e.g., "AGENTS.md for MyProject successfully created")'
+              description: 'Custom success message to display when the file is created (REQUIRED - e.g., "AGENTS.md for MyProject successfully created")'
             }
           },
-          required: ['filePath', 'content']
+          required: ['filePath', 'content', 'successMessage']
         }
       },
       {
@@ -144,14 +144,11 @@ export class SubAgent {
           // Write the file
           fs.writeFileSync(filePath, parameters.content, 'utf8');
 
-          // Use custom success message if provided, otherwise use default
-          const successMessage = parameters.successMessage ||
-            `${this.name} completed successfully at ${parameters.filePath}`;
-
-          loadingSpinner.succeed(successMessage);
+          // Use the required custom success message
+          loadingSpinner.succeed(parameters.successMessage);
           return {
             success: true,
-            message: successMessage,
+            message: parameters.successMessage,
             filePath: parameters.filePath
           };
         } catch (error) {

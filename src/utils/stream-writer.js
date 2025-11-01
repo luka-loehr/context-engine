@@ -262,6 +262,40 @@ function highlightCodeBlock(code, language, maxWidth, options) {
 }
 
 /**
+ * Helper function to find the right color for a class name
+ */
+function findColorForClass(className, colorMap) {
+  // Check for exact match first
+  if (colorMap[className]) {
+    return colorMap[className];
+  }
+  
+  // Check for partial matches (in case of multiple classes)
+  const classes = className.split(' ');
+  for (const cls of classes) {
+    if (colorMap[cls]) {
+      return colorMap[cls];
+    }
+    
+    // Handle underscore suffix (language_ -> language)
+    const clsWithoutUnderscore = cls.replace(/_$/, '');
+    if (colorMap[clsWithoutUnderscore]) {
+      return colorMap[clsWithoutUnderscore];
+    }
+    
+    // Handle dot notation (hljs-title.function_ -> hljs-title)
+    if (cls.includes('.')) {
+      const baseCls = cls.split('.')[0];
+      if (colorMap[baseCls]) {
+        return colorMap[baseCls];
+      }
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Convert highlight.js HTML output to ANSI colors
  */
 function convertHljsToAnsi(html) {
@@ -353,46 +387,62 @@ function convertHljsToAnsi(html) {
   };
   
   // Process spans - work from innermost to outermost
-  // Handle nested spans, multiple classes, and various formats
+  // We need to process in multiple passes to handle nested spans
   let iterations = 0;
-  while (result.includes('<span') && iterations < 20) {
-    // Match spans including those with nested content (non-greedy)
-    result = result.replace(/<span class="([^"]+)">((?:(?!<span)[\s\S])*?)<\/span>/g, (match, className, content) => {
+  const maxIterations = 25;
+  
+  while (result.includes('<span') && iterations < maxIterations) {
+    let hasChanges = false;
+    
+    // First, try to match innermost spans (those without nested spans)
+    result = result.replace(/<span class="([^"]+)">([^<]+)<\/span>/g, (match, className, content) => {
+      hasChanges = true;
+      
       // Skip language wrapper spans (they just group content)
       if (className.startsWith('language-')) {
         return content;
       }
       
-      // Check for exact match first
-      if (colorMap[className]) {
-        return colorMap[className](content);
+      // Try to find a color for this class
+      const color = findColorForClass(className, colorMap);
+      if (color) {
+        return color(content);
       }
       
-      // Check for partial matches (in case of multiple classes)
-      const classes = className.split(' ');
-      for (const cls of classes) {
-        if (colorMap[cls]) {
-          return colorMap[cls](content);
-        }
-        
-        // Handle underscore suffix (language_ -> language)
-        const clsWithoutUnderscore = cls.replace(/_$/, '');
-        if (colorMap[clsWithoutUnderscore]) {
-          return colorMap[clsWithoutUnderscore](content);
-        }
-        
-        // Handle dot notation (hljs-title.function_ -> hljs-title)
-        if (cls.includes('.')) {
-          const baseCls = cls.split('.')[0];
-          if (colorMap[baseCls]) {
-            return colorMap[baseCls](content);
-          }
-        }
-      }
-      
-      // No match found, return content as-is (white/default)
+      // No match found, return content as-is
       return content;
     });
+    
+    // Then, match spans that might contain already-processed colored text
+    // This handles spans with ANSI escape codes inside
+    result = result.replace(/<span class="([^"]+)">([\s\S]*?)<\/span>/g, (match, className, content) => {
+      // Don't process if it contains more spans (wait for next iteration)
+      if (content.includes('<span')) {
+        return match;
+      }
+      
+      hasChanges = true;
+      
+      // Skip language wrapper spans
+      if (className.startsWith('language-')) {
+        return content;
+      }
+      
+      // Try to find a color for this class
+      const color = findColorForClass(className, colorMap);
+      if (color) {
+        // Content might already have ANSI codes, apply color to whole thing
+        return color(content);
+      }
+      
+      return content;
+    });
+    
+    // If no changes were made, we're done
+    if (!hasChanges) {
+      break;
+    }
+    
     iterations++;
   }
   

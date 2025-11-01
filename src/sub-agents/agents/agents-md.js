@@ -7,7 +7,7 @@ import { SubAgent } from '../core/base.js';
 
 export class AgentsMdSubAgent extends SubAgent {
   constructor() {
-    super('AGENTS.md', 'Creating AGENTS.md');
+    super('AGENTS.md', 'Creating AGENTS.md', 'agents-md');
   }
 
   /**

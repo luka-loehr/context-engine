@@ -38,6 +38,12 @@ Tools available to both main AI and subagents:
 
 **Why shared?** Both main AI and subagents need to read files for analysis.
 
+### 4. **AGENT-SPECIFIC** - Specific Subagents Only
+Tools can be restricted to specific subagent IDs:
+- `analyzeAgentStructure` - Only for `agents-md` subagent
+
+**Why agent-specific?** Some tools are only relevant to certain subagents and shouldn't clutter other agents' tool lists.
+
 ## Access Control Matrix
 
 | Tool | Main AI | Subagent | Reason |

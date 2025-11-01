@@ -21,6 +21,7 @@ export { ToolCategories };
 // Export helper functions
 export {
   getToolsForContext,
+  getToolsForAgent,
   executeToolInContext,
   isToolAvailable
 } from './helpers.js';

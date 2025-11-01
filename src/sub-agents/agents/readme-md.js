@@ -7,7 +7,7 @@ import { SubAgent } from '../core/base.js';
 
 export class ReadmeSubAgent extends SubAgent {
   constructor() {
-    super('README.md', 'Creating README.md');
+    super('README.md', 'Creating README.md', 'readme-md');
   }
 
   /**

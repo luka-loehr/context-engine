@@ -4,7 +4,7 @@
  */
 
 import { createProvider } from '../../providers/index.js';
-import { getToolsForContext, executeToolInContext } from '../../tools/index.js';
+import { getToolsForContext, getToolsForAgent, executeToolInContext } from '../../tools/index.js';
 import ora from 'ora';
 
 /**
@@ -12,9 +12,10 @@ import ora from 'ora';
  * Provides common functionality for all sub-agents
  */
 export class SubAgent {
-  constructor(name, description) {
+  constructor(name, description, agentId = null) {
     this.name = name;
     this.description = description;
+    this.agentId = agentId; // Optional: agent ID for agent-specific tools
   }
 
   /**
@@ -30,7 +31,12 @@ export class SubAgent {
    * @returns {Array} Array of tool definitions
    */
   getTools() {
-    // Get tools from registry that are available to subagents
+    // Get tools from registry that are available to this specific agent
+    // If agentId is set, get agent-specific tools + general subagent tools
+    // Otherwise, get all subagent tools
+    if (this.agentId) {
+      return getToolsForAgent(this.agentId);
+    }
     return getToolsForContext('subagent');
   }
 
@@ -71,6 +77,7 @@ export class SubAgent {
           projectContext,
           spinner: loadingSpinner,
           subAgentName: this.name,
+          agentId: this.agentId, // Pass agent ID for agent-specific tool access control
           isFirstStatusUpdate
         });
       };

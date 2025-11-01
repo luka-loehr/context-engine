@@ -22,6 +22,7 @@ class ToolRegistry {
    * @param {Object} config.parameters - JSON schema for parameters
    * @param {Function} config.handler - Async function to execute the tool
    * @param {string|Array<string>} config.availableTo - 'main', 'subagent', 'shared', or ['main', 'subagent']
+   * @param {Array<string>} config.agentIds - Optional: Specific agent IDs that can use this tool (e.g., ['agents-md', 'readme-md'])
    * @param {Array<string>} config.tags - Optional tags for categorization
    */
   register(config) {
@@ -31,6 +32,7 @@ class ToolRegistry {
       parameters,
       handler,
       availableTo = 'shared',
+      agentIds = null,
       tags = []
     } = config;
 
@@ -54,6 +56,11 @@ class ToolRegistry {
       ? [this.categories.MAIN, this.categories.SUBAGENT]
       : availability;
 
+    // Normalize agentIds to array if provided
+    const normalizedAgentIds = agentIds 
+      ? (Array.isArray(agentIds) ? agentIds : [agentIds])
+      : null;
+
     this.tools.set(name, {
       name,
       description,
@@ -64,6 +71,7 @@ class ToolRegistry {
       },
       handler,
       availableTo: expandedAvailability,
+      agentIds: normalizedAgentIds,
       tags
     });
   }
@@ -87,22 +95,46 @@ class ToolRegistry {
   /**
    * Get all tool definitions for a specific context
    * @param {string} context - 'main' or 'subagent'
+   * @param {string} agentId - Optional: Specific agent ID to filter tools for
    * @returns {Array<Object>}
    */
-  getToolsForContext(context) {
+  getToolsForContext(context, agentId = null) {
     const tools = [];
     
     for (const [name, tool] of this.tools.entries()) {
-      if (tool.availableTo.includes(context)) {
-        tools.push({
-          name: tool.name,
-          description: tool.description,
-          parameters: tool.parameters
-        });
+      // Check if tool is available in this context
+      if (!tool.availableTo.includes(context)) {
+        continue;
       }
+
+      // If agentId is specified, check if tool is agent-specific
+      if (agentId && tool.agentIds) {
+        // Tool has agent restrictions - only include if this agent is allowed
+        if (!tool.agentIds.includes(agentId)) {
+          continue;
+        }
+      } else if (!agentId && tool.agentIds) {
+        // Requesting general tools, skip agent-specific ones
+        continue;
+      }
+
+      tools.push({
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters
+      });
     }
     
     return tools;
+  }
+
+  /**
+   * Get all tool definitions for a specific agent
+   * @param {string} agentId - Agent ID (e.g., 'agents-md', 'readme-md')
+   * @returns {Array<Object>}
+   */
+  getToolsForAgent(agentId) {
+    return this.getToolsForContext('subagent', agentId);
   }
 
   /**
@@ -110,7 +142,7 @@ class ToolRegistry {
    * @param {string} name - Tool name
    * @param {Object} parameters - Tool parameters
    * @param {string} context - Execution context ('main' or 'subagent')
-   * @param {Object} contextData - Additional context data (projectContext, session, etc.)
+   * @param {Object} contextData - Additional context data (projectContext, session, agentId, etc.)
    * @returns {Promise<any>}
    */
   async executeTool(name, parameters, context, contextData = {}) {
@@ -123,12 +155,22 @@ class ToolRegistry {
       };
     }
 
-    // Check access permissions
+    // Check context access permissions
     if (!tool.availableTo.includes(context)) {
       return {
         success: false,
         error: `Tool '${name}' is not available in ${context} context`
       };
+    }
+
+    // Check agent-specific access if tool has agent restrictions
+    if (tool.agentIds && contextData.agentId) {
+      if (!tool.agentIds.includes(contextData.agentId)) {
+        return {
+          success: false,
+          error: `Tool '${name}' is not available to agent '${contextData.agentId}'`
+        };
+      }
     }
 
     try {

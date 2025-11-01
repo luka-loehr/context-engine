@@ -58,7 +58,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Tool definitions for AI
-  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear, TOOLS.createAgentsMd];
+  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear, TOOLS.createAgentsMd, TOOLS.createReadme];
   
   // Tool call handler
   let currentToolSpinner = null;
@@ -166,6 +166,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       const subAgent = getSubAgent('agentsMd');
       await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
       return { success: true, message: 'AGENTS.md creation completed', stopLoop: true };
+    }
+
+    if (toolName === 'createReadme') {
+      // Start README.md creation process
+      const subAgent = getSubAgent('readme');
+      await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+      return { success: true, message: 'README.md creation completed', stopLoop: true };
     }
 
     // Show file loading spinner

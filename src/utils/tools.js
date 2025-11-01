@@ -70,6 +70,15 @@ export const TOOLS = {
       properties: {},
       required: []
     }
+  },
+  createReadme: {
+    name: 'createReadme',
+    description: 'Create a README.md file for the project. This tool spawns a sub-agent that analyzes the codebase and generates a comprehensive README with project description, installation instructions, usage examples, and other relevant information.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 };
 
@@ -110,6 +119,11 @@ export function executeTool(toolName, parameters, projectContext) {
       return {
         success: true,
         action: 'createAgentsMd'
+      };
+    case 'createReadme':
+      return {
+        success: true,
+        action: 'createReadme'
       };
     default:
       return {

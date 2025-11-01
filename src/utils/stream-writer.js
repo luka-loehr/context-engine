@@ -1,5 +1,6 @@
 import wrapAnsi from 'wrap-ansi';
 import chalk from 'chalk';
+import hljs from 'highlight.js';
 
 /**
  * Wrap text with list indentation preservation
@@ -219,189 +220,125 @@ export function createStreamWriter() {
 }
 
 /**
- * Highlight a code block with syntax colors using regex patterns
+ * Highlight a code block using highlight.js with custom ANSI renderer
  */
 function highlightCodeBlock(code, language, maxWidth, options) {
   const trimmedCode = code.trim();
   
-  // Apply language-specific highlighting
-  let highlighted;
-  if (language === 'html' || language === 'xml') {
-    highlighted = highlightHTML(trimmedCode);
-  } else if (language === 'javascript' || language === 'js' || language === 'typescript' || language === 'ts') {
-    highlighted = highlightJavaScript(trimmedCode);
-  } else if (language === 'python' || language === 'py') {
-    highlighted = highlightPython(trimmedCode);
-  } else if (language === 'css' || language === 'scss') {
-    highlighted = highlightCSS(trimmedCode);
-  } else if (language === 'json') {
-    highlighted = highlightJSON(trimmedCode);
-  } else {
-    // Generic highlighting for unknown languages
-    highlighted = highlightGeneric(trimmedCode);
+  try {
+    // Map common aliases
+    const langMap = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'py': 'python',
+      'rb': 'ruby',
+      'sh': 'bash',
+      'yml': 'yaml',
+      'md': 'markdown'
+    };
+    
+    const mappedLang = langMap[language] || language;
+    
+    // Use highlight.js to parse the code
+    let result;
+    if (mappedLang && hljs.getLanguage(mappedLang)) {
+      result = hljs.highlight(trimmedCode, { language: mappedLang });
+    } else {
+      result = hljs.highlightAuto(trimmedCode);
+    }
+    
+    // Convert highlight.js HTML to ANSI colors
+    const highlighted = convertHljsToAnsi(result.value);
+    
+    // Handle word wrapping for long lines
+    const lines = highlighted.split('\n');
+    const wrappedLines = lines.map(line => wrapText(line, maxWidth, options));
+    return wrappedLines.join('\n');
+  } catch (error) {
+    // Fallback to basic coloring
+    const lines = trimmedCode.split('\n');
+    return lines.map(line => wrapText(chalk.dim(line), maxWidth, options)).join('\n');
   }
-
-  // Handle word wrapping for long lines
-  const lines = highlighted.split('\n');
-  const wrappedLines = lines.map(line => wrapText(line, maxWidth, options));
-  return wrappedLines.join('\n');
 }
 
 /**
- * Highlight HTML/XML syntax
+ * Convert highlight.js HTML output to ANSI colors
  */
-function highlightHTML(code) {
-  let result = code;
+function convertHljsToAnsi(html) {
+  let result = html;
   
-  // Step 1: Protect strings to prevent double-processing
-  const stringPlaceholders = [];
-  result = result.replace(/"([^"]*)"/g, (match, content) => {
-    const placeholder = `__STRING_${stringPlaceholders.length}__`;
-    stringPlaceholders.push(chalk.green(match));
-    return placeholder;
+  // Define color mapping for highlight.js classes
+  const colorMap = {
+    'hljs-keyword': chalk.magenta,          // Keywords (function, const, if, etc.)
+    'hljs-built_in': chalk.cyan,            // Built-in functions
+    'hljs-type': chalk.cyan,                // Types
+    'hljs-literal': chalk.blue,             // Literals (true, false, null)
+    'hljs-number': chalk.yellow,            // Numbers
+    'hljs-string': chalk.green,             // Strings
+    'hljs-comment': chalk.gray,             // Comments
+    'hljs-doctag': chalk.gray,              // Doc comments
+    'hljs-meta': chalk.gray,                // Meta information
+    'hljs-function': chalk.yellow,          // Function declarations
+    'hljs-title': chalk.yellow,             // Function/class titles
+    'hljs-params': chalk.white,             // Parameters
+    'hljs-attr': chalk.cyan,                // HTML/XML attributes
+    'hljs-attribute': chalk.cyan,           // Attributes
+    'hljs-name': chalk.blue,                // HTML/XML tag names
+    'hljs-tag': chalk.blue,                 // HTML/XML tags
+    'hljs-selector-tag': chalk.magenta,     // CSS selectors
+    'hljs-selector-class': chalk.yellow,    // CSS class selectors
+    'hljs-selector-id': chalk.yellow,       // CSS ID selectors
+    'hljs-property': chalk.cyan,            // CSS properties
+    'hljs-regexp': chalk.red,               // Regular expressions
+    'hljs-variable': chalk.white,           // Variables
+    'hljs-template-variable': chalk.green,  // Template variables
+    'hljs-link': chalk.blue.underline,      // Links
+    'hljs-deletion': chalk.red,             // Deletions
+    'hljs-addition': chalk.green,           // Additions
+    'hljs-symbol': chalk.magenta,           // Symbols
+    'hljs-bullet': chalk.cyan,              // List bullets
+    'hljs-emphasis': chalk.italic,          // Emphasis
+    'hljs-strong': chalk.bold,              // Strong
+    'hljs-operator': chalk.gray,            // Operators
+    'hljs-punctuation': chalk.gray,         // Punctuation
+  };
+  
+  // Replace HTML tags with ANSI colors
+  // Process each span tag
+  result = result.replace(/<span class="([^"]+)">([^<]*)<\/span>/g, (match, className, content) => {
+    const colorFn = colorMap[className];
+    if (colorFn) {
+      return colorFn(content);
+    }
+    return content;
   });
   
-  // Step 2: Highlight comments
-  result = result.replace(/<!--[\s\S]*?-->/g, (match) => chalk.gray(match));
+  // Handle nested spans by processing multiple times
+  let iterations = 0;
+  while (result.includes('<span') && iterations < 10) {
+    result = result.replace(/<span class="([^"]+)">([^<]*?)<\/span>/g, (match, className, content) => {
+      const colorFn = colorMap[className];
+      if (colorFn) {
+        return colorFn(content);
+      }
+      return content;
+    });
+    iterations++;
+  }
   
-  // Step 3: Highlight DOCTYPE
-  result = result.replace(/<!DOCTYPE[^>]*>/gi, (match) => chalk.magenta(match));
+  // Remove any remaining HTML tags
+  result = result.replace(/<[^>]+>/g, '');
   
-  // Step 4: Highlight opening tags: <tagname
-  result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)/g, (match, tag) => {
-    return chalk.gray('<') + chalk.blue(tag);
-  });
-  
-  // Step 5: Highlight closing tags: </tagname>
-  result = result.replace(/<\/([a-zA-Z][a-zA-Z0-9]*)>/g, (match, tag) => {
-    return chalk.gray('</') + chalk.blue(tag) + chalk.gray('>');
-  });
-  
-  // Step 6: Highlight self-closing tags and closing brackets
-  result = result.replace(/\/>/g, chalk.gray('/>'));
-  result = result.replace(/(?<!<\/)>/g, (match) => chalk.gray(match));
-  
-  // Step 7: Highlight attribute names (words followed by =)
-  result = result.replace(/\s([a-zA-Z][a-zA-Z0-9\-]*)(?=__STRING_)/g, (match, attrName) => {
-    return ' ' + chalk.cyan(attrName);
-  });
-  
-  // Step 8: Highlight the = sign
-  result = result.replace(/=(?=__STRING_)/g, chalk.gray('='));
-  
-  // Step 9: Restore strings (now colored)
-  stringPlaceholders.forEach((coloredString, index) => {
-    result = result.replace(`__STRING_${index}__`, coloredString);
-  });
+  // Decode HTML entities
+  result = result.replace(/&lt;/g, '<');
+  result = result.replace(/&gt;/g, '>');
+  result = result.replace(/&amp;/g, '&');
+  result = result.replace(/&quot;/g, '"');
+  result = result.replace(/&#39;/g, "'");
   
   return result;
 }
 
-/**
- * Highlight JavaScript/TypeScript syntax
- */
-function highlightJavaScript(code) {
-  let result = code;
-  
-  // Comments
-  result = result.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, (match) => chalk.gray(match));
-  
-  // Strings
-  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, (match) => chalk.green(match));
-  
-  // Numbers
-  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
-  
-  // Keywords
-  const keywords = ['function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'return', 'class', 'extends', 'import', 'export', 'default', 'async', 'await', 'try', 'catch', 'throw', 'new'];
-  keywords.forEach(keyword => {
-    result = result.replace(new RegExp(`\\b(${keyword})\\b`, 'g'), (match) => chalk.magenta(match));
-  });
-  
-  return result;
-}
-
-/**
- * Highlight Python syntax
- */
-function highlightPython(code) {
-  let result = code;
-  
-  // Comments
-  result = result.replace(/(#.*$)/gm, (match) => chalk.gray(match));
-  
-  // Strings
-  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (match) => chalk.green(match));
-  
-  // Numbers
-  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
-  
-  // Keywords
-  const keywords = ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'return', 'import', 'from', 'as', 'try', 'except', 'finally', 'with', 'lambda', 'yield', 'async', 'await'];
-  keywords.forEach(keyword => {
-    result = result.replace(new RegExp(`\\b(${keyword})\\b`, 'g'), (match) => chalk.magenta(match));
-  });
-  
-  return result;
-}
-
-/**
- * Highlight CSS syntax
- */
-function highlightCSS(code) {
-  let result = code;
-  
-  // Comments
-  result = result.replace(/(\/\*[\s\S]*?\*\/)/g, (match) => chalk.gray(match));
-  
-  // Selectors
-  result = result.replace(/^([^{]+)(?={)/gm, (match) => chalk.yellow(match));
-  
-  // Properties
-  result = result.replace(/([a-zA-Z-]+)(?=\s*:)/g, (match) => chalk.cyan(match));
-  
-  // Values (strings and colors)
-  result = result.replace(/:\s*([^;{]+)/g, (match, value) => ': ' + chalk.green(value));
-  
-  return result;
-}
-
-/**
- * Highlight JSON syntax
- */
-function highlightJSON(code) {
-  let result = code;
-  
-  // Strings (keys and values)
-  result = result.replace(/"([^"]+)"(\s*:)/g, (match, key) => chalk.cyan('"' + key + '"') + chalk.gray(':'));
-  result = result.replace(/:\s*"([^"]+)"/g, (match, value) => ': ' + chalk.green('"' + value + '"'));
-  
-  // Numbers
-  result = result.replace(/:\s*(\d+\.?\d*)/g, (match, num) => ': ' + chalk.yellow(num));
-  
-  // Booleans and null
-  result = result.replace(/:\s*(true|false|null)/g, (match, value) => ': ' + chalk.magenta(value));
-  
-  return result;
-}
-
-/**
- * Generic syntax highlighting for unknown languages
- */
-function highlightGeneric(code) {
-  let result = code;
-  
-  // Strings
-  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (match) => chalk.green(match));
-  
-  // Numbers
-  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
-  
-  // Comments (// and /* */ style)
-  result = result.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/|#.*$)/gm, (match) => chalk.gray(match));
-  
-  return result;
-}
 
 /**
  * Format inline markdown (bold, italic, inline code)

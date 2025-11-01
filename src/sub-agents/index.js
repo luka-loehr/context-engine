@@ -5,11 +5,11 @@
 
 export { SubAgent } from './base.js';
 export { AgentsMdSubAgent } from './agents-md.js';
-export { ReadmeSubAgent } from './readme.js';
+export { ReadmeSubAgent } from './readme-md.js';
 
 // Import for registry
 import { AgentsMdSubAgent } from './agents-md.js';
-import { ReadmeSubAgent } from './readme.js';
+import { ReadmeSubAgent } from './readme-md.js';
 
 /**
  * Get a sub-agent by name

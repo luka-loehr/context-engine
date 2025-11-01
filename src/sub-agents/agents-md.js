@@ -87,6 +87,8 @@ Use the statusUpdate tool at key milestones, not for every single file. Keep sta
 
 For example, instead of updating for each individual file, you could say "looking at 10 project files" or "checking configuration files".
 
+When calling createFile, ALWAYS include a successMessage parameter with a descriptive message like "AGENTS.md for [ProjectName] successfully created" where [ProjectName] is determined from the project files (package.json name, README title, etc.).
+
 Use standard markdown formatting:
 - # for main headings
 - ## for section headings

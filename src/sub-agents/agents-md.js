@@ -72,14 +72,13 @@ Guidelines for contributions and deployment including:
 - Documentation requirements
 
 WORKFLOW:
-1. Call statusUpdate with "Scanning project files"
-2. Use getFileContent to explore key files - call statusUpdate with "Looking at project configuration" when reading config files
-3. Call statusUpdate with "Examining source code structure" when looking at main files
-4. Call statusUpdate with "Analyzing coding patterns and dependencies" when reviewing code
-5. Call statusUpdate with "Reviewing project documentation" when reading docs
+1. Call statusUpdate at the start of major activities (let the AI choose appropriate messages)
+2. Use getFileContent to explore key files - call statusUpdate with meaningful progress messages
+3. Call statusUpdate when examining different aspects of the codebase
+4. Call statusUpdate when analyzing code patterns and dependencies
+5. Call statusUpdate when reviewing documentation and gathering information
 6. Call statusUpdate with "Compiling project overview" when ready to summarize
 7. Call statusUpdate with "Creating AGENTS.md content" when starting to write the document
-8. Call statusUpdate with "Saving AGENTS.md file" before using createFile tool
 
 Use the statusUpdate tool at key milestones, not for every single file. Keep status messages brief and clear.
 
@@ -101,6 +100,6 @@ CRITICAL: Create a properly formatted AGENTS.md file with:
 - Proper markdown formatting
 - Concise, non-redundant information
 
-Start by calling statusUpdate with "Scanning project files", then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
+Start by calling statusUpdate with your first major activity, then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones with meaningful progress messages. Call statusUpdate with "Creating AGENTS.md content" when you start writing the document. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
   }
 }

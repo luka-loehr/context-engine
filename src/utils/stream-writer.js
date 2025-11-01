@@ -253,30 +253,46 @@ function highlightCodeBlock(code, language, maxWidth, options) {
 function highlightHTML(code) {
   let result = code;
   
-  // Comments
-  result = result.replace(/(&lt;!--[\s\S]*?--&gt;|<!--[\s\S]*?-->)/g, (match) => chalk.gray(match));
+  // Step 1: Protect strings to prevent double-processing
+  const stringPlaceholders = [];
+  result = result.replace(/"([^"]*)"/g, (match, content) => {
+    const placeholder = `__STRING_${stringPlaceholders.length}__`;
+    stringPlaceholders.push(chalk.green(match));
+    return placeholder;
+  });
   
-  // Doctype
-  result = result.replace(/(&lt;!DOCTYPE[^&gt;]*&gt;|<!DOCTYPE[^>]*>)/gi, (match) => chalk.magenta(match));
+  // Step 2: Highlight comments
+  result = result.replace(/<!--[\s\S]*?-->/g, (match) => chalk.gray(match));
   
-  // Tags with attributes
-  result = result.replace(/(&lt;\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z][a-zA-Z0-9\-]*(?:="[^"]*")?)*\s*)(\/?>|&gt;)/g, 
-    (match, open, tag, attrs, close) => {
-      const openTag = chalk.gray(open);
-      const tagName = chalk.blue(tag);
-      const closingBracket = chalk.gray(close);
-      
-      // Highlight attributes
-      const highlightedAttrs = attrs.replace(/([a-zA-Z][a-zA-Z0-9\-]*)(?:="([^"]*)")?/g, (attrMatch, attrName, attrValue) => {
-        if (attrValue !== undefined) {
-          return chalk.cyan(attrName) + chalk.gray('=') + chalk.green('"' + attrValue + '"');
-        }
-        return chalk.cyan(attrName);
-      });
-      
-      return openTag + tagName + highlightedAttrs + closingBracket;
-    }
-  );
+  // Step 3: Highlight DOCTYPE
+  result = result.replace(/<!DOCTYPE[^>]*>/gi, (match) => chalk.magenta(match));
+  
+  // Step 4: Highlight opening tags: <tagname
+  result = result.replace(/<([a-zA-Z][a-zA-Z0-9]*)/g, (match, tag) => {
+    return chalk.gray('<') + chalk.blue(tag);
+  });
+  
+  // Step 5: Highlight closing tags: </tagname>
+  result = result.replace(/<\/([a-zA-Z][a-zA-Z0-9]*)>/g, (match, tag) => {
+    return chalk.gray('</') + chalk.blue(tag) + chalk.gray('>');
+  });
+  
+  // Step 6: Highlight self-closing tags and closing brackets
+  result = result.replace(/\/>/g, chalk.gray('/>'));
+  result = result.replace(/(?<!<\/)>/g, (match) => chalk.gray(match));
+  
+  // Step 7: Highlight attribute names (words followed by =)
+  result = result.replace(/\s([a-zA-Z][a-zA-Z0-9\-]*)(?=__STRING_)/g, (match, attrName) => {
+    return ' ' + chalk.cyan(attrName);
+  });
+  
+  // Step 8: Highlight the = sign
+  result = result.replace(/=(?=__STRING_)/g, chalk.gray('='));
+  
+  // Step 9: Restore strings (now colored)
+  stringPlaceholders.forEach((coloredString, index) => {
+    result = result.replace(`__STRING_${index}__`, coloredString);
+  });
   
   return result;
 }

@@ -1,34 +1,35 @@
 import chalk from 'chalk';
+import { providerRegistry } from '../providers/index.js';
 
 /**
- * AI Model definitions
+ * AI Model definitions - now uses provider registry
  */
 
 export const MODELS = {
-  // Default: Fast model as "context"
   'context': {
     name: 'context',
     provider: 'xai',
-    model: 'grok-4-fast-non-reasoning',
-    description: 'Fast model – fastest responses with minimal reasoning overhead'
+    model: 'grok-beta',
+    description: 'Fast model'
   },
-  // Ultra: Premium reasoning model as "context-ultra"
   'context-ultra': {
     name: 'context-ultra',
     provider: 'xai',
-    model: 'grok-4-fast-reasoning',
-    description: 'Premium reasoning model – deep analysis with reduced hallucinations'
+    model: 'grok-2-latest',
+    description: 'Premium reasoning model'
   }
 };
 
 export const MODEL_CHOICES = [
-  { name: `${chalk.white('context')} (Fast model)`, value: 'context' },
-  { name: `${chalk.magenta('context-ultra')} (Premium reasoning model)`, value: 'context-ultra' }
+  { name: `${chalk.white('context')} (Fast)`, value: 'context' },
+  { name: `${chalk.magenta('context-ultra')} (Premium)`, value: 'context-ultra' }
 ];
 
-/**
- * Get all available models
- */
 export function getAllModels() {
   return MODELS;
+}
+
+// Get models dynamically from registry
+export function getAvailableModels() {
+  return providerRegistry.getAllModels();
 }

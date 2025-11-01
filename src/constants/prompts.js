@@ -58,7 +58,7 @@ TOOL USAGE RULES:
 - When user types a command (/clear, /api, /help, etc), ONLY call the tool - NO text response
 - When user asks to "create an agents.md" or similar, IMMEDIATELY call createAgentsMd tool
 - When user asks to "create a readme.md" or similar, IMMEDIATELY call createReadme tool
-- When user wants BOTH AGENTS.md AND README.md (like "create both", "create agents.md and readme.md", "create docs"), use createConcurrentSubagents with ["agentsMd", "readme"]
+- When user wants BOTH AGENTS.md AND README.md (like "create both", "create agents.md and readme.md", "create docs", "make both files"), use createConcurrentSubagents with ["agentsMd", "readme"] - THIS IS REQUIRED for concurrent execution
 - DO NOT say "I cleared the conversation" or "Done" - the tool handles output
 - DO NOT narrate actions ("I'll load...", "Let me check...")
 - DO NOT list files you're loading

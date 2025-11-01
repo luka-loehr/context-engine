@@ -1,31 +1,26 @@
 # Context Engine
 
-Context Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using XAI's Grok models. It provides instant answers, code analysis, and context-aware assistance directly from the command line.
+Context Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using XAI's Grok models. It analyzes project structure, provides instant code insights, and assists with development tasks through natural language conversations.
 
 ## Description
 
-Context Engine transforms your codebase into an interactive AI assistant. By analyzing your project files and structure, it allows you to ask questions about your code, get explanations, debug issues, and receive suggestions—all powered by advanced AI models from XAI.
+Context Engine transforms your codebase into an interactive AI assistant. By leveraging advanced language models, it understands your project's architecture, dependencies, and code patterns to deliver context-aware responses. Key use cases include:
 
-**Key Features:**
-- Natural language queries about your codebase
-- Automatic project context analysis
-- Support for multiple AI models
-- Secure API key management
-- Interactive chat sessions
-- Syntax highlighting and formatted output
+- Explaining complex code sections
+- Generating documentation from source files
+- Debugging assistance through natural language queries
+- Codebase navigation and architecture insights
+- Refactoring suggestions based on project context
 
-**Use Cases:**
-- Understanding complex codebases
-- Quick debugging and troubleshooting
-- Code reviews and explanations
-- Learning new projects
-- Generating documentation
+The tool supports multiple XAI Grok models and integrates seamlessly with existing development workflows.
 
 ## Installation
 
 ### Prerequisites
-- Node.js version 16.0.0 or higher
-- An XAI API key (obtain from [x.ai](https://x.ai))
+
+- Node.js >= 16.0.0
+- npm or yarn package manager
+- XAI API key (obtain from [XAI Console](https://console.x.ai/))
 
 ### Installation Steps
 
@@ -35,86 +30,80 @@ Context Engine transforms your codebase into an interactive AI assistant. By ana
    ```
 
 2. **Set up your XAI API key:**
-   Create a `.env` file in your home directory or set the environment variable:
    ```bash
+   # Option 1: Environment variable
    export XAI_API_KEY="your-api-key-here"
+   
+   # Option 2: The tool will prompt for API key on first run
    ```
 
-3. **Run the setup:**
+3. **Verify installation:**
    ```bash
-   context setup
+   context --version
    ```
-   This will guide you through model selection and configuration.
+
+The post-install script will automatically configure the tool and check for updates.
 
 ## Usage
 
 ### Basic Commands
 
-- **Start interactive chat session:**
-  ```bash
-  context chat
-  ```
-  This analyzes your current project and starts an AI conversation.
-
-- **Change AI model:**
-  ```bash
-  context model
-  ```
-  Select from available XAI models like Grok, Grok-1, etc.
-
-- **Clear configuration:**
-  ```bash
-  context clear
-  ```
-  Reset all settings and start fresh.
-
-### Example Usage
-
-1. Navigate to your project directory:
-   ```bash
-   cd my-project
-   ```
-
-2. Start chatting with your code:
-   ```bash
-   context chat
-   ```
-
-3. Ask questions like:
-   - "What does this function do?"
-   - "How is the database connected?"
-   - "Explain the authentication flow"
-   - "Find bugs in the payment module"
-
-The AI will analyze your codebase and provide detailed, context-aware responses.
-
-### Project Context Analysis
-
-Context Engine automatically scans your project to understand:
-- File structure and dependencies
-- Key configuration files
-- Main entry points
-- Common patterns and architecture
-
-You can also specify a custom directory:
 ```bash
-context chat /path/to/project
+# Start interactive chat session (default)
+context
+
+# Chat with specific model
+context --model grok-2
+
+# Clear configuration and restart setup
+context --clear-config
+
+# Get help
+context --help
 ```
+
+### First-Time Setup
+
+On first run, Context Engine will:
+1. Prompt for your XAI API key
+2. Select preferred model (defaults to 'context')
+3. Configure project context scanning
+
+### Interactive Chat
+
+Once started, you can ask questions about your codebase:
+
+```
+> Explain the authentication flow in this project
+> What does the user service handle?
+> Show me the database schema
+> How is error handling implemented?
+```
+
+The tool automatically analyzes your current directory and provides context-aware responses.
+
+### Project Context
+
+Context Engine scans your project to understand:
+- File structure and dependencies
+- Configuration files (package.json, .env, etc.)
+- Key source files and modules
+- Documentation and README content
+
+Use `context --help` for all available options.
 
 ## Features
 
-- **Multi-Model Support**: Choose from various XAI Grok models optimized for different tasks
-- **Smart Context Gathering**: Automatically identifies relevant files and code patterns
-- **Interactive Sessions**: Maintain conversation context across multiple questions
-- **Secure Configuration**: Encrypted storage for API keys and settings
-- **Rich Output Formatting**: Syntax-highlighted code and clear explanations
-- **Update Notifications**: Automatic checks for new versions and features
-- **Cross-Platform**: Works on macOS, Linux, and Windows
-- **Lightweight**: Minimal dependencies with fast startup time
+- **Multi-Model Support**: Compatible with various XAI Grok models
+- **Smart Context Analysis**: Automatically understands project structure
+- **Interactive CLI Interface**: Natural language conversations about code
+- **Secure Configuration**: Encrypted storage of API keys
+- **Update Notifications**: Automatic version checking and upgrade prompts
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Extensible Architecture**: Modular design for easy customization
+- **Code Highlighting**: Syntax-colored output for better readability
 
 ## Contributing
-
-We welcome contributions to improve Context Engine! Please follow these guidelines:
 
 ### Development Setup
 
@@ -129,38 +118,38 @@ We welcome contributions to improve Context Engine! Please follow these guidelin
    npm install
    ```
 
-3. **Link for local development:**
+3. **Set up development environment:**
    ```bash
-   npm link
+   # Copy example environment
+   cp .env.example .env
+   # Add your XAI API key to .env
    ```
 
 4. **Run in development mode:**
    ```bash
-   npm run dev
+   # Link globally for testing
+   npm link
+   
+   # Test the CLI
+   context
    ```
 
 ### Coding Standards
 
-- Use ES6+ syntax and modern JavaScript
-- Follow [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
-- Write clear, concise comments for complex logic
+- Use ES modules (import/export syntax)
+- Follow [StandardJS](https://standardjs.com/) style guide
+- Write modular, single-responsibility functions
+- Include JSDoc comments for public APIs
 - Add unit tests for new features
-- Keep functions small and focused
 
 ### Contribution Process
 
 1. Fork the repository and create a feature branch
 2. Make your changes and ensure tests pass
 3. Update documentation if needed
-4. Submit a pull request with a clear description
+4. Submit a pull request with clear description
 
-### Testing
-
-Currently, the test suite is minimal. Contributions to expand test coverage are especially welcome:
-
-```bash
-npm test
-```
+We welcome contributions for new models, UI improvements, and additional analysis features.
 
 ## License
 

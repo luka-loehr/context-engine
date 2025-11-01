@@ -11,6 +11,7 @@ import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
+import { getToolsForContext } from '../tools/index.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
 import { getSubAgentByToolName, isSubAgentTool, SubAgentManager, getAllSubAgentTools } from '../sub-agents/index.js';
@@ -57,15 +58,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider (use the actual model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
-  // Tool definitions for AI - includes base tools + all registered subagent tools
+  // Tool definitions for AI - get from ToolRegistry for main context + subagent tools
   const tools = [
-    TOOLS.getFileContent, 
-    TOOLS.exit, 
-    TOOLS.help, 
-    TOOLS.model, 
-    TOOLS.api, 
-    TOOLS.clear,
-    ...getAllSubAgentTools() // Dynamically add all subagent tools
+    ...getToolsForContext('main'), // Tools available to main AI from registry
+    ...getAllSubAgentTools()        // Dynamically add all subagent creation tools
   ];
   
   // Tool call handler

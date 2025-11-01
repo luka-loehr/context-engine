@@ -3,7 +3,8 @@
  * Provides a framework for creating specialized AI agents that can analyze codebases
  */
 
-import { createProvider } from '../providers/index.js';
+import { createProvider } from '../../providers/index.js';
+import { getToolsForContext, executeToolInContext } from '../../tools/index.js';
 import ora from 'ora';
 
 /**
@@ -29,58 +30,8 @@ export class SubAgent {
    * @returns {Array} Array of tool definitions
    */
   getTools() {
-    return [
-      {
-        name: 'getFileContent',
-        description: 'Get the full content of a specific file from the codebase. Use this to analyze code structure, dependencies, and configuration.',
-        parameters: {
-          type: 'object',
-          properties: {
-            filePath: {
-              type: 'string',
-              description: 'The exact path of the file to read (e.g., "package.json", "src/index.js")'
-            }
-          },
-          required: ['filePath']
-        }
-      },
-      {
-        name: 'createFile',
-        description: 'Create or overwrite a file with the specified content. Use this when you have completed your analysis and are ready to write the final output.',
-        parameters: {
-          type: 'object',
-          properties: {
-            filePath: {
-              type: 'string',
-              description: 'The path where to create the file (relative to project root)'
-            },
-            content: {
-              type: 'string',
-              description: 'The complete content to write to the file'
-            },
-            successMessage: {
-              type: 'string',
-              description: 'Custom success message to display when the file is created (REQUIRED - e.g., "AGENTS.md for MyProject successfully created")'
-            }
-          },
-          required: ['filePath', 'content', 'successMessage']
-        }
-      },
-      {
-        name: 'statusUpdate',
-        description: 'Provide a brief status update to the user about what you are currently doing. Use this frequently to keep the user informed of your progress. Keep messages very short and clear.',
-        parameters: {
-          type: 'object',
-          properties: {
-            status: {
-              type: 'string',
-              description: 'A very brief status message describing current activity (e.g., "analyzing dependencies", "reviewing README", "finalizing content")'
-            }
-          },
-          required: ['status']
-        }
-      }
-    ];
+    // Get tools from registry that are available to subagents
+    return getToolsForContext('subagent');
   }
 
   /**
@@ -113,76 +64,16 @@ export class SubAgent {
       const tools = this.getTools();
       const initialPrompt = this.getInitialPrompt();
 
-      // Sub-agent tool handler
+      // Sub-agent tool handler - uses ToolRegistry
       const handleSubAgentToolCall = async (toolName, parameters) => {
-        if (toolName === 'getFileContent') {
-          // Find file in project context
-          const file = projectContext.find(f => f.path === parameters.filePath);
-          if (!file) {
-            return {
-              success: false,
-              error: `File not found at path "${parameters.filePath}". Please check the file path and try again.`,
-              filePath: parameters.filePath
-            };
-          }
-
-          return {
-            success: true,
-            filePath: file.path,
-            content: file.content
-          };
-        }
-
-      if (toolName === 'createFile') {
-        try {
-          const fs = await import('fs');
-          const path = await import('path');
-
-          // Ensure we're writing to the project root
-          const filePath = path.join(process.cwd(), parameters.filePath);
-
-          // Write the file
-          fs.writeFileSync(filePath, parameters.content, 'utf8');
-
-          // Use the required custom success message
-          loadingSpinner.succeed(parameters.successMessage);
-          return {
-            success: true,
-            message: parameters.successMessage,
-            filePath: parameters.filePath
-          };
-        } catch (error) {
-          loadingSpinner.fail(`Failed to create ${this.name}: ${error.message}`);
-          return {
-            success: false,
-            error: `Failed to create file: ${error.message}`
-          };
-        }
-      }
-
-      if (toolName === 'statusUpdate') {
-        // Update the loading spinner with the status message
-        if (loadingSpinner && loadingSpinner.isSpinning) {
-          // Remove the prefix after the first status update
-          if (isFirstStatusUpdate) {
-            isFirstStatusUpdate = false;
-          }
-          loadingSpinner.text = parameters.status;
-        } else {
-          // If spinner is not running, just log the status
-          console.log(`📝 ${this.name}: ${parameters.status}`);
-        }
-        return {
-          success: true,
-          message: `Status updated: ${parameters.status}`
-        };
-      }
-
-      return {
-        success: false,
-        error: `Unknown tool: ${toolName}`
+        // Use the tool registry to execute tools in subagent context
+        return await executeToolInContext(toolName, parameters, 'subagent', {
+          projectContext,
+          spinner: loadingSpinner,
+          subAgentName: this.name,
+          isFirstStatusUpdate
+        });
       };
-    };
 
       // Run the sub-agent
       await subAgentProvider.refinePrompt(

@@ -1,117 +1,67 @@
 /**
  * Tool definitions for AI function calling
+ * DEPRECATED: This file is maintained for backward compatibility
+ * New code should use src/tools/index.js and the ToolRegistry
  */
 
+import { toolRegistry } from '../tools/index.js';
+
+// Legacy TOOLS object for backward compatibility
+// Tools are now managed by ToolRegistry in src/tools/
 export const TOOLS = {
-  getFileContent: {
-    name: 'getFileContent',
-    description: 'Get the full content of a specific file from the codebase. Returns an object with success status, filePath, and content (if successful) or error message (if failed). Use this when you need to read or analyze a specific file.',
-    parameters: {
-      type: 'object',
-      properties: {
-        filePath: {
-          type: 'string',
-          description: 'The exact path of the file to read (e.g., "src/index.js", "lib/main.dart")'
-        }
-      },
-      required: ['filePath']
-    }
+  get getFileContent() {
+    return toolRegistry.getToolDefinition('getFileContent');
   },
-  exit: {
-    name: 'exit',
-    description: 'Exit the context-engine CLI session. Use this when the user wants to close or quit the interactive chat.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
+  get exit() {
+    return toolRegistry.getToolDefinition('exit');
   },
-  help: {
-    name: 'help',
-    description: 'Show context-engine version and tips. Use this when the user asks for help or information about the tool.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
+  get help() {
+    return toolRegistry.getToolDefinition('help');
   },
-  model: {
-    name: 'model',
-    description: 'Open model selection dialog to change the AI model. Use this when the user wants to switch between available AI models.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
+  get model() {
+    return toolRegistry.getToolDefinition('model');
   },
-  api: {
-    name: 'api',
-    description: 'Manage API keys - show current status or import from .env file. Use this when the user wants to check or update API key configuration.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
+  get api() {
+    return toolRegistry.getToolDefinition('api');
   },
-  clear: {
-    name: 'clear',
-    description: 'Clear the conversation history. Use this when the user wants to start fresh or reset the chat context.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
+  get clear() {
+    return toolRegistry.getToolDefinition('clear');
   }
-  // Note: Subagent tools (createAgentsMd, createReadme, etc.) are now
-  // dynamically loaded from the SubAgent registry in chat.js
 };
 
 /**
- * Execute a tool call
+ * Execute a tool call (legacy wrapper)
+ * @deprecated Use executeToolInContext from src/tools/index.js instead
  */
 export function executeTool(toolName, parameters, projectContext) {
-  switch (toolName) {
-    case 'getFileContent':
-      return getFileContent(parameters.filePath, projectContext);
-    case 'exit':
-      return {
-        success: true,
-        action: 'exit',
-        message: 'Exiting context-engine session...'
-      };
-    case 'help':
-      return {
-        success: true,
-        action: 'help'
-      };
-    case 'model':
-      return {
-        success: true,
-        action: 'model'
-      };
-    case 'api':
-      return {
-        success: true,
-        action: 'api'
-      };
-    case 'clear':
-      return {
-        success: true,
-        action: 'clear'
-      };
-    default:
-      // Subagent tools are handled in chat.js via the registry
-      return {
-        success: false,
-        error: `Unknown tool: ${toolName}`
-      };
+  // This is a legacy function that returns action objects for compatibility
+  // The actual tool execution happens in chat.js
+  
+  const actionTools = ['exit', 'help', 'model', 'api', 'clear'];
+  
+  if (actionTools.includes(toolName)) {
+    return {
+      success: true,
+      action: toolName
+    };
   }
+  
+  // For getFileContent, execute directly
+  if (toolName === 'getFileContent') {
+    return getFileContentLegacy(parameters.filePath, projectContext);
+  }
+  
+  return {
+    success: false,
+    error: `Unknown tool: ${toolName}`
+  };
 }
 
 /**
- * Get file content from project context
+ * Legacy getFileContent implementation
+ * @private
  */
-function getFileContent(filePath, projectContext) {
+function getFileContentLegacy(filePath, projectContext) {
   const file = projectContext.find(f => f.path === filePath);
   
   if (!file) {
@@ -128,4 +78,3 @@ function getFileContent(filePath, projectContext) {
     content: file.content
   };
 }
-

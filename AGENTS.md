@@ -1,89 +1,66 @@
 # context-engine AGENTS.md
 
-Interactive AI-powered CLI tool that enables natural language conversations with codebases using XAI Grok models, providing context-aware answers and code analysis.
+Interactive AI-powered CLI tool that enables natural language conversations with codebases using XAI's Grok models. Provides context-aware answers, code analysis, and project insights directly in the terminal.
 
 ## Project Overview
 
-context-engine is a terminal-based assistant that scans and understands entire codebases, allowing users to ask questions in natural language and receive intelligent, contextually relevant responses powered by XAI's Grok AI models. It supports multiple models for different use cases, features secure API key management, and provides beautifully formatted output with code highlighting.
+context-engine is a terminal-based AI assistant designed for developers to interact with their codebases using natural language. It automatically scans project files, loads relevant context, and leverages XAI Grok models to deliver intelligent responses, code explanations, and debugging assistance. The tool supports multiple models for quick queries or deep analysis, with secure API key management and beautiful terminal formatting.
 
 ## Setup commands
 
 ### Installation
-```bash
-npm install -g @lukaloehr/context-engine
-```
+- Global installation (recommended for CLI usage): `npm install -g @lukaloehr/context-engine`
+- Local development: `git clone https://github.com/luka-loehr/context-engine.git && cd context-engine && npm install`
 
-### Development Setup
-```bash
-git clone https://github.com/luka-loehr/context-engine.git
-cd context-engine
-npm install
-npm link  # For local testing
-```
-
-### Environment Configuration
-Set XAI API key:
-```bash
-export XAI_API_KEY="xai-your_api_key_here"
-```
-Or create `.env` file:
-```env
-XAI_API_KEY=xai-your_api_key_here
-```
+### Environment Setup
+- Set XAI API key: `export XAI_API_KEY="your_xai_api_key"` or create a `.env` file with `XAI_API_KEY=your_xai_api_key`
+- For development linking: `npm link` to test the `context` command locally
 
 ### Starting the Application
-```bash
-cd your-project
-context  # Starts interactive chat session
-```
+- Run the CLI: `context` (from project root or any directory)
+- The tool auto-loads the current working directory's codebase and starts an interactive chat session
 
 ### Post-Installation
-A postinstall script runs automatically to set up necessary configurations.
+- A postinstall script warns if not installed globally and guides setup
+- No additional servers; it's a lightweight Node.js CLI
 
 ## Code style
 
-- **Language and Module System**: Modern ES modules (ESM) with `"type": "module"` in package.json. Uses Node.js >=16.0.0.
-- **Naming Conventions**: CamelCase for functions and variables, PascalCase for classes. Descriptive names following semantic patterns (e.g., `startApp`, `createUpdateNotifier`).
-- **Import/Export Patterns**: Named exports for modularity (e.g., `export { startApp } from './core/index.js'`). Relative imports for internal modules, absolute for dependencies.
-- **Code Organization Principles**: Modular structure with directories for concerns:
-  - `src/commands/`: CLI command handlers
-  - `src/config/`: Configuration and key management
-  - `src/constants/`: Prompts, models, file patterns
-  - `src/providers/`: XAI API integrations
-  - `src/ui/`: Terminal UI and formatting components
-  - `src/utils/`: Utilities like tokenizers and scanners
-  Entry points in `bin/` and `src/index.js`.
-- **Linting and Formatting**: No explicit linter specified; follow consistent indentation (2 spaces), JSDoc comments for documentation, and clean async/await patterns. Use chalk for colored output and highlight.js for code syntax.
+- **Language and Module System**: Modern ES modules (`"type": "module"`) with Node.js >=16.0.0
+- **Naming Conventions**: CamelCase for variables/functions, PascalCase for classes, kebab-case for files/directories
+- **Import/Export Patterns**: Named exports preferred (e.g., `export { startApp } from './core/index.js'`); absolute imports relative to src/ where possible
+- **Code Organization Principles**: Modular structure with directories for concerns (e.g., `src/commands/`, `src/providers/`, `src/utils/`); single-responsibility files; clear separation of CLI entry, core logic, and utilities
+- **Linting and Formatting**: No explicit linter in package.json; follow consistent indentation (2 spaces), JSDoc comments for functions, and clean async/await patterns. Use ES6+ features like destructuring and template literals
 
 ## Dev environment tips
 
 - **Common Development Commands**:
-  - `npm link`: Link local package for testing in other projects.
-  - `node bin/context.js`: Run the CLI directly.
-  - Monitor updates with built-in notifier via `update-notifier`.
-- **Build and Deployment**: No build step required; publish directly via npm. Global installation preferred (`preferGlobal: true`).
-- **Environment Setup Requirements**: Ensure Node.js >=16. XAI API key must be set for functionality. Uses system keychain for secure storage via `conf` package.
+  - Link for local testing: `npm link`
+  - Run directly: `node bin/context.js`
+  - Check updates: The tool includes an update notifier via `update-notifier`
+- **Build and Deployment**: No build step required; publish via `npm publish` for releases. Global installs handle distribution
+- **Environment Setup Requirements**: Node.js >=16; XAI_API_KEY for testing API integrations. Use `.env` for local dev
 - **Troubleshooting Tips**:
-  - If API calls fail, verify `XAI_API_KEY` and network access.
-  - For module resolution issues, confirm ESM support in Node version.
-  - Clear config with `/clear` command in chat; reset keys via `/api`.
-- **Performance Considerations**: Tool is lightweight with instant startup. Large codebases may increase scanning time; optimize by focusing on relevant directories. Token limits handled via `gpt-tokenizer`.
+  - If `context` command not found, ensure global install or use `npx @lukaloehr/context-engine`
+  - API key issues: Use `/api` command in chat or check keychain storage via `conf` package
+  - Global vs local: Postinstall script detects and warns about non-global installs
+- **Performance Considerations**: Lightweight startup; scans files efficiently but large codebases may increase load time. Tokenization via `gpt-tokenizer` helps manage context size
 
 ## Testing instructions
 
-- **Test Commands**: Basic placeholder script exists (`npm test` echoes error and exits). Implement comprehensive tests for core functions like context loading, API integration, and UI rendering.
-- **Test Structure and Organization**: No existing test suite. Organize tests in `__tests__/` or alongside source files using Jest or similar. Cover units for providers, utils, and commands.
-- **CI/CD Setup**: Not configured. Recommend GitHub Actions for linting, unit tests, and npm publish on tags.
-- **Testing Frameworks Used**: None specified. Suggest Vitest or Jest for ESM compatibility, with focus on async API mocks.
-- **Coverage Requirements**: Aim for >80% coverage on core logic (scanning, prompting, response formatting). Test edge cases like large files and API errors.
+- **Test Commands**: Basic placeholder in package.json: `npm test` (currently echoes error; implement proper tests)
+- **Test Structure and Organization**: No dedicated tests folder yet; add unit tests for utils (e.g., file scanning, tokenization) and integration tests for API providers
+- **CI/CD Setup**: Not configured; recommend GitHub Actions for linting, testing, and npm publish on tags
+- **Testing Frameworks Used**: None specified; suggest Jest or Node's built-in test runner for future implementation
+- **Coverage Requirements**: Aim for >80% coverage on core functions like context loading and model switching once tests are added
 
 ## PR instructions
 
-- **Pull Request Process**: Fork the repository, create feature branches (`feat/`, `fix/`, `docs/` prefixes). Ensure changes align with MIT license and project scope.
-- **Code Review Requirements**: PRs must include descriptive titles and bodies explaining changes. Add JSDoc for new functions. No breaking changes without version bump. Test locally with `npm link`.
-- **Versioning Strategy**: Semantic versioning (SemVer) via `package.json`. Major updates for API/model changes, minor for features, patch for fixes.
-- **Release Process**: Update version with `npm version [major|minor|patch]`, commit, tag, and push. Publish to npm with `npm publish`. Update changelog in README if needed.
-- **Documentation Requirements**: Update README.md for user-facing changes. Add examples for new features. Ensure code comments cover complex logic.
+- **Pull Request Process**: Fork the repo, create feature branch (`feat/your-feature`), commit with clear messages (e.g., "feat: add test suite"), and open PR against `main`
+- **Code Review Requirements**: Ensure code follows ES module patterns, includes JSDoc, and doesn't break CLI functionality. Test globally with `npm link` before submitting
+- **Versioning Strategy**: Semantic versioning (SemVer) via package.json; bump minor for features, patch for fixes, major for breaking changes
+- **Release Process**: Update version in package.json, tag release (`git tag vX.Y.Z`), push tags, and run `npm publish --access public`
+- **Documentation Requirements**: Update README.md for new features; add examples in usage section. Ensure changes are reflected in project structure comments
 
 ---
 

@@ -5,9 +5,11 @@
 
 export { SubAgent } from './base.js';
 export { AgentsMdSubAgent } from './agents-md.js';
+export { ReadmeSubAgent } from './readme.js';
 
 // Import for registry
 import { AgentsMdSubAgent } from './agents-md.js';
+import { ReadmeSubAgent } from './readme.js';
 
 /**
  * Get a sub-agent by name
@@ -18,6 +20,8 @@ export function getSubAgent(name) {
   switch (name) {
     case 'agentsMd':
       return new AgentsMdSubAgent();
+    case 'readme':
+      return new ReadmeSubAgent();
     default:
       throw new Error(`Unknown sub-agent: ${name}`);
   }

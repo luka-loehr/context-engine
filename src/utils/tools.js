@@ -61,25 +61,9 @@ export const TOOLS = {
       properties: {},
       required: []
     }
-  },
-  createAgentsMd: {
-    name: 'createAgentsMd',
-    description: 'Create an AGENTS.md file for the project. This tool spawns a sub-agent that analyzes the codebase and generates comprehensive instructions for AI coding agents. Use this when the user wants to create documentation specifically for AI assistants.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
-  },
-  createReadme: {
-    name: 'createReadme',
-    description: 'Create a README.md file for the project. This tool spawns a sub-agent that analyzes the codebase and generates a comprehensive README with project description, installation instructions, usage examples, and other relevant information.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
   }
+  // Note: Subagent tools (createAgentsMd, createReadme, etc.) are now
+  // dynamically loaded from the SubAgent registry in chat.js
 };
 
 /**
@@ -115,17 +99,8 @@ export function executeTool(toolName, parameters, projectContext) {
         success: true,
         action: 'clear'
       };
-    case 'createAgentsMd':
-      return {
-        success: true,
-        action: 'createAgentsMd'
-      };
-    case 'createReadme':
-      return {
-        success: true,
-        action: 'createReadme'
-      };
     default:
+      // Subagent tools are handled in chat.js via the registry
       return {
         success: false,
         error: `Unknown tool: ${toolName}`

@@ -13,8 +13,7 @@ import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
-import { getSubAgent } from '../sub-agents/index.js';
-import { SubAgentManager } from '../sub-agents/manager.js';
+import { getSubAgentByToolName, isSubAgentTool, SubAgentManager, getAllSubAgentTools } from '../sub-agents/index.js';
 import {
   createSession,
   addUserMessage,
@@ -58,8 +57,16 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider (use the actual model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
-  // Tool definitions for AI
-  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear, TOOLS.createAgentsMd, TOOLS.createReadme];
+  // Tool definitions for AI - includes base tools + all registered subagent tools
+  const tools = [
+    TOOLS.getFileContent, 
+    TOOLS.exit, 
+    TOOLS.help, 
+    TOOLS.model, 
+    TOOLS.api, 
+    TOOLS.clear,
+    ...getAllSubAgentTools() // Dynamically add all subagent tools
+  ];
   
   // Tool call handler
   let currentToolSpinner = null;
@@ -166,10 +173,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       return { success: true, message: 'Conversation cleared', stopLoop: true };
     }
 
-    if (toolName === 'createAgentsMd' || toolName === 'createReadme') {
+    // Generic subagent handler - works for ALL subagents
+    if (isSubAgentTool(toolName)) {
       // Handle subagent creation with concurrent execution support
       const callId = ++subAgentCallId;
-      const subAgentType = toolName === 'createAgentsMd' ? 'agentsMd' : 'readme';
       
       // Create a promise that will be resolved when this call should execute
       let resolveExecution;
@@ -180,7 +187,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Register this call
       const callInfo = {
         id: callId,
-        subAgentType,
+        toolName,
         parameters,
         resolveExecution,
         executionPromise
@@ -202,7 +209,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           // Multiple subagents - use SubAgentManager for concurrent execution
           const manager = new SubAgentManager();
           const configs = allCalls.map(call => ({
-            subAgent: getSubAgent(call.subAgentType),
+            subAgent: getSubAgentByToolName(call.toolName),
             params: {},
             projectContext: session.fullProjectContext,
             modelInfo: currentModelInfo,
@@ -225,7 +232,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           return result;
         } else {
           // Single subagent - execute directly
-          const subAgent = getSubAgent(subAgentType);
+          const subAgent = getSubAgentByToolName(toolName);
           await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
           const result = { 
             success: true, 

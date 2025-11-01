@@ -115,7 +115,7 @@ export class SubAgentManager {
    * Execute subagent with intercepted status updates
    */
   async executeWithStatusInterception(subAgent, params, projectContext, modelInfo, apiKey, provider, index) {
-    const { createProvider } = await import('../providers/index.js');
+    const { createProvider } = await import('../../providers/index.js');
     
     // Create sub-agent provider
     const subAgentProvider = createProvider(modelInfo.provider, apiKey, modelInfo.model);

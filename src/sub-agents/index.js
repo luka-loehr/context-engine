@@ -1,28 +1,66 @@
 /**
- * Sub-agents registry
- * Exports all available sub-agents
+ * SubAgent System Entry Point
+ * Provides access to the registry and initializes all agents
  */
 
-export { SubAgent } from './base.js';
-export { AgentsMdSubAgent } from './agents-md.js';
-export { ReadmeSubAgent } from './readme-md.js';
+import { registry } from './core/registry.js';
 
-// Import for registry
-import { AgentsMdSubAgent } from './agents-md.js';
-import { ReadmeSubAgent } from './readme-md.js';
+// Import and register all agents
+import { agentConfig as agentsMdConfig } from './agents/agents-md.js';
+import { agentConfig as readmeMdConfig } from './agents/readme-md.js';
+
+// Register agents
+registry.register(agentsMdConfig);
+registry.register(readmeMdConfig);
 
 /**
- * Get a sub-agent by name
- * @param {string} name - Sub-agent name
- * @returns {SubAgent} Sub-agent instance
+ * Get a subagent instance by ID
+ * @param {string} id - Agent ID (e.g., 'agents-md', 'readme-md')
+ * @returns {SubAgent}
  */
-export function getSubAgent(name) {
-  switch (name) {
-    case 'agentsMd':
-      return new AgentsMdSubAgent();
-    case 'readme':
-      return new ReadmeSubAgent();
-    default:
-      throw new Error(`Unknown sub-agent: ${name}`);
-  }
+export function getSubAgent(id) {
+  return registry.getAgent(id);
 }
+
+/**
+ * Get a subagent instance by tool name
+ * @param {string} toolName - Tool function name (e.g., 'createAgentsMd')
+ * @returns {SubAgent}
+ */
+export function getSubAgentByToolName(toolName) {
+  return registry.getAgentByToolName(toolName);
+}
+
+/**
+ * Get all tool definitions for AI
+ * @returns {Array}
+ */
+export function getAllSubAgentTools() {
+  return registry.getAllToolDefinitions();
+}
+
+/**
+ * Check if a tool name is a subagent tool
+ * @param {string} toolName
+ * @returns {boolean}
+ */
+export function isSubAgentTool(toolName) {
+  return registry.isSubAgentTool(toolName);
+}
+
+/**
+ * Get all registered agent IDs
+ * @returns {Array<string>}
+ */
+export function getAllAgentIds() {
+  return registry.getAllAgentIds();
+}
+
+// Export the registry for advanced usage
+export { registry };
+
+// Export SubAgentManager for concurrent execution
+export { SubAgentManager } from './core/manager.js';
+
+// Export base class for creating new agents
+export { SubAgent } from './core/base.js';

@@ -1,155 +1,172 @@
-# Context Engine
+# Context-Engine
 
-Context Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using advanced AI models like XAI Grok. It analyzes project structure, provides instant code insights, and assists with development tasks through natural language conversations.
+Context-Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using XAI Grok. It provides instant answers to questions about code structure, dependencies, and functionality by analyzing project files in real-time.
 
 ## Description
 
-Context Engine transforms your codebase into an interactive AI assistant. By combining sophisticated prompt engineering with AI language models, it allows you to ask questions about your code, get explanations, debug issues, and receive suggestions directly from the command line.
+Context-Engine transforms your codebase into an interactive conversation partner. Using advanced AI models from XAI, it understands your project's architecture and can explain components, suggest improvements, and answer technical questions. Key features include:
 
-**Key Features:**
-- Natural language interaction with your entire codebase
-- Support for multiple AI models (XAI Grok, OpenAI, and more)
-- Intelligent context gathering and token optimization
-- Syntax-highlighted code responses
-- Persistent configuration and session management
-- Update notifications and easy model switching
+- **Real-time file analysis**: Automatically loads and analyzes relevant files as you ask questions
+- **Multi-model support**: Switch between different AI models for optimal performance
+- **Interactive chat interface**: Natural language conversation with syntax highlighting and streaming responses
+- **Tool integration**: Built-in tools for file access, configuration management, and documentation generation
+- **Sub-agent system**: Specialized agents for creating README.md and AGENTS.md files
+- **Session management**: Maintains conversation context while preserving project structure
 
-**Use Cases:**
-- Understanding complex legacy codebases
-- Quick code reviews and explanations
-- Debugging assistance through conversational AI
-- Learning new projects by asking questions
-- Generating documentation from code analysis
+Use cases include code reviews, onboarding new developers, debugging assistance, and automated documentation generation.
 
 ## Installation
 
 ### Prerequisites
-- Node.js version 16.0.0 or higher
-- npm or yarn package manager
-- API key for your preferred AI provider (XAI, OpenAI, etc.)
+- Node.js >= 16.0.0
+- XAI API key (obtain from [x.ai](https://x.ai))
 
-### Install via npm
-```bash
-npm install -g @lukaloehr/context-engine
-```
+### Setup Steps
 
-### Verify Installation
-```bash
-context --version
-```
+1. **Install globally via npm:**
+   ```bash
+   npm install -g @lukaloehr/context-engine
+   ```
 
-The tool will automatically run a post-install script to set up necessary configurations.
+2. **Set your XAI API key:**
+   Create a `.env` file in your project root:
+   ```
+   XAI_API_KEY=your_xai_api_key_here
+   ```
+   Or set as environment variable:
+   ```bash
+   export XAI_API_KEY=your_xai_api_key_here
+   ```
+
+3. **Verify installation:**
+   ```bash
+   context --version
+   ```
+
+The post-install script will automatically configure the tool and check for updates.
 
 ## Usage
 
-### Initial Setup
-The first time you run the tool, it will guide you through setup:
+### Basic Usage
+
+Navigate to your project directory and start the interactive session:
 
 ```bash
+cd your-project
 context
 ```
 
-You'll be prompted to:
-1. Select your preferred AI model (default: context)
-2. Enter your API key (stored securely)
-3. Choose your default project directory
+This launches the AI assistant with full access to your codebase. Ask questions naturally:
 
-### Basic Commands
+- "What does the main function do?"
+- "Explain the authentication flow"
+- "How are database connections handled?"
+- "Generate a README for this project"
 
-**Start a chat session in current directory:**
-```bash
-context chat
-```
+### Command Line Options
 
-**Chat with a specific project:**
-```bash
-context chat /path/to/your/project
-```
-
-**Switch AI models:**
-```bash
-context model
-```
-
-**Clear configuration (reset setup):**
-```bash
-context clear
-```
-
-**View help:**
 ```bash
 context --help
 ```
 
-### Interactive Chat Session
-Once started, you can ask questions like:
-- "Explain how the authentication system works"
-- "What does this function do?"
-- "Find all API endpoints in the codebase"
-- "Suggest improvements for this React component"
-- "Debug why this test is failing"
+Available commands:
+- `context` - Start interactive chat session
+- `context --model <name>` - Switch AI model
+- `context --clear-config` - Reset configuration
 
-The AI will analyze your codebase context and provide detailed, syntax-highlighted responses.
+### Interactive Commands
 
-### Environment Variables
-Set your API key as an environment variable:
-```bash
-export XAI_API_KEY="your-api-key-here"
-# or for OpenAI
-export OPENAI_API_KEY="your-openai-key"
+Within the chat session, use these commands:
+- `/exit` - Close the session
+- `/clear` - Clear conversation history (keep context)
+- `/model` - Change AI model
+- `/api` - Manage API keys
+- `/help` - Show help information
+
+### Example Session
+
+```
+> What is the main purpose of this project?
+
+context-engine: This project is a React-based e-commerce platform built with TypeScript. The main entry point is `src/index.tsx` which sets up the routing with React Router and the global state management using Redux. The core features include user authentication, product catalog browsing, shopping cart functionality, and order processing.
+
+The architecture follows a modular pattern with separate concerns for:
+- Authentication (src/auth/)
+- Products (src/products/)
+- Cart (src/cart/)
+- Orders (src/orders/)
+
+Would you like me to explain any specific component in detail?
 ```
 
 ## Features
 
-- **Multi-Model Support**: Seamlessly switch between XAI Grok, OpenAI GPT models, and other providers
-- **Intelligent Context Gathering**: Automatically analyzes your project structure and relevant files
-- **Token Optimization**: Smart prompt engineering to maximize response quality within token limits
-- **Syntax Highlighting**: Beautiful, colored code output using highlight.js
-- **Persistent Configuration**: Securely stores API keys and preferences using Conf
+- **Intelligent File Loading**: Automatically identifies and loads relevant files based on your questions
+- **Syntax Highlighting**: Code snippets are displayed with proper syntax coloring
+- **Streaming Responses**: Real-time AI responses as they are generated
+- **Token Management**: Tracks and displays token usage for cost awareness
+- **Model Switching**: Support for multiple AI models with easy switching
+- **Sub-Agent System**: Specialized agents for documentation generation (README.md, AGENTS.md)
+- **Concurrent Processing**: Handles multiple file analysis requests efficiently
+- **Error Recovery**: Graceful handling of API errors and missing files
 - **Update Notifications**: Automatic checks for new versions
-- **CLI-First Design**: Built with Commander.js for intuitive command-line interface
 - **Cross-Platform**: Works on Windows, macOS, and Linux
-- **Modular Architecture**: Easy to extend with custom models or features
 
 ## Contributing
 
-We welcome contributions to improve Context Engine! Please follow these guidelines:
-
 ### Development Setup
-1. Fork the repository and clone your fork
-2. Install dependencies:
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/luka-loehr/context-engine.git
+   cd context-engine
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
-3. Create a `.env` file with your API keys for testing
-4. Run the development version:
+
+3. **Set up development environment:**
    ```bash
-   npm run dev
+   # Copy example environment
+   cp .env.example .env
+   
+   # Set your XAI API key in .env
+   ```
+
+4. **Run in development mode:**
+   ```bash
+   # Link globally for testing
+   npm link
+   
+   # Test the CLI
+   context --version
    ```
 
 ### Coding Standards
+
 - Use ES modules (import/export syntax)
-- Follow Airbnb JavaScript style guide
+- Follow [JavaScript Standard Style](https://standardjs.com/)
 - Write descriptive commit messages
-- Add tests for new features
-- Update documentation for API changes
+- Add comprehensive JSDoc comments for public APIs
+- Ensure cross-platform compatibility
 
 ### Contribution Process
-1. Create a feature branch: `git checkout -b feature/amazing-new-feature`
-2. Make your changes and commit: `git commit -m "Add amazing new feature"`
-3. Push to your branch: `git push origin feature/amazing-new-feature`
-4. Create a Pull Request on GitHub
-5. Ensure your code passes linting and tests
-6. Respond to feedback and iterate
+
+1. Fork the repository and create a feature branch
+2. Make your changes and add tests
+3. Ensure code passes linting: `npm run lint`
+4. Submit a pull request with detailed description
+5. Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification
 
 ### Testing
-Currently, the test suite is minimal. Contributions adding comprehensive tests are especially welcome. Run tests with:
+
+Currently, the test suite is minimal. Contributions adding comprehensive tests are welcome:
+
 ```bash
 npm test
 ```
-
-### Documentation
-Keep README.md updated with new features. Add usage examples in the documentation section.
 
 ## License
 

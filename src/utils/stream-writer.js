@@ -1,6 +1,6 @@
 import wrapAnsi from 'wrap-ansi';
 import chalk from 'chalk';
-import { createHighlighter } from 'shiki';
+import { highlight } from 'cli-highlight';
 
 /**
  * Wrap text with list indentation preservation
@@ -44,22 +44,10 @@ function wrapText(text, maxWidth, options = { hard: true, wordWrap: true, trim: 
 /**
  * Helper function for streaming with word wrap and inline markdown
  */
-export async function createStreamWriter() {
+export function createStreamWriter() {
   const terminalWidth = process.stdout.columns || 80;
   const maxWidth = Math.min(terminalWidth - 4, 76); // Leave some margin
   const options = { hard: true, wordWrap: true, trim: false };
-
-  // Initialize Shiki highlighter
-  const highlighter = await createHighlighter({
-    themes: ['dark-plus'],
-    langs: [
-      'javascript', 'typescript', 'python', 'java', 'cpp', 'c', 'csharp', 'go', 'rust',
-      'php', 'ruby', 'swift', 'kotlin', 'dart', 'scala', 'html', 'css', 'scss',
-      'json', 'yaml', 'xml', 'sql', 'bash', 'shell', 'powershell', 'dockerfile',
-      'markdown', 'latex', 'r', 'matlab', 'lua', 'perl', 'haskell', 'clojure',
-      'scheme', 'erlang', 'elixir', 'vim', 'diff', 'log', 'plaintext'
-    ]
-  });
 
   let buffer = '';
   let isInCodeBlock = false; // State for multi-line code blocks
@@ -85,7 +73,7 @@ export async function createStreamWriter() {
           } else {
             // End of code block - highlight and output the complete block
             isInCodeBlock = false;
-            const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, highlighter, maxWidth, options);
+            const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, maxWidth, options);
             console.log(highlightedCode);
             codeBlockBuffer = '';
             codeBlockLang = '';
@@ -135,7 +123,7 @@ export async function createStreamWriter() {
             codeBlockBuffer = '';
           } else {
             isInCodeBlock = false;
-            const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, highlighter, maxWidth, options);
+            const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, maxWidth, options);
             console.log(highlightedCode);
             codeBlockBuffer = '';
             codeBlockLang = '';
@@ -176,7 +164,7 @@ export async function createStreamWriter() {
     flush() {
       // Handle any remaining code block content first
       if (isInCodeBlock && codeBlockBuffer.trim()) {
-        const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, highlighter, maxWidth, options);
+        const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, maxWidth, options);
         console.log(highlightedCode);
         isInCodeBlock = false;
         codeBlockBuffer = '';
@@ -198,7 +186,7 @@ export async function createStreamWriter() {
           codeBlockBuffer = '';
         } else {
           isInCodeBlock = false;
-          const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, highlighter, maxWidth, options);
+          const highlightedCode = highlightCodeBlock(codeBlockBuffer, codeBlockLang, maxWidth, options);
           console.log(highlightedCode);
           codeBlockBuffer = '';
           codeBlockLang = '';
@@ -232,19 +220,56 @@ export async function createStreamWriter() {
 }
 
 /**
- * Highlight a code block using Shiki
+ * Highlight a code block using cli-highlight
  */
-function highlightCodeBlock(code, language, highlighter, maxWidth, options) {
+function highlightCodeBlock(code, language, maxWidth, options) {
   try {
-    // Use Shiki to highlight the code with ANSI output
-    const ansiCode = highlighter.codeToAnsi(code.trim(), {
-      lang: language,
-      theme: 'dark-plus'
+    // Map common language aliases to cli-highlight supported names
+    const languageMap = {
+      'js': 'javascript',
+      'ts': 'typescript',
+      'py': 'python',
+      'rb': 'ruby',
+      'sh': 'bash',
+      'yml': 'yaml',
+      'md': 'markdown',
+      'jsx': 'javascript',
+      'tsx': 'typescript'
+    };
+
+    const mappedLang = languageMap[language] || language;
+
+    // Use cli-highlight to add syntax colors
+    const highlighted = highlight(code.trim(), {
+      language: mappedLang,
+      ignoreIllegals: true,
+      theme: {
+        keyword: chalk.magenta,
+        built_in: chalk.cyan,
+        type: chalk.cyan.dim,
+        literal: chalk.blue,
+        number: chalk.green,
+        string: chalk.green,
+        comment: chalk.gray,
+        meta: chalk.gray,
+        function: chalk.yellow,
+        title: chalk.yellow,
+        params: chalk.white,
+        attr: chalk.cyan,
+        name: chalk.cyan,
+        tag: chalk.blue,
+        regexp: chalk.red,
+        selector: chalk.magenta,
+        variable: chalk.white,
+        'template-variable': chalk.green,
+        link: chalk.blue.underline,
+        deletion: chalk.red,
+        addition: chalk.green
+      }
     });
 
-    // The ANSI output from Shiki already includes proper coloring
-    // We just need to handle word wrapping for long lines
-    const lines = ansiCode.split('\n');
+    // Handle word wrapping for long lines
+    const lines = highlighted.split('\n');
     const wrappedLines = lines.map(line => wrapText(line, maxWidth, options));
     return wrappedLines.join('\n');
   } catch (error) {

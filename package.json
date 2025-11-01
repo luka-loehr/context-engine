@@ -40,6 +40,7 @@
   "dependencies": {
     "ansi-escapes": "^7.1.1",
     "chalk": "^5.3.0",
+    "cli-highlight": "^2.1.11",
     "commander": "^11.1.0",
     "conf": "^12.0.0",
     "dotenv": "^17.2.3",
@@ -47,7 +48,6 @@
     "inquirer": "^9.2.12",
     "openai": "^4.0.0",
     "ora": "^7.0.1",
-    "shiki": "^3.14.0",
     "update-notifier": "^7.3.1",
     "wrap-ansi": "^9.0.0"
   },

@@ -48,7 +48,7 @@ Guidelines for contributors. Include development setup, coding standards, and co
 License information and any attribution requirements.
 
 WORKFLOW:
-Use the statusUpdate tool frequently with brief, meaningful progress messages as you work. Call statusUpdate with "Creating README.md content" when you start writing the document.
+Use the statusUpdate tool frequently with SHORT, concise progress messages (1-3 words). Call statusUpdate with "Creating README.md content" when you start writing the document.
 
 When calling createFile, you MUST include the successMessage parameter with a descriptive message like "README.md for [ProjectName] successfully created". This parameter is REQUIRED.
 
@@ -60,7 +60,7 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create a clean, professional README.md file. You MUST use the statusUpdate tool frequently with brief, meaningful messages - this is REQUIRED.
+    return `Please analyze this codebase and create a clean, professional README.md file. You MUST use the statusUpdate tool frequently with SHORT messages (1-3 words) - this is REQUIRED.
 
 CRITICAL: Create a properly formatted README.md file with:
 - Clean title: "# [ProjectName]" (no repetition)

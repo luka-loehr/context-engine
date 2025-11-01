@@ -1,6 +1,5 @@
 import wrapAnsi from 'wrap-ansi';
 import chalk from 'chalk';
-import { highlight } from 'cli-highlight';
 
 /**
  * Wrap text with list indentation preservation
@@ -220,67 +219,172 @@ export function createStreamWriter() {
 }
 
 /**
- * Highlight a code block using cli-highlight
+ * Highlight a code block with syntax colors using regex patterns
  */
 function highlightCodeBlock(code, language, maxWidth, options) {
-  try {
-    // Map common language aliases to cli-highlight supported names
-    const languageMap = {
-      'js': 'javascript',
-      'ts': 'typescript',
-      'py': 'python',
-      'rb': 'ruby',
-      'sh': 'bash',
-      'yml': 'yaml',
-      'md': 'markdown',
-      'jsx': 'javascript',
-      'tsx': 'typescript'
-    };
-
-    const mappedLang = languageMap[language] || language;
-
-    // Use cli-highlight to add syntax colors
-    const highlighted = highlight(code.trim(), {
-      language: mappedLang,
-      ignoreIllegals: true,
-      theme: {
-        keyword: chalk.magenta,
-        built_in: chalk.cyan,
-        type: chalk.cyan.dim,
-        literal: chalk.blue,
-        number: chalk.green,
-        string: chalk.green,
-        comment: chalk.gray,
-        meta: chalk.gray,
-        function: chalk.yellow,
-        title: chalk.yellow,
-        params: chalk.white,
-        attr: chalk.cyan,
-        name: chalk.cyan,
-        tag: chalk.blue,
-        regexp: chalk.red,
-        selector: chalk.magenta,
-        variable: chalk.white,
-        'template-variable': chalk.green,
-        link: chalk.blue.underline,
-        deletion: chalk.red,
-        addition: chalk.green
-      }
-    });
-
-    // Handle word wrapping for long lines
-    const lines = highlighted.split('\n');
-    const wrappedLines = lines.map(line => wrapText(line, maxWidth, options));
-    return wrappedLines.join('\n');
-  } catch (error) {
-    // Fallback to basic blue highlighting if syntax highlighting fails
-    const lines = code.trim().split('\n');
-    const wrappedLines = lines.map(line => {
-      const wrapped = wrapText(line, maxWidth, options);
-      return chalk.blue(wrapped);
-    });
-    return wrappedLines.join('\n');
+  const trimmedCode = code.trim();
+  
+  // Apply language-specific highlighting
+  let highlighted;
+  if (language === 'html' || language === 'xml') {
+    highlighted = highlightHTML(trimmedCode);
+  } else if (language === 'javascript' || language === 'js' || language === 'typescript' || language === 'ts') {
+    highlighted = highlightJavaScript(trimmedCode);
+  } else if (language === 'python' || language === 'py') {
+    highlighted = highlightPython(trimmedCode);
+  } else if (language === 'css' || language === 'scss') {
+    highlighted = highlightCSS(trimmedCode);
+  } else if (language === 'json') {
+    highlighted = highlightJSON(trimmedCode);
+  } else {
+    // Generic highlighting for unknown languages
+    highlighted = highlightGeneric(trimmedCode);
   }
+
+  // Handle word wrapping for long lines
+  const lines = highlighted.split('\n');
+  const wrappedLines = lines.map(line => wrapText(line, maxWidth, options));
+  return wrappedLines.join('\n');
+}
+
+/**
+ * Highlight HTML/XML syntax
+ */
+function highlightHTML(code) {
+  let result = code;
+  
+  // Comments
+  result = result.replace(/(&lt;!--[\s\S]*?--&gt;|<!--[\s\S]*?-->)/g, (match) => chalk.gray(match));
+  
+  // Doctype
+  result = result.replace(/(&lt;!DOCTYPE[^&gt;]*&gt;|<!DOCTYPE[^>]*>)/gi, (match) => chalk.magenta(match));
+  
+  // Tags with attributes
+  result = result.replace(/(&lt;\/?)([a-zA-Z][a-zA-Z0-9]*)((?:\s+[a-zA-Z][a-zA-Z0-9\-]*(?:="[^"]*")?)*\s*)(\/?>|&gt;)/g, 
+    (match, open, tag, attrs, close) => {
+      const openTag = chalk.gray(open);
+      const tagName = chalk.blue(tag);
+      const closingBracket = chalk.gray(close);
+      
+      // Highlight attributes
+      const highlightedAttrs = attrs.replace(/([a-zA-Z][a-zA-Z0-9\-]*)(?:="([^"]*)")?/g, (attrMatch, attrName, attrValue) => {
+        if (attrValue !== undefined) {
+          return chalk.cyan(attrName) + chalk.gray('=') + chalk.green('"' + attrValue + '"');
+        }
+        return chalk.cyan(attrName);
+      });
+      
+      return openTag + tagName + highlightedAttrs + closingBracket;
+    }
+  );
+  
+  return result;
+}
+
+/**
+ * Highlight JavaScript/TypeScript syntax
+ */
+function highlightJavaScript(code) {
+  let result = code;
+  
+  // Comments
+  result = result.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, (match) => chalk.gray(match));
+  
+  // Strings
+  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, (match) => chalk.green(match));
+  
+  // Numbers
+  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
+  
+  // Keywords
+  const keywords = ['function', 'const', 'let', 'var', 'if', 'else', 'for', 'while', 'return', 'class', 'extends', 'import', 'export', 'default', 'async', 'await', 'try', 'catch', 'throw', 'new'];
+  keywords.forEach(keyword => {
+    result = result.replace(new RegExp(`\\b(${keyword})\\b`, 'g'), (match) => chalk.magenta(match));
+  });
+  
+  return result;
+}
+
+/**
+ * Highlight Python syntax
+ */
+function highlightPython(code) {
+  let result = code;
+  
+  // Comments
+  result = result.replace(/(#.*$)/gm, (match) => chalk.gray(match));
+  
+  // Strings
+  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (match) => chalk.green(match));
+  
+  // Numbers
+  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
+  
+  // Keywords
+  const keywords = ['def', 'class', 'if', 'elif', 'else', 'for', 'while', 'return', 'import', 'from', 'as', 'try', 'except', 'finally', 'with', 'lambda', 'yield', 'async', 'await'];
+  keywords.forEach(keyword => {
+    result = result.replace(new RegExp(`\\b(${keyword})\\b`, 'g'), (match) => chalk.magenta(match));
+  });
+  
+  return result;
+}
+
+/**
+ * Highlight CSS syntax
+ */
+function highlightCSS(code) {
+  let result = code;
+  
+  // Comments
+  result = result.replace(/(\/\*[\s\S]*?\*\/)/g, (match) => chalk.gray(match));
+  
+  // Selectors
+  result = result.replace(/^([^{]+)(?={)/gm, (match) => chalk.yellow(match));
+  
+  // Properties
+  result = result.replace(/([a-zA-Z-]+)(?=\s*:)/g, (match) => chalk.cyan(match));
+  
+  // Values (strings and colors)
+  result = result.replace(/:\s*([^;{]+)/g, (match, value) => ': ' + chalk.green(value));
+  
+  return result;
+}
+
+/**
+ * Highlight JSON syntax
+ */
+function highlightJSON(code) {
+  let result = code;
+  
+  // Strings (keys and values)
+  result = result.replace(/"([^"]+)"(\s*:)/g, (match, key) => chalk.cyan('"' + key + '"') + chalk.gray(':'));
+  result = result.replace(/:\s*"([^"]+)"/g, (match, value) => ': ' + chalk.green('"' + value + '"'));
+  
+  // Numbers
+  result = result.replace(/:\s*(\d+\.?\d*)/g, (match, num) => ': ' + chalk.yellow(num));
+  
+  // Booleans and null
+  result = result.replace(/:\s*(true|false|null)/g, (match, value) => ': ' + chalk.magenta(value));
+  
+  return result;
+}
+
+/**
+ * Generic syntax highlighting for unknown languages
+ */
+function highlightGeneric(code) {
+  let result = code;
+  
+  // Strings
+  result = result.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, (match) => chalk.green(match));
+  
+  // Numbers
+  result = result.replace(/\b(\d+\.?\d*)\b/g, (match) => chalk.yellow(match));
+  
+  // Comments (// and /* */ style)
+  result = result.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/|#.*$)/gm, (match) => chalk.gray(match));
+  
+  return result;
 }
 
 /**

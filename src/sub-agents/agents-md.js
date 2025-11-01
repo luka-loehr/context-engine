@@ -72,8 +72,8 @@ WORKFLOW:
 4. Call statusUpdate with "Analyzing coding patterns and dependencies" when reviewing code
 5. Call statusUpdate with "Reviewing project documentation" when reading docs
 6. Call statusUpdate with "Compiling project overview" when ready to summarize
-7. Call statusUpdate with "Structuring AGENTS.md content" when organizing the document
-8. Call statusUpdate with "Writing AGENTS.md file" before using createFile tool
+7. Call statusUpdate with "Creating AGENTS.md content" when starting to write the document
+8. Call statusUpdate with "Saving AGENTS.md file" before using createFile tool
 
 Use the statusUpdate tool at key milestones, not for every single file. Keep status messages brief and clear like:
 - "Scanning project files"
@@ -82,8 +82,8 @@ Use the statusUpdate tool at key milestones, not for every single file. Keep sta
 - "Analyzing coding patterns"
 - "Reviewing documentation"
 - "Compiling project overview"
-- "Structuring content"
-- "Writing file"
+- "Creating content"
+- "Saving file"
 
 For example, instead of updating for each individual file, you could say "Looking at 10 project files" or "Checking configuration files".
 
@@ -107,6 +107,6 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create an AGENTS.md file. You MUST use the statusUpdate tool frequently to keep users informed - this is REQUIRED, not optional. Start by calling statusUpdate with "Scanning project files", then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones with messages like "Looking at project configuration", "Examining source code structure", "Analyzing coding patterns", "Reviewing documentation", "Compiling project overview", "Structuring content". For example, you could say "Looking at 10 project files" when examining multiple files. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
+    return `Please analyze this codebase and create an AGENTS.md file. You MUST use the statusUpdate tool frequently to keep users informed - this is REQUIRED, not optional. Start by calling statusUpdate with "Scanning project files", then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones with messages like "Looking at project configuration", "Examining source code structure", "Analyzing coding patterns", "Reviewing documentation", "Compiling project overview", "Creating content". For example, you could say "Looking at 10 project files" when examining multiple files. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
   }
 }

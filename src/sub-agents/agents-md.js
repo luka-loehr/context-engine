@@ -72,7 +72,7 @@ Guidelines for contributions and deployment including:
 - Documentation requirements
 
 WORKFLOW:
-Use the statusUpdate tool VERY FREQUENTLY with SHORT progress messages (1-3 words max). Call statusUpdate with "Creating AGENTS.md content" when you start writing the document.
+Use the statusUpdate tool VERY FREQUENTLY with SHORT progress messages (1-6 words max). Call statusUpdate with "Creating AGENTS.md content" when you start writing the document.
 
 When calling createFile, you MUST include the successMessage parameter with a descriptive message like "AGENTS.md for [ProjectName] successfully created". This parameter is REQUIRED.
 
@@ -84,7 +84,7 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create a clean, professional AGENTS.md file. You MUST use the statusUpdate tool VERY FREQUENTLY with SHORT messages (1-3 words max) - this is REQUIRED.
+    return `Please analyze this codebase and create a clean, professional AGENTS.md file. You MUST use the statusUpdate tool VERY FREQUENTLY with SHORT messages (1-6 words max) - this is REQUIRED.
 
 CRITICAL: Create a properly formatted AGENTS.md file with:
 - Clean title: "# [ProjectName] AGENTS.md" (no repetition)

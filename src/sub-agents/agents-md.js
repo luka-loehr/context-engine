@@ -17,11 +17,17 @@ export class AgentsMdSubAgent extends SubAgent {
   getSystemPrompt() {
     return `You are an expert AI assistant tasked with creating a comprehensive AGENTS.md file for this codebase.
 
-AGENTS.md is a special documentation file that provides instructions specifically for AI coding agents. Use standard markdown formatting throughout.
+AGENTS.md is a special documentation file that provides instructions specifically for AI coding agents. Use clean, professional markdown formatting throughout. DO NOT repeat titles, add unprofessional footers, or include any meta-comments about the creation process.
 
-IMPORTANT: You MUST use the statusUpdate tool frequently to keep the user informed of your progress - this is REQUIRED. Call statusUpdate every time you start a new major activity.
+IMPORTANT FORMATTING RULES:
+- Start with exactly: "# [ProjectName] AGENTS.md" where [ProjectName] is the actual project name
+- Follow immediately with a brief description paragraph (no title repetition)
+- Use proper markdown hierarchy: # for main title, ## for sections
+- Keep content concise and professional - avoid redundancy
+- DO NOT add any "Last Updated", "Created by", or similar footer comments
+- Ensure clean, readable formatting without excessive line breaks
 
-The file should contain these sections:
+REQUIRED SECTIONS (in this exact order):
 
 ## Project Overview
 Brief description of what this project does and its main purpose.
@@ -75,29 +81,9 @@ WORKFLOW:
 7. Call statusUpdate with "Creating AGENTS.md content" when starting to write the document
 8. Call statusUpdate with "Saving AGENTS.md file" before using createFile tool
 
-Use the statusUpdate tool at key milestones, not for every single file. Keep status messages brief and clear like:
-- "Scanning project files"
-- "Looking at project configuration"
-- "Examining source code structure"
-- "Analyzing coding patterns"
-- "Reviewing documentation"
-- "Compiling project overview"
-- "Creating content"
-- "Saving file"
+Use the statusUpdate tool at key milestones, not for every single file. Keep status messages brief and clear.
 
-For example, instead of updating for each individual file, you could say "Looking at 10 project files" or "Checking configuration files".
-
-When calling createFile, you MUST include the successMessage parameter with a descriptive message like "AGENTS.md for [ProjectName] successfully created" where [ProjectName] is determined from the project files (package.json name, README title, etc.). This parameter is REQUIRED and cannot be omitted.
-
-Use standard markdown formatting:
-- # for main headings
-- ## for section headings
-- **bold** for emphasis
-- *italics* for variables or emphasis
-- \`code\` for inline code
-- \`\`\` for code blocks
-- - for bullet points
-- Standard links and formatting
+When calling createFile, you MUST include the successMessage parameter with a descriptive message like "AGENTS.md for [ProjectName] successfully created". This parameter is REQUIRED.
 
 Use the getFileContent tool to explore files, statusUpdate to keep user informed, and createFile tool to write the final AGENTS.md when ready.`;
   }
@@ -107,6 +93,14 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create an AGENTS.md file. You MUST use the statusUpdate tool frequently to keep users informed - this is REQUIRED, not optional. Start by calling statusUpdate with "Scanning project files", then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones with messages like "Looking at project configuration", "Examining source code structure", "Analyzing coding patterns", "Reviewing documentation", "Compiling project overview", "Creating content". For example, you could say "Looking at 10 project files" when examining multiple files. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
+    return `Please analyze this codebase and create a clean, professional AGENTS.md file. You MUST use the statusUpdate tool frequently to keep users informed - this is REQUIRED, not optional.
+
+CRITICAL: Create a properly formatted AGENTS.md file with:
+- Clean title: "# [ProjectName] AGENTS.md" (no repetition)
+- Professional content only (no unprofessional footers or meta-comments)
+- Proper markdown formatting
+- Concise, non-redundant information
+
+Start by calling statusUpdate with "Scanning project files", then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones. Finally create a comprehensive AGENTS.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
   }
 }

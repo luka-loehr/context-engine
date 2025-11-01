@@ -61,6 +61,20 @@ export class SubAgent {
           },
           required: ['filePath', 'content']
         }
+      },
+      {
+        name: 'statusUpdate',
+        description: 'Provide a brief status update to the user about what you are currently doing. Use this frequently to keep the user informed of your progress. Keep messages very short and clear.',
+        parameters: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              description: 'A very brief status message describing current activity (e.g., "analyzing dependencies", "reviewing README", "finalizing content")'
+            }
+          },
+          required: ['status']
+        }
       }
     ];
   }
@@ -114,37 +128,51 @@ export class SubAgent {
           };
         }
 
-        if (toolName === 'createFile') {
-          try {
-            const fs = await import('fs');
-            const path = await import('path');
+      if (toolName === 'createFile') {
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
 
-            // Ensure we're writing to the project root
-            const filePath = path.join(process.cwd(), parameters.filePath);
+          // Ensure we're writing to the project root
+          const filePath = path.join(process.cwd(), parameters.filePath);
 
-            // Write the file
-            fs.writeFileSync(filePath, parameters.content, 'utf8');
+          // Write the file
+          fs.writeFileSync(filePath, parameters.content, 'utf8');
 
-            loadingSpinner.succeed(`${this.name} completed successfully at ${parameters.filePath}`);
-            return {
-              success: true,
-              message: `File created successfully at ${parameters.filePath}`,
-              filePath: parameters.filePath
-            };
-          } catch (error) {
-            loadingSpinner.fail(`Failed to create ${this.name}: ${error.message}`);
-            return {
-              success: false,
-              error: `Failed to create file: ${error.message}`
-            };
-          }
+          loadingSpinner.succeed(`${this.name} completed successfully at ${parameters.filePath}`);
+          return {
+            success: true,
+            message: `File created successfully at ${parameters.filePath}`,
+            filePath: parameters.filePath
+          };
+        } catch (error) {
+          loadingSpinner.fail(`Failed to create ${this.name}: ${error.message}`);
+          return {
+            success: false,
+            error: `Failed to create file: ${error.message}`
+          };
         }
+      }
 
+      if (toolName === 'statusUpdate') {
+        // Update the loading spinner with the status message
+        if (loadingSpinner && loadingSpinner.isSpinning) {
+          loadingSpinner.text = `${this.description} - ${parameters.status}`;
+        } else {
+          // If spinner is not running, just log the status
+          console.log(`📝 ${this.name}: ${parameters.status}`);
+        }
         return {
-          success: false,
-          error: `Unknown tool: ${toolName}`
+          success: true,
+          message: `Status updated: ${parameters.status}`
         };
+      }
+
+      return {
+        success: false,
+        error: `Unknown tool: ${toolName}`
       };
+    };
 
       // Run the sub-agent
       await subAgentProvider.refinePrompt(

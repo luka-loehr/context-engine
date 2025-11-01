@@ -47,6 +47,7 @@
     "inquirer": "^9.2.12",
     "openai": "^4.0.0",
     "ora": "^7.0.1",
+    "shiki": "^3.14.0",
     "update-notifier": "^7.3.1",
     "wrap-ansi": "^9.0.0"
   },

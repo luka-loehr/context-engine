@@ -342,7 +342,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       thinkingSpinner = ora('Thinking...').start();
       
       // Get response from AI
-      const streamWriter = createStreamWriter();
+      const streamWriter = await createStreamWriter();
       let firstChunk = true;
       let assistantResponse = '';
       

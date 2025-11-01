@@ -48,15 +48,7 @@ Guidelines for contributors. Include development setup, coding standards, and co
 License information and any attribution requirements.
 
 WORKFLOW:
-1. Call statusUpdate at the start of major activities (let the AI choose appropriate messages)
-2. Use getFileContent to explore key files - call statusUpdate with meaningful progress messages
-3. Call statusUpdate when examining different aspects of the codebase
-4. Call statusUpdate when analyzing code patterns and dependencies
-5. Call statusUpdate when reviewing documentation and gathering information
-6. Call statusUpdate with "Compiling project overview" when ready to summarize
-7. Call statusUpdate with "Creating README.md content" when starting to write the document
-
-Use the statusUpdate tool at key milestones, not for every single file. Keep status messages brief and clear.
+Use the statusUpdate tool frequently with brief, meaningful progress messages as you work. Call statusUpdate with "Creating README.md content" when you start writing the document.
 
 When calling createFile, you MUST include the successMessage parameter with a descriptive message like "README.md for [ProjectName] successfully created". This parameter is REQUIRED.
 
@@ -68,7 +60,7 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create a clean, professional README.md file. You MUST use the statusUpdate tool frequently to keep users informed - this is REQUIRED, not optional.
+    return `Please analyze this codebase and create a clean, professional README.md file. You MUST use the statusUpdate tool frequently with brief, meaningful messages - this is REQUIRED.
 
 CRITICAL: Create a properly formatted README.md file with:
 - Clean title: "# [ProjectName]" (no repetition)
@@ -76,6 +68,6 @@ CRITICAL: Create a properly formatted README.md file with:
 - Proper markdown formatting
 - Concise, non-redundant information
 
-Start by calling statusUpdate with your first major activity, then examine key configuration files, documentation, and source code to understand the project structure, dependencies, and development workflow. Use statusUpdate at key milestones with meaningful progress messages. Call statusUpdate with "Creating README.md content" when you start writing the document. Finally create a comprehensive README.md file following the standard format, and remember to include the REQUIRED successMessage parameter when calling createFile.`;
+Examine the codebase, use statusUpdate to keep users informed, and call statusUpdate with "Creating README.md content" when you start writing the document. Finally create a comprehensive README.md file and remember to include the REQUIRED successMessage parameter when calling createFile.`;
   }
 }

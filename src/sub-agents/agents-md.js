@@ -67,15 +67,25 @@ Guidelines for contributions and deployment including:
 
 WORKFLOW:
 1. Call statusUpdate with "scanning project files"
-2. Use getFileContent to explore key files like package.json, README.md, and main source files
-3. Call statusUpdate with "analyzing dependencies" after reading package.json
-4. Call statusUpdate with "reviewing documentation" after reading README.md
-5. Call statusUpdate with "examining code structure" when looking at source files
-6. Call statusUpdate with "compiling project overview" when ready to summarize
-7. Call statusUpdate with "finalizing AGENTS.md content" when structuring the document
-8. Use createFile tool to write the final AGENTS.md when complete
+2. Use getFileContent to explore key files - call statusUpdate with "checking package.json" when reading it
+3. Call statusUpdate with "looking at dependencies" after reading package.json
+4. Call statusUpdate with "taking a closer look at README.md" when reading it
+5. Call statusUpdate with "reviewing project documentation" after reading README.md
+6. Call statusUpdate with "examining source code structure" when looking at main files
+7. Call statusUpdate with "analyzing coding patterns" when reviewing code style
+8. Call statusUpdate with "compiling project overview" when ready to summarize
+9. Call statusUpdate with "finalizing AGENTS.md content" when structuring the document
+10. Call statusUpdate with "saving AGENTS.md file" before using createFile tool
 
-Use the statusUpdate tool frequently - every time you start reading a new file type, analyzing a new aspect, or moving to a new phase of work. Keep status messages brief and clear.
+Use the statusUpdate tool frequently - every time you start reading a file, analyzing something new, or moving to a new phase. Keep status messages brief and clear like:
+- "checking package.json"
+- "looking at dependencies"
+- "taking a closer look at README.md"
+- "reviewing documentation"
+- "examining code structure"
+- "analyzing patterns"
+- "finalizing content"
+- "saving file"
 
 Use standard markdown formatting:
 - # for main headings
@@ -95,6 +105,6 @@ Use the getFileContent tool to explore files, statusUpdate to keep user informed
    * @returns {string} Initial prompt
    */
   getInitialPrompt() {
-    return `Please analyze this codebase and create an AGENTS.md file. Start by calling statusUpdate with "scanning project files", then examine the package.json, README.md, and key source files to understand the project structure, dependencies, and development workflow. Use statusUpdate frequently to keep the user informed of your progress. Finally create a comprehensive AGENTS.md file following the standard format.`;
+    return `Please analyze this codebase and create an AGENTS.md file. Start by calling statusUpdate with "scanning project files", then examine the package.json (call statusUpdate with "checking package.json"), README.md (call statusUpdate with "taking a closer look at README.md"), and key source files to understand the project structure, dependencies, and development workflow. Use statusUpdate frequently with messages like "looking at dependencies", "reviewing documentation", "examining code structure", "analyzing patterns", "finalizing content". Finally create a comprehensive AGENTS.md file following the standard format.`;
   }
 }

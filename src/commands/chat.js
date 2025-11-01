@@ -28,6 +28,50 @@ import { handleAPIError } from '../errors/index.js';
 
 
 /**
+ * Detect if user message requests multiple subagents concurrently
+ */
+function detectConcurrentSubagentRequest(userMessage) {
+  const message = userMessage.toLowerCase().trim();
+
+  // Patterns that indicate concurrent subagent requests
+  const concurrentPatterns = [
+    // Direct mentions: "create agents.md and readme.md"
+    /\b(create|make|generate)\b.*\bagents?\.md\b.*\b(and|&)\b.*\breadme\.md\b/i,
+    /\b(create|make|generate)\b.*\breadme\.md\b.*\b(and|&)\b.*\bagents?\.md\b/i,
+
+    // "both" patterns: "create both", "make both docs"
+    /\b(create|make|generate)\b.*\bboth\b.*\b(doc|file|documentation)s?\b/i,
+    /\b(create|make|generate)\b.*\bdocs?\b.*\band\b.*\bagents?\.md\b/i,
+    /\b(create|make|generate)\b.*\bdocs?\b.*\band\b.*\breadme\.md\b/i,
+
+    // Multiple file requests: "create agents.md create readme.md"
+    /\b(create|make|generate)\b.*\bagents?\.md\b.*\b(create|make|generate)\b.*\breadme\.md\b/i,
+    /\b(create|make|generate)\b.*\breadme\.md\b.*\b(create|make|generate)\b.*\bagents?\.md\b/i,
+  ];
+
+  // Check if message matches any concurrent pattern
+  const isConcurrent = concurrentPatterns.some(pattern => pattern.test(message));
+
+  if (isConcurrent) {
+    const subagents = [];
+
+    // Check for agents.md variants
+    if (/\bagents?\.md\b/i.test(message)) {
+      subagents.push('agentsMd');
+    }
+
+    // Check for readme.md
+    if (/\breadme\.md\b/i.test(message)) {
+      subagents.push('readme');
+    }
+
+    return subagents;
+  }
+
+  return [];
+}
+
+/**
  * Execute multiple subagents concurrently with improved UI
  */
 async function executeConcurrentSubagents(subagents, session, currentModelInfo, currentApiKey, provider) {
@@ -371,9 +415,24 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         break;
       }
 
+      // Check for concurrent subagent requests before processing
+      const concurrentSubagents = detectConcurrentSubagentRequest(userMessage);
+      if (concurrentSubagents.length > 1) {
+        // Handle concurrent subagents directly
+        console.log(chalk.cyan(`\n🚀 Detected request for ${concurrentSubagents.length} subagents...\n`));
+
+        await executeConcurrentSubagents(concurrentSubagents, session, currentModelInfo, currentApiKey, provider);
+
+        // Add a summary response to session
+        const filesCreated = concurrentSubagents.map(sa => sa === 'agentsMd' ? 'AGENTS.md' : 'README.md').join(' and ');
+        addAssistantMessage(session, `Subagents successfully created ${filesCreated}. Anything else I can help with?`);
+
+        continue; // Skip AI processing, go to next user input
+      }
+
       // Add user message to session
       addUserMessage(session, userMessage);
-      
+
       // Build full prompt with conversation history (context already sent once)
       let fullPrompt = '';
 

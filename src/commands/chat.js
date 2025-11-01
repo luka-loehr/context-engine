@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import dotenv from 'dotenv';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import { promisify } from 'util';

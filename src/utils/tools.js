@@ -61,6 +61,15 @@ export const TOOLS = {
       properties: {},
       required: []
     }
+  },
+  createAgentsMd: {
+    name: 'createAgentsMd',
+    description: 'Create an AGENTS.md file for the project. This tool spawns a sub-agent that analyzes the codebase and generates comprehensive instructions for AI coding agents. Use this when the user wants to create documentation specifically for AI assistants.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
   }
 };
 
@@ -96,6 +105,11 @@ export function executeTool(toolName, parameters, projectContext) {
       return {
         success: true,
         action: 'clear'
+      };
+    case 'createAgentsMd':
+      return {
+        success: true,
+        action: 'createAgentsMd'
       };
     default:
       return {

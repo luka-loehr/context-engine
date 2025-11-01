@@ -50,9 +50,11 @@ TOOLS (CRITICAL - MUST USE):
 - api: IMMEDIATELY call when user types "api" or "/api" - DO NOT respond, just call the tool
 - clear: IMMEDIATELY call when user types "clear" or "/clear" - DO NOT respond, just call the tool
 - exit: IMMEDIATELY call when user types "exit" or "/exit" - DO NOT respond, just call the tool
+- createAgentsMd: IMMEDIATELY call when user wants to create an AGENTS.md file - DO NOT respond, just call the tool
 
 TOOL USAGE RULES:
 - When user types a command (/clear, /api, /help, etc), ONLY call the tool - NO text response
+- When user asks to "create an agents.md" or similar, IMMEDIATELY call createAgentsMd tool
 - DO NOT say "I cleared the conversation" or "Done" - the tool handles output
 - DO NOT narrate actions ("I'll load...", "Let me check...")
 - DO NOT list files you're loading

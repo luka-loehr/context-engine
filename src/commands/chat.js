@@ -2,8 +2,6 @@ import chalk from 'chalk';
 import dotenv from 'dotenv';
 import ora from 'ora';
 import inquirer from 'inquirer';
-import { promisify } from 'util';
-import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { promptForUserInput } from '../ui/prompts.js';
@@ -15,53 +13,19 @@ import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
 import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
+import { getSubAgent } from '../sub-agents/index.js';
+import {
+  createSession,
+  addUserMessage,
+  addAssistantMessage,
+  addInitialContext,
+  clearConversationHistory,
+  getTotalTokens
+} from '../session/index.js';
+import { showWelcomeBanner } from '../session/index.js';
+import { clearScreen, clearPromptOutput } from '../terminal/index.js';
+import { handleAPIError } from '../errors/index.js';
 
-const execAsync = promisify(exec);
-
-/**
- * Get git status for current directory
- */
-async function getGitStatus() {
-  try {
-    const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD 2>/dev/null');
-    const branch = stdout.trim();
-    return branch ? ` git:(${branch})` : '';
-  } catch (err) {
-    return '';
-  }
-}
-
-/**
- * Display welcome banner
- */
-async function showWelcomeBanner(projectContext, contextPrefix) {
-  // Show current directory and git status
-  console.log(chalk.gray(`${process.cwd()}${await getGitStatus()}\n`));
-
-  // Welcome header
-  console.log(chalk.cyan.bold('* Welcome to context-engine!'));
-  console.log('');
-
-  // Show project info
-  console.log(chalk.gray('cwd: ' + process.cwd()));
-
-  if (projectContext && projectContext.length > 0) {
-    // Calculate tokens from what we actually send (file paths + markdown content)
-    const totalTokens = countTokens(contextPrefix);
-    const formattedTokens = formatTokenCount(totalTokens);
-    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})\n`));
-  } else {
-    console.log(chalk.yellow('loaded: 0 files (no project detected)\n'));
-  }
-
-  console.log(chalk.cyan('🚀 Smart Context Engine Features:'));
-  console.log('');
-  console.log(chalk.gray('  • Instant whole-folder structure preload & injection'));
-  console.log(chalk.gray('  • AI-powered context retrieval - loads exactly what you need'));
-  console.log(chalk.gray('  • Multi-file analysis with intelligent file selection'));
-  console.log(chalk.gray('  • Real-time code understanding & bug detection'));
-  console.log(chalk.gray('  • Ask anything about your codebase - from architecture to implementation\n'));
-}
 
 /**
  * Start interactive chat session with codebase context
@@ -70,26 +34,18 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
   const contextPrefix = buildProjectContextPrefix(projectContext);
-  
+
   // Show welcome banner
   await showWelcomeBanner(projectContext, contextPrefix);
-  
-  // Conversation history
-  const conversationHistory = [];
-  const initialContextMessages = []; // Store initial context separately
-  
-  // Token tracking
+
+  // Create session using new session management
+  const session = createSession(selectedModel, modelInfo, apiKey);
+  session.fullProjectContext = projectContext;
+
+  // Current session state (for backwards compatibility during refactoring)
   let currentModel = selectedModel;
   let currentModelInfo = modelInfo;
   let currentApiKey = apiKey;
-  const baseTokens = countTokens(contextPrefix) + countTokens(systemPrompt);
-  let conversationTokens = 0;
-  
-  // Track lines to clear before next message
-  let linesToClearBeforeNextMessage = 0;
-  
-  // Store full project context for tool calls
-  const fullProjectContext = projectContext;
   
   // Ensure API key is present
   if (!currentApiKey) {
@@ -102,7 +58,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
   // Tool definitions for AI
-  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear];
+  const tools = [TOOLS.getFileContent, TOOLS.exit, TOOLS.help, TOOLS.model, TOOLS.api, TOOLS.clear, TOOLS.createAgentsMd];
   
   // Tool call handler
   let currentToolSpinner = null;
@@ -197,14 +153,19 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 
     if (toolName === 'clear') {
       // Keep initial context, clear user conversation
-      conversationHistory.length = 0;
-      conversationHistory.push(...initialContextMessages);
-      conversationTokens = 0;
-      console.clear();
+      clearConversationHistory(session);
+      clearScreen();
       await showWelcomeBanner(projectContext, contextPrefix);
       console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
-      linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
+      session.linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
       return { success: true, message: 'Conversation cleared', stopLoop: true };
+    }
+
+    if (toolName === 'createAgentsMd') {
+      // Start AGENTS.md creation process
+      const subAgent = getSubAgent('agentsMd');
+      await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+      return { success: true, message: 'AGENTS.md creation completed', stopLoop: true };
     }
 
     // Show file loading spinner
@@ -238,39 +199,31 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Helper function to inject context into AI
   async function injectContext() {
     if (!projectContext || projectContext.length === 0) return;
-    
+
     const contextSpinner = ora('Injecting context into AI model...').start();
-    
+
     try {
       const initialContextMessage = contextPrefix + '\n\nPlease respond with just "ready" when you have processed all the project files and are ready to answer questions.';
-      
+
       const acknowledgment = await provider.refinePrompt(
         initialContextMessage,
         systemPrompt,
         null // No streaming for this initial message
       );
-      
+
       contextSpinner.succeed('Context-engine initialized');
-      
-      // Store initial context messages
-      initialContextMessages.length = 0;
-      initialContextMessages.push({
-        role: 'user',
-        content: contextPrefix
-      });
-      initialContextMessages.push({
-        role: 'assistant',
-        content: acknowledgment
-      });
-      
-      // Add to conversation history
-      conversationHistory.length = 0;
-      conversationHistory.push(...initialContextMessages);
-      
+
+      // Store initial context messages using session management
+      const initialMessages = [
+        { role: 'user', content: contextPrefix },
+        { role: 'assistant', content: acknowledgment }
+      ];
+      addInitialContext(session, initialMessages);
+
       console.log('');
     } catch (error) {
       contextSpinner.fail('Failed to load context');
-      displayError(error, modelInfo);
+      handleAPIError(error, currentModelInfo);
       console.log(chalk.yellow('\nContinuing without context...\n'));
     }
   }
@@ -315,26 +268,20 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         console.log(chalk.gray('\n👋 Goodbye!\n'));
         break;
       }
-      
-      // Add user message to history
-      conversationHistory.push({
-        role: 'user',
-        content: userMessage
-      });
-      
-      // Update conversation tokens
-      conversationTokens += countTokens(userMessage);
+
+      // Add user message to session
+      addUserMessage(session, userMessage);
       
       // Build full prompt with conversation history (context already sent once)
       let fullPrompt = '';
-      
-      // Add conversation history (which includes the initial context)
-      if (conversationHistory.length > 0) {
-        conversationHistory.forEach(msg => {
+
+      // Add conversation history from session (which includes the initial context)
+      if (session.conversationHistory.length > 0) {
+        session.conversationHistory.forEach(msg => {
           fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
         });
       }
-      
+
       // Add current question
       fullPrompt += `User: ${userMessage}`;
       
@@ -372,20 +319,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         streamWriter.flush();
         console.log('\n');  // Single empty line after response
         
-        // Add assistant response to history
-        conversationHistory.push({
-          role: 'assistant',
-          content: assistantResponse
-        });
-        
-        // Update conversation tokens
-        conversationTokens += countTokens(assistantResponse);
+        // Add assistant response to session
+        addAssistantMessage(session, assistantResponse);
         
       } catch (error) {
         if (thinkingSpinner && thinkingSpinner.isSpinning) {
           thinkingSpinner.stop();
         }
-        displayError(error, modelInfo);
+        handleAPIError(error, currentModelInfo);
         console.log(chalk.gray('\nContinuing chat session...\n'));
       }
       
@@ -399,7 +340,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     }
   }
 }
-
 /**
  * Show chat-specific help
  */

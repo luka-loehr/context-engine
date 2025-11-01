@@ -38,7 +38,6 @@
   "homepage": "https://github.com/luka-loehr/context-engine#readme",
   "license": "MIT",
   "dependencies": {
-    "ansi-escapes": "^7.1.1",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
     "conf": "^12.0.0",

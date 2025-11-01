@@ -1,30 +1,6 @@
 import { encode } from 'gpt-tokenizer';
 
 /**
- * Calculate total tokens from project files
- */
-export function calculateTokens(projectContext) {
-  if (!projectContext || projectContext.length === 0) {
-    return 0;
-  }
-  
-  let totalTokens = 0;
-  
-  for (const file of projectContext) {
-    try {
-      // Encode the file content to count tokens
-      const tokens = encode(file.content);
-      totalTokens += tokens.length;
-    } catch (error) {
-      // Skip files that can't be tokenized
-      continue;
-    }
-  }
-  
-  return totalTokens;
-}
-
-/**
  * Calculate tokens from a string
  */
 export function countTokens(text) {
@@ -59,20 +35,3 @@ export function formatTokenCount(count) {
     return Math.floor(count / 1000000) + 'M';
   }
 }
-
-/**
- * Calculate context usage percentage
- */
-export function calculateContextPercentage(usedTokens, totalLimit) {
-  if (totalLimit === 0) return 0;
-  const percentage = (usedTokens / totalLimit) * 100;
-  return Math.min(100, Math.round(percentage));
-}
-
-/**
- * Format context percentage with color coding
- */
-export function formatContextUsage(percentage) {
-  return `${percentage}%`;
-}
-

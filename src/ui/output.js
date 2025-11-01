@@ -88,30 +88,3 @@ export function displayError(error, modelInfo) {
     console.log(chalk.gray('\n💡 Check your API key and account status.'));
   }
 }
-
-/**
- * Show success message
- */
-export function showSuccess(message, details = {}) {
-  console.log(chalk.green(`\n✅ ${message}`));
-  Object.entries(details).forEach(([key, value]) => {
-    console.log(chalk.gray(`${key}: ${value}`));
-  });
-}
-
-/**
- * Display project scan results
- */
-export function displayProjectScanResults(files) {
-  console.log(chalk.gray('\nFiles to include:'));
-  files.slice(0, 10).forEach(file => {
-    console.log(chalk.gray(`  • ${file.path}`));
-  });
-  if (files.length > 10) {
-    console.log(chalk.gray(`  ... and ${files.length - 10} more files`));
-  }
-  
-  console.log(chalk.yellow('\n⚠️  WARNING: All file contents will be sent to the AI model.'));
-  console.log(chalk.gray('This may include sensitive information like API keys or secrets.'));
-}
-

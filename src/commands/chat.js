@@ -14,6 +14,7 @@ import { TOOLS, executeTool } from '../utils/tools.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
 import { getSubAgent } from '../sub-agents/index.js';
+import { SubAgentManager } from '../sub-agents/manager.js';
 import {
   createSession,
   addUserMessage,
@@ -26,133 +27,6 @@ import { showWelcomeBanner } from '../session/index.js';
 import { clearScreen, clearPromptOutput } from '../terminal/index.js';
 import { handleAPIError } from '../errors/index.js';
 
-
-/**
- * Detect if user message requests multiple subagents concurrently
- */
-function detectConcurrentSubagentRequest(userMessage) {
-  const message = userMessage.toLowerCase().trim();
-
-  // Patterns that indicate concurrent subagent requests
-  const concurrentPatterns = [
-    // Direct mentions: "create agents.md and readme.md"
-    /\b(create|make|generate)\b.*\bagents?\.md\b.*\b(and|&)\b.*\breadme\.md\b/i,
-    /\b(create|make|generate)\b.*\breadme\.md\b.*\b(and|&)\b.*\bagents?\.md\b/i,
-
-    // "both" patterns: "create both", "make both docs"
-    /\b(create|make|generate)\b.*\bboth\b.*\b(doc|file|documentation)s?\b/i,
-    /\b(create|make|generate)\b.*\bdocs?\b.*\band\b.*\bagents?\.md\b/i,
-    /\b(create|make|generate)\b.*\bdocs?\b.*\band\b.*\breadme\.md\b/i,
-
-    // Multiple file requests: "create agents.md create readme.md"
-    /\b(create|make|generate)\b.*\bagents?\.md\b.*\b(create|make|generate)\b.*\breadme\.md\b/i,
-    /\b(create|make|generate)\b.*\breadme\.md\b.*\b(create|make|generate)\b.*\bagents?\.md\b/i,
-  ];
-
-  // Check if message matches any concurrent pattern
-  const isConcurrent = concurrentPatterns.some(pattern => pattern.test(message));
-
-  if (isConcurrent) {
-    const subagents = [];
-
-    // Check for agents.md variants
-    if (/\bagents?\.md\b/i.test(message)) {
-      subagents.push('agentsMd');
-    }
-
-    // Check for readme.md
-    if (/\breadme\.md\b/i.test(message)) {
-      subagents.push('readme');
-    }
-
-    return subagents;
-  }
-
-  return [];
-}
-
-/**
- * Execute multiple subagents concurrently with improved UI
- */
-async function executeConcurrentSubagents(subagents, session, currentModelInfo, currentApiKey, provider) {
-  const subagentInstances = subagents.map(name => ({
-    name,
-    instance: getSubAgent(name),
-    displayName: name === 'agentsMd' ? 'AGENTS.md' : 'README.md'
-  }));
-
-  console.log(chalk.cyan(`\n🚀 ${subagents.length} Subagents working concurrently...\n`));
-
-  // Create multi-spinner display
-  const spinners = {};
-  subagentInstances.forEach(({ name, displayName }) => {
-    spinners[name] = ora(`⏳ Starting ${displayName} creation`).start();
-  });
-
-  // Status tracking for each subagent
-  const statusMap = new Map();
-  const completedCount = { count: 0 };
-
-  // Execute all subagents concurrently
-  const promises = subagentInstances.map(async ({ name, instance, displayName }) => {
-    try {
-      // Override the statusUpdate handler for concurrent execution
-      const originalExecute = instance.execute.bind(instance);
-      instance.execute = async function(...args) {
-        // Intercept tool calls to handle status updates properly
-        const originalProvider = args[4]; // provider
-
-        const wrappedProvider = {
-          ...originalProvider,
-          refinePrompt: async (prompt, systemPrompt, onChunk, tools, handleToolCall) => {
-            const wrappedHandleToolCall = async (toolCall) => {
-              if (toolCall.name === 'statusUpdate') {
-                // Update our spinner instead of logging
-                const status = toolCall.arguments?.status || toolCall.parameters?.status;
-                if (status && spinners[name] && spinners[name].isSpinning) {
-                  spinners[name].text = `🔄 ${displayName}: ${status}`;
-                }
-                return {
-                  success: true,
-                  message: `Status updated: ${status}`
-                };
-              }
-              return await handleToolCall(toolCall);
-            };
-
-            return await originalProvider.refinePrompt(prompt, systemPrompt, onChunk, tools, wrappedHandleToolCall);
-          }
-        };
-
-        const result = await originalExecute(...args.slice(0, 4), wrappedProvider);
-
-        // Mark as completed
-        if (spinners[name] && spinners[name].isSpinning) {
-          spinners[name].succeed(`✅ ${displayName} completed`);
-        }
-        completedCount.count++;
-
-        return result;
-      };
-
-      await instance.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-    } catch (error) {
-      if (spinners[name] && spinners[name].isSpinning) {
-        spinners[name].fail(`❌ ${displayName} failed: ${error.message}`);
-      }
-      throw error;
-    }
-  });
-
-  // Wait for all to complete
-  try {
-    await Promise.all(promises);
-    console.log(chalk.green(`\n🎉 All ${subagents.length} subagents completed successfully!\n`));
-  } catch (error) {
-    console.log(chalk.red(`\n❌ Some subagents failed. Check the errors above.\n`));
-    throw error;
-  }
-}
 
 /**
  * Start interactive chat session with codebase context
@@ -190,6 +64,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Tool call handler
   let currentToolSpinner = null;
   let thinkingSpinner = null;
+  
+  // Track subagent calls to enable batching
+  let activeSubAgentCalls = new Map();
+  let subAgentCallId = 0;
   
   async function handleToolCall(toolName, parameters) {
     // Stop thinking spinner if it's running
@@ -288,30 +166,79 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       return { success: true, message: 'Conversation cleared', stopLoop: true };
     }
 
-    if (toolName === 'createAgentsMd') {
-      // Start AGENTS.md creation process
-      const subAgent = getSubAgent('agentsMd');
-      await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-      return { success: true, stopLoop: true };
-    }
-
-    if (toolName === 'createReadme') {
-      // Start README.md creation process
-      const subAgent = getSubAgent('readme');
-      await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-      return { success: true, stopLoop: true };
-    }
-
-    if (toolName === 'createConcurrentSubagents') {
-      // Handle concurrent subagent execution
-      const { subagents } = parameters;
-      await executeConcurrentSubagents(subagents, session, currentModelInfo, currentApiKey, provider);
-      const filesCreated = subagents.map(sa => sa === 'agentsMd' ? 'AGENTS.md' : 'README.md').join(' and ');
-      return {
-        success: true,
-        message: `Subagents successfully created ${filesCreated}. Anything else I can help with?`,
-        stopLoop: true
+    if (toolName === 'createAgentsMd' || toolName === 'createReadme') {
+      // Handle subagent creation with concurrent execution support
+      const callId = ++subAgentCallId;
+      const subAgentType = toolName === 'createAgentsMd' ? 'agentsMd' : 'readme';
+      
+      // Create a promise that will be resolved when this call should execute
+      let resolveExecution;
+      const executionPromise = new Promise(resolve => {
+        resolveExecution = resolve;
+      });
+      
+      // Register this call
+      const callInfo = {
+        id: callId,
+        subAgentType,
+        parameters,
+        resolveExecution,
+        executionPromise
       };
+      activeSubAgentCalls.set(callId, callInfo);
+      
+      // Set a microtask to check if we're the coordinator (first call)
+      await Promise.resolve(); // Let all synchronous tool calls register first
+      
+      // If we're the first call, coordinate the batch
+      if (callId === Math.min(...Array.from(activeSubAgentCalls.keys()))) {
+        // Wait a tiny bit more for any remaining calls
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const allCalls = Array.from(activeSubAgentCalls.values());
+        activeSubAgentCalls.clear();
+        
+        if (allCalls.length > 1) {
+          // Multiple subagents - use SubAgentManager for concurrent execution
+          const manager = new SubAgentManager();
+          const configs = allCalls.map(call => ({
+            subAgent: getSubAgent(call.subAgentType),
+            params: {},
+            projectContext: session.fullProjectContext,
+            modelInfo: currentModelInfo,
+            apiKey: currentApiKey,
+            provider
+          }));
+          
+          // Execute concurrently
+          await manager.executeMultiple(configs);
+          
+          // Resolve all waiting calls
+          const fileNames = configs.map(c => c.subAgent.name).join(' and ');
+          const result = { 
+            success: true, 
+            message: `Successfully created ${fileNames}`,
+            stopLoop: false // Let AI provide feedback about what was created
+          };
+          
+          allCalls.forEach(call => call.resolveExecution(result));
+          return result;
+        } else {
+          // Single subagent - execute directly
+          const subAgent = getSubAgent(subAgentType);
+          await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+          const result = { 
+            success: true, 
+            message: `${subAgent.name} creation completed`,
+            stopLoop: false // Let AI provide feedback
+          };
+          allCalls[0].resolveExecution(result);
+          return result;
+        }
+      } else {
+        // Not the coordinator - wait for execution
+        return await executionPromise;
+      }
     }
 
     // Show file loading spinner
@@ -415,24 +342,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         break;
       }
 
-      // Check for concurrent subagent requests before processing
-      const concurrentSubagents = detectConcurrentSubagentRequest(userMessage);
-      if (concurrentSubagents.length > 1) {
-        // Handle concurrent subagents directly
-        console.log(chalk.cyan(`\n🚀 Detected request for ${concurrentSubagents.length} subagents...\n`));
-
-        await executeConcurrentSubagents(concurrentSubagents, session, currentModelInfo, currentApiKey, provider);
-
-        // Add a summary response to session
-        const filesCreated = concurrentSubagents.map(sa => sa === 'agentsMd' ? 'AGENTS.md' : 'README.md').join(' and ');
-        addAssistantMessage(session, `Subagents successfully created ${filesCreated}. Anything else I can help with?`);
-
-        continue; // Skip AI processing, go to next user input
-      }
-
       // Add user message to session
       addUserMessage(session, userMessage);
-
+      
       // Build full prompt with conversation history (context already sent once)
       let fullPrompt = '';
 

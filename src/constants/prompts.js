@@ -51,14 +51,10 @@ TOOLS (CRITICAL - MUST USE):
 - clear: IMMEDIATELY call when user types "clear" or "/clear" - DO NOT respond, just call the tool
 - exit: IMMEDIATELY call when user types "exit" or "/exit" - DO NOT respond, just call the tool
 - createAgentsMd: IMMEDIATELY call when user wants to create an AGENTS.md file - DO NOT respond, just call the tool
-- createReadme: IMMEDIATELY call when user wants to create a README.md file - DO NOT respond, just call the tool
-- createConcurrentSubagents: Use when user wants to create multiple docs at once (AGENTS.md + README.md). Pass array like ["agentsMd", "readme"]
 
 TOOL USAGE RULES:
 - When user types a command (/clear, /api, /help, etc), ONLY call the tool - NO text response
 - When user asks to "create an agents.md" or similar, IMMEDIATELY call createAgentsMd tool
-- When user asks to "create a readme.md" or similar, IMMEDIATELY call createReadme tool
-- When user wants BOTH AGENTS.md AND README.md (like "create both", "create agents.md and readme.md", "create docs", "make both files"), use createConcurrentSubagents with ["agentsMd", "readme"] - THIS IS REQUIRED for concurrent execution
 - DO NOT say "I cleared the conversation" or "Done" - the tool handles output
 - DO NOT narrate actions ("I'll load...", "Let me check...")
 - DO NOT list files you're loading

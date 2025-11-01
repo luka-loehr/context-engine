@@ -72,7 +72,7 @@ Guidelines for contributions and deployment including:
 - Documentation requirements
 
 WORKFLOW:
-Use the statusUpdate tool VERY FREQUENTLY with concise progress messages (1-10 words max). Make at least 6 status updates during exploration before calling "Creating AGENTS.md content" when you start writing the document content.
+Use the statusUpdate tool VERY FREQUENTLY with concise progress messages (1-10 words max). ALWAYS call statusUpdate BEFORE you start each major activity. Make at least 6 status updates during exploration before calling "Creating AGENTS.md content" when you start writing the document content.
 
 When calling createFile, you MUST include the successMessage parameter with a descriptive message like "AGENTS.md for [ProjectName] successfully created". This parameter is REQUIRED.
 
@@ -92,6 +92,6 @@ CRITICAL: Create a properly formatted AGENTS.md file with:
 - Proper markdown formatting
 - Concise, non-redundant information
 
-Examine the codebase, use statusUpdate VERY FREQUENTLY (at least 6 times during exploration), and call statusUpdate with "Creating AGENTS.md content" when you start writing the document content. Finally create a comprehensive AGENTS.md file and remember to include the REQUIRED successMessage parameter when calling createFile.`;
+Examine the codebase, use statusUpdate VERY FREQUENTLY (at least 6 times during exploration, BEFORE each major activity), and call statusUpdate with "Creating AGENTS.md content" BEFORE you start writing the document content. Finally create a comprehensive AGENTS.md file and remember to include the REQUIRED successMessage parameter when calling createFile.`;
   }
 }

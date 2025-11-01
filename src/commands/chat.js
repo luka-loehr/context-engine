@@ -324,8 +324,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         );
         
         streamWriter.flush();
-        console.log('\n');  // Single empty line after response
-        
+        console.log('');  // Single line spacing after response
+
         // Add assistant response to session
         addAssistantMessage(session, assistantResponse);
         

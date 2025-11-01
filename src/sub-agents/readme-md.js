@@ -48,7 +48,7 @@ Guidelines for contributors. Include development setup, coding standards, and co
 License information and any attribution requirements.
 
 WORKFLOW:
-Use the statusUpdate tool VERY FREQUENTLY with concise progress messages (1-10 words max). ALWAYS call statusUpdate BEFORE you start each major activity. Make at least 6 status updates during exploration before calling "Creating README.md content" when you start writing the document content.
+Use the statusUpdate tool VERY FREQUENTLY with concise progress messages (1-10 words max). ALWAYS call statusUpdate BEFORE you start each major activity. Make at least 6 status updates during exploration.
 
 When calling createFile, you MUST include the successMessage parameter with a descriptive message like "README.md for [ProjectName] successfully created". This parameter is REQUIRED.
 

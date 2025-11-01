@@ -12,13 +12,13 @@ providerRegistry.register({
   providerClass: XAIProvider,
   models: [
     {
-      name: 'Grok Beta',
-      model: 'grok-beta',
+      name: 'Grok 4 Fast Non-Reasoning',
+      model: 'grok-4-fast-non-reasoning',
       description: 'Fast and capable model for general tasks'
     },
     {
-      name: 'Grok 2 (Latest)',
-      model: 'grok-2-latest',
+      name: 'Grok 4 Fast Reasoning',
+      model: 'grok-4-fast-reasoning',
       description: 'Most advanced Grok model with enhanced reasoning'
     }
   ],

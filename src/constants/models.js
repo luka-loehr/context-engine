@@ -9,13 +9,13 @@ export const MODELS = {
   'context': {
     name: 'context',
     provider: 'xai',
-    model: 'grok-beta',
+    model: 'grok-4-fast-non-reasoning',
     description: 'Fast model'
   },
   'context-ultra': {
     name: 'context-ultra',
     provider: 'xai',
-    model: 'grok-2-latest',
+    model: 'grok-4-fast-reasoning',
     description: 'Premium reasoning model'
   }
 };

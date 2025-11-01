@@ -352,11 +352,17 @@ function convertHljsToAnsi(html) {
     'hljs-package': chalk.cyan,
   };
   
-  // Process spans with potentially multiple classes or complex class names
-  // Handle both old format (hljs-title) and new format (hljs-title.function_)
+  // Process spans - work from innermost to outermost
+  // Handle nested spans, multiple classes, and various formats
   let iterations = 0;
-  while (result.includes('<span') && iterations < 15) {
-    result = result.replace(/<span class="([^"]+)">([^<]*?)<\/span>/g, (match, className, content) => {
+  while (result.includes('<span') && iterations < 20) {
+    // Match spans including those with nested content (non-greedy)
+    result = result.replace(/<span class="([^"]+)">((?:(?!<span)[\s\S])*?)<\/span>/g, (match, className, content) => {
+      // Skip language wrapper spans (they just group content)
+      if (className.startsWith('language-')) {
+        return content;
+      }
+      
       // Check for exact match first
       if (colorMap[className]) {
         return colorMap[className](content);
@@ -368,10 +374,19 @@ function convertHljsToAnsi(html) {
         if (colorMap[cls]) {
           return colorMap[cls](content);
         }
-        // Also try with dots replaced by spaces for new format
-        const altCls = cls.replace('.', ' ').split(' ')[0];
-        if (colorMap[altCls]) {
-          return colorMap[altCls](content);
+        
+        // Handle underscore suffix (language_ -> language)
+        const clsWithoutUnderscore = cls.replace(/_$/, '');
+        if (colorMap[clsWithoutUnderscore]) {
+          return colorMap[clsWithoutUnderscore](content);
+        }
+        
+        // Handle dot notation (hljs-title.function_ -> hljs-title)
+        if (cls.includes('.')) {
+          const baseCls = cls.split('.')[0];
+          if (colorMap[baseCls]) {
+            return colorMap[baseCls](content);
+          }
         }
       }
       

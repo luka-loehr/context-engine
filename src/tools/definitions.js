@@ -57,52 +57,6 @@ export function registerCoreTools() {
   // SUBAGENT-ONLY TOOLS
   // ============================================================================
 
-  // Example: Agent-specific tool (only for AGENTS.md subagent)
-  toolRegistry.register({
-    name: 'analyzeAgentStructure',
-    description: 'Analyze the structure of existing AGENTS.md files in the codebase to understand patterns and conventions.',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    },
-    availableTo: ToolCategories.SUBAGENT,
-    agentIds: ['agents-md'], // Only available to agents-md subagent
-    tags: ['analysis', 'agents'],
-    handler: async (parameters, context) => {
-      const { projectContext } = context;
-      
-      // Find any existing AGENTS.md files
-      const agentsFiles = projectContext.filter(f => 
-        f.path.toLowerCase().includes('agents.md')
-      );
-      
-      if (agentsFiles.length === 0) {
-        return {
-          success: true,
-          found: false,
-          message: 'No existing AGENTS.md files found in project'
-        };
-      }
-      
-      // Analyze structure
-      const analysis = agentsFiles.map(file => ({
-        path: file.path,
-        hasProjectOverview: file.content.includes('## Project Overview'),
-        hasSetupCommands: file.content.includes('## Setup'),
-        hasCodeStyle: file.content.includes('## Code style'),
-        lineCount: file.content.split('\n').length
-      }));
-      
-      return {
-        success: true,
-        found: true,
-        files: analysis,
-        count: agentsFiles.length
-      };
-    }
-  });
-
   toolRegistry.register({
     name: 'createFile',
     description: 'Create or overwrite a file with the specified content. Use this when you have completed your analysis and are ready to write the final output.',

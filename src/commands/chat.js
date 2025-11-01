@@ -28,6 +28,89 @@ import { handleAPIError } from '../errors/index.js';
 
 
 /**
+ * Execute multiple subagents concurrently with improved UI
+ */
+async function executeConcurrentSubagents(subagents, session, currentModelInfo, currentApiKey, provider) {
+  const subagentInstances = subagents.map(name => ({
+    name,
+    instance: getSubAgent(name),
+    displayName: name === 'agentsMd' ? 'AGENTS.md' : 'README.md'
+  }));
+
+  console.log(chalk.cyan(`\n🚀 ${subagents.length} Subagents working concurrently...\n`));
+
+  // Create multi-spinner display
+  const spinners = {};
+  subagentInstances.forEach(({ name, displayName }) => {
+    spinners[name] = ora(`⏳ Starting ${displayName} creation`).start();
+  });
+
+  // Status tracking for each subagent
+  const statusMap = new Map();
+  const completedCount = { count: 0 };
+
+  // Execute all subagents concurrently
+  const promises = subagentInstances.map(async ({ name, instance, displayName }) => {
+    try {
+      // Override the statusUpdate handler for concurrent execution
+      const originalExecute = instance.execute.bind(instance);
+      instance.execute = async function(...args) {
+        // Intercept tool calls to handle status updates properly
+        const originalProvider = args[4]; // provider
+
+        const wrappedProvider = {
+          ...originalProvider,
+          refinePrompt: async (prompt, systemPrompt, onChunk, tools, handleToolCall) => {
+            const wrappedHandleToolCall = async (toolCall) => {
+              if (toolCall.name === 'statusUpdate') {
+                // Update our spinner instead of logging
+                const status = toolCall.arguments?.status || toolCall.parameters?.status;
+                if (status && spinners[name] && spinners[name].isSpinning) {
+                  spinners[name].text = `🔄 ${displayName}: ${status}`;
+                }
+                return {
+                  success: true,
+                  message: `Status updated: ${status}`
+                };
+              }
+              return await handleToolCall(toolCall);
+            };
+
+            return await originalProvider.refinePrompt(prompt, systemPrompt, onChunk, tools, wrappedHandleToolCall);
+          }
+        };
+
+        const result = await originalExecute(...args.slice(0, 4), wrappedProvider);
+
+        // Mark as completed
+        if (spinners[name] && spinners[name].isSpinning) {
+          spinners[name].succeed(`✅ ${displayName} completed`);
+        }
+        completedCount.count++;
+
+        return result;
+      };
+
+      await instance.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+    } catch (error) {
+      if (spinners[name] && spinners[name].isSpinning) {
+        spinners[name].fail(`❌ ${displayName} failed: ${error.message}`);
+      }
+      throw error;
+    }
+  });
+
+  // Wait for all to complete
+  try {
+    await Promise.all(promises);
+    console.log(chalk.green(`\n🎉 All ${subagents.length} subagents completed successfully!\n`));
+  } catch (error) {
+    console.log(chalk.red(`\n❌ Some subagents failed. Check the errors above.\n`));
+    throw error;
+  }
+}
+
+/**
  * Start interactive chat session with codebase context
  */
 export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
@@ -165,14 +248,26 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Start AGENTS.md creation process
       const subAgent = getSubAgent('agentsMd');
       await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-      return { success: true, message: 'AGENTS.md creation completed', stopLoop: true };
+      return { success: true, stopLoop: true };
     }
 
     if (toolName === 'createReadme') {
       // Start README.md creation process
       const subAgent = getSubAgent('readme');
       await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-      return { success: true, message: 'README.md creation completed', stopLoop: true };
+      return { success: true, stopLoop: true };
+    }
+
+    if (toolName === 'createConcurrentSubagents') {
+      // Handle concurrent subagent execution
+      const { subagents } = parameters;
+      await executeConcurrentSubagents(subagents, session, currentModelInfo, currentApiKey, provider);
+      const filesCreated = subagents.map(sa => sa === 'agentsMd' ? 'AGENTS.md' : 'README.md').join(' and ');
+      return {
+        success: true,
+        message: `Subagents successfully created ${filesCreated}. Anything else I can help with?`,
+        stopLoop: true
+      };
     }
 
     // Show file loading spinner

@@ -79,6 +79,24 @@ export const TOOLS = {
       properties: {},
       required: []
     }
+  },
+  createConcurrentSubagents: {
+    name: 'createConcurrentSubagents',
+    description: 'Create multiple documentation files concurrently using subagents. Use this when the user wants to create AGENTS.md and README.md at the same time for better efficiency.',
+    parameters: {
+      type: 'object',
+      properties: {
+        subagents: {
+          type: 'array',
+          description: 'Array of subagent names to execute concurrently (e.g., ["agentsMd", "readme"])',
+          items: {
+            type: 'string',
+            enum: ['agentsMd', 'readme']
+          }
+        }
+      },
+      required: ['subagents']
+    }
   }
 };
 
@@ -124,6 +142,12 @@ export function executeTool(toolName, parameters, projectContext) {
       return {
         success: true,
         action: 'createReadme'
+      };
+    case 'createConcurrentSubagents':
+      return {
+        success: true,
+        action: 'createConcurrentSubagents',
+        subagents: parameters.subagents
       };
     default:
       return {

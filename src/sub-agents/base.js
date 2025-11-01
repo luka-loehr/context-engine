@@ -98,6 +98,7 @@ export class SubAgent {
    */
   async execute(params, projectContext, modelInfo, apiKey, mainProvider) {
     const loadingSpinner = ora(`${this.description}...`).start();
+    let isFirstStatusUpdate = true;
 
     try {
       // Create sub-agent provider
@@ -157,7 +158,11 @@ export class SubAgent {
       if (toolName === 'statusUpdate') {
         // Update the loading spinner with the status message
         if (loadingSpinner && loadingSpinner.isSpinning) {
-          loadingSpinner.text = `${this.description} - ${parameters.status}`;
+          // Remove the prefix after the first status update
+          if (isFirstStatusUpdate) {
+            isFirstStatusUpdate = false;
+          }
+          loadingSpinner.text = parameters.status;
         } else {
           // If spinner is not running, just log the status
           console.log(`📝 ${this.name}: ${parameters.status}`);

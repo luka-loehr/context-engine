@@ -181,7 +181,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     const localSpinner = ora(`Loading ${chalk.cyan(fileName)}`).start();
 
     // Execute tool
-    const result = executeTool(toolName, parameters, fullProjectContext);
+    const result = executeTool(toolName, parameters, session.fullProjectContext);
 
     // Calculate tokens from the file content (result is now an object)
     const tokens = result.content ? countTokens(result.content) : 0;

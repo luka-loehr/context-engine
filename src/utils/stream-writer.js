@@ -267,60 +267,115 @@ function highlightCodeBlock(code, language, maxWidth, options) {
 function convertHljsToAnsi(html) {
   let result = html;
   
-  // Define color mapping for highlight.js classes
+  // Comprehensive color mapping for ALL highlight.js classes
+  // Based on highlight.js documentation and common language grammars
   const colorMap = {
-    'hljs-keyword': chalk.magenta,          // Keywords (function, const, if, etc.)
-    'hljs-built_in': chalk.cyan,            // Built-in functions
-    'hljs-type': chalk.cyan,                // Types
-    'hljs-literal': chalk.blue,             // Literals (true, false, null)
-    'hljs-number': chalk.yellow,            // Numbers
-    'hljs-string': chalk.green,             // Strings
-    'hljs-comment': chalk.gray,             // Comments
-    'hljs-doctag': chalk.gray,              // Doc comments
-    'hljs-meta': chalk.gray,                // Meta information
-    'hljs-function': chalk.yellow,          // Function declarations
-    'hljs-title': chalk.yellow,             // Function/class titles
-    'hljs-params': chalk.white,             // Parameters
-    'hljs-attr': chalk.cyan,                // HTML/XML attributes
-    'hljs-attribute': chalk.cyan,           // Attributes
-    'hljs-name': chalk.blue,                // HTML/XML tag names
-    'hljs-tag': chalk.blue,                 // HTML/XML tags
-    'hljs-selector-tag': chalk.magenta,     // CSS selectors
-    'hljs-selector-class': chalk.yellow,    // CSS class selectors
-    'hljs-selector-id': chalk.yellow,       // CSS ID selectors
-    'hljs-property': chalk.cyan,            // CSS properties
-    'hljs-regexp': chalk.red,               // Regular expressions
-    'hljs-variable': chalk.white,           // Variables
-    'hljs-template-variable': chalk.green,  // Template variables
-    'hljs-link': chalk.blue.underline,      // Links
-    'hljs-deletion': chalk.red,             // Deletions
-    'hljs-addition': chalk.green,           // Additions
-    'hljs-symbol': chalk.magenta,           // Symbols
-    'hljs-bullet': chalk.cyan,              // List bullets
-    'hljs-emphasis': chalk.italic,          // Emphasis
-    'hljs-strong': chalk.bold,              // Strong
-    'hljs-operator': chalk.gray,            // Operators
-    'hljs-punctuation': chalk.gray,         // Punctuation
+    // Keywords and control flow
+    'hljs-keyword': chalk.magenta,
+    'hljs-built_in': chalk.cyan,
+    'hljs-type': chalk.cyan,
+    'hljs-literal': chalk.blue,
+    'hljs-params': chalk.white,
+    
+    // Functions and methods
+    'hljs-function': chalk.yellow,
+    'hljs-title': chalk.yellow,
+    'hljs-title.function': chalk.yellow,
+    'hljs-title.class': chalk.yellow,
+    'hljs-title.function_': chalk.yellow,  // With underscore (new format)
+    'hljs-title.class_': chalk.yellow,
+    
+    // Variables and identifiers
+    'hljs-variable': chalk.white,
+    'hljs-variable.language': chalk.cyan,
+    'hljs-variable.constant': chalk.cyan,
+    'hljs-property': chalk.cyan,
+    'hljs-attr': chalk.cyan,
+    'hljs-attribute': chalk.cyan,
+    
+    // Strings and characters
+    'hljs-string': chalk.green,
+    'hljs-char': chalk.green,
+    'hljs-template-variable': chalk.green,
+    'hljs-template-tag': chalk.green,
+    'hljs-regexp': chalk.red,
+    
+    // Numbers
+    'hljs-number': chalk.yellow,
+    
+    // Comments and documentation
+    'hljs-comment': chalk.gray,
+    'hljs-doctag': chalk.gray,
+    'hljs-quote': chalk.gray,
+    
+    // HTML/XML/Markup
+    'hljs-tag': chalk.blue,
+    'hljs-name': chalk.blue,
+    'hljs-selector-tag': chalk.blue,
+    'hljs-selector-id': chalk.yellow,
+    'hljs-selector-class': chalk.yellow,
+    'hljs-selector-attr': chalk.cyan,
+    'hljs-selector-pseudo': chalk.magenta,
+    
+    // Meta and preprocessor
+    'hljs-meta': chalk.gray,
+    'hljs-meta-keyword': chalk.magenta,
+    'hljs-meta-string': chalk.green,
+    'hljs-meta.prompt': chalk.gray,
+    
+    // Operators and punctuation
+    'hljs-operator': chalk.white,
+    'hljs-punctuation': chalk.gray,
+    
+    // Special
+    'hljs-symbol': chalk.magenta,
+    'hljs-bullet': chalk.cyan,
+    'hljs-link': chalk.blue.underline,
+    'hljs-emphasis': chalk.italic,
+    'hljs-strong': chalk.bold,
+    'hljs-formula': chalk.yellow,
+    'hljs-section': chalk.yellow.bold,
+    'hljs-code': chalk.green,
+    
+    // Diff
+    'hljs-addition': chalk.green,
+    'hljs-deletion': chalk.red,
+    
+    // Language-specific
+    'hljs-subst': chalk.white,
+    'hljs-decorator': chalk.magenta,
+    'hljs-annotation': chalk.magenta,
+    'hljs-built-in': chalk.cyan,
+    'hljs-class': chalk.yellow,
+    'hljs-module': chalk.cyan,
+    'hljs-namespace': chalk.cyan,
+    'hljs-package': chalk.cyan,
   };
   
-  // Replace HTML tags with ANSI colors
-  // Process each span tag
-  result = result.replace(/<span class="([^"]+)">([^<]*)<\/span>/g, (match, className, content) => {
-    const colorFn = colorMap[className];
-    if (colorFn) {
-      return colorFn(content);
-    }
-    return content;
-  });
-  
-  // Handle nested spans by processing multiple times
+  // Process spans with potentially multiple classes or complex class names
+  // Handle both old format (hljs-title) and new format (hljs-title.function_)
   let iterations = 0;
-  while (result.includes('<span') && iterations < 10) {
+  while (result.includes('<span') && iterations < 15) {
     result = result.replace(/<span class="([^"]+)">([^<]*?)<\/span>/g, (match, className, content) => {
-      const colorFn = colorMap[className];
-      if (colorFn) {
-        return colorFn(content);
+      // Check for exact match first
+      if (colorMap[className]) {
+        return colorMap[className](content);
       }
+      
+      // Check for partial matches (in case of multiple classes)
+      const classes = className.split(' ');
+      for (const cls of classes) {
+        if (colorMap[cls]) {
+          return colorMap[cls](content);
+        }
+        // Also try with dots replaced by spaces for new format
+        const altCls = cls.replace('.', ' ').split(' ')[0];
+        if (colorMap[altCls]) {
+          return colorMap[altCls](content);
+        }
+      }
+      
+      // No match found, return content as-is (white/default)
       return content;
     });
     iterations++;
@@ -335,6 +390,7 @@ function convertHljsToAnsi(html) {
   result = result.replace(/&amp;/g, '&');
   result = result.replace(/&quot;/g, '"');
   result = result.replace(/&#39;/g, "'");
+  result = result.replace(/&#x27;/g, "'");
   
   return result;
 }

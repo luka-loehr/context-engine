@@ -47,9 +47,7 @@ export async function showAgentsMenu(context) {
     }
 
     // Show agent selection menu
-    console.log(chalk.cyan.bold('\n╔════════════════════════════════════════╗'));
-    console.log(chalk.cyan.bold('║     Specialized AI Agents Menu         ║'));
-    console.log(chalk.cyan.bold('╚════════════════════════════════════════╝\n'));
+    console.log(chalk.cyan.bold('\nSpecialized Agents\n'));
 
     const { selectedAgentId } = await inquirer.prompt([{
       type: 'list',

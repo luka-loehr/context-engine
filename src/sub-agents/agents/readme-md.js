@@ -6,7 +6,7 @@
 export const agentConfig = {
   id: 'readme-md',
   name: 'README.md',
-  description: 'Creates comprehensive README.md files with installation instructions, usage examples, and project documentation',
+  description: 'Creates comprehensive README documentation files',
   category: 'documentation',
   icon: '📄',
   

@@ -125,7 +125,7 @@ export class GenericAgentExecutor {
       agentToolNames.includes(tool.name)
     );
 
-    // Convert to AI format
+    // Convert to AI format (exclude handler, category, and other internal fields)
     return agentTools.map(tool => ({
       type: 'function',
       function: {

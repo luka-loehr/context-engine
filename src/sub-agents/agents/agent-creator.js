@@ -6,7 +6,7 @@
 export const agentConfig = {
   id: 'agent-creator',
   name: 'Agent Creator',
-  description: 'Creates new custom subagents tailored to specific tasks. Can also edit existing agents.',
+  description: 'Creates and edits custom agents',
   category: 'system',
   icon: '🔨',
   
@@ -59,7 +59,7 @@ The following tools are available for agents to use:
 export const agentConfig = {
   id: 'agent-id', // kebab-case identifier
   name: 'Agent Name', // Human-readable name
-  description: 'Clear description of what this agent does',
+  description: 'Brief description max 7 words', // MAX 7 WORDS!
   category: 'category', // e.g., 'documentation', 'development', 'testing'
   icon: '🤖', // Emoji icon
   
@@ -77,6 +77,7 @@ export const agentConfig = {
 
 **Important:**
 - Agent IDs must be unique and use kebab-case
+- Description MUST be max 7 words (keep it short!)
 - Tools list should include only necessary tools
 - System prompt should define expertise, workflow, and best practices
 - Default instructions should provide clear step-by-step guidance

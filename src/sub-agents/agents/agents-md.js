@@ -6,7 +6,7 @@
 export const agentConfig = {
   id: 'agents-md',
   name: 'AGENTS.md',
-  description: 'Creates AGENTS.md documentation files with project setup, coding style, testing instructions, and development guidelines for AI agents',
+  description: 'Creates AGENTS.md documentation for AI',
   category: 'documentation',
   icon: '🤖',
   

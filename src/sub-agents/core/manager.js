@@ -74,7 +74,7 @@ export class SubAgentManager {
       // Clear interval and render final status
       clearInterval(updateInterval);
       this.stopHeaderSpinner();
-
+      
       // Show completion summary
       this.showCompletionSummary();
 
@@ -284,12 +284,12 @@ export class SubAgentManager {
   showCompletionSummary() {
     logUpdate.clear();
     console.log(chalk.green('✓ All subagents completed successfully\n'));
-
+    
     // Show individual completion messages
     this.activeSubAgents.forEach(agent => {
       console.log(chalk.green(`✔ ${agent.name} created successfully`));
     });
-
+    
     console.log(''); // Add spacing after completion
   }
 

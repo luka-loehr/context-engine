@@ -293,6 +293,24 @@ export function registerCoreTools() {
       };
     }
   });
+
+  toolRegistry.register({
+    name: 'agents',
+    description: 'Open interactive menu to select and run specialized AI agents. Use this when the user types "agents" or "/agents", or when they need specialized tasks like documentation generation, code review, or custom agent creation.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    },
+    availableTo: ToolCategories.MAIN,
+    tags: ['system', 'agents'],
+    handler: async (parameters, context) => {
+      return {
+        success: true,
+        action: 'agents'
+      };
+    }
+  });
 }
 
 /**

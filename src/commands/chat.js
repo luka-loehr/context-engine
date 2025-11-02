@@ -169,6 +169,18 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       return { success: true, message: 'Conversation cleared', stopLoop: true };
     }
 
+    if (toolName === 'agents') {
+      // Open interactive agents menu
+      const { showAgentsMenu } = await import('./agents-menu.js');
+      const result = await showAgentsMenu({
+        projectContext: session.fullProjectContext,
+        modelInfo: currentModelInfo,
+        apiKey: currentApiKey,
+        session
+      });
+      return result;
+    }
+
     // Generic subagent handler - works for ALL subagents
     if (isSubAgentTool(toolName)) {
       // Handle subagent creation with concurrent execution support
@@ -212,10 +224,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             apiKey: currentApiKey,
             provider
           }));
-
+          
           // Execute concurrently and get comprehensive results
           const executionResults = await manager.executeMultiple(configs);
-
+          
           // Create detailed result message for the main AI
           const fileNames = configs.map(c => c.subAgent.name).join(' and ');
           let detailedMessage = `Successfully created ${fileNames}.\n\n`;
@@ -251,13 +263,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             });
           }
 
-          const result = {
-            success: true,
+          const result = { 
+            success: true, 
             message: detailedMessage,
             subAgentResults: executionResults,
             stopLoop: false // Let AI provide feedback about what was created
           };
-
+          
           allCalls.forEach(call => call.resolveExecution(result));
           return result;
         } else {
@@ -298,8 +310,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             });
           }
 
-          const result = {
-            success: true,
+          const result = { 
+            success: true, 
             message: detailedMessage,
             subAgentResults: executionResult,
             stopLoop: false // Let AI provide feedback
@@ -381,7 +393,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     try {
       // Get user input
       const userMessage = await promptForUserInput('>');
-      
+
       // Clear any pending confirmation messages immediately after user input
       // This clears messages that are ABOVE the user's input line
       if (session.linesToClearBeforeNextMessage > 0) {

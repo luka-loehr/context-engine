@@ -30,14 +30,24 @@ export class XAIProvider extends BaseProvider {
       
       // Add tools if provided
       if (tools) {
-        completionParams.tools = tools.map(tool => ({
-          type: 'function',
-          function: {
-            name: tool.name,
-            description: tool.description,
-            parameters: tool.parameters
+        // Tools can be in two formats:
+        // 1. Raw format: {name, description, parameters}
+        // 2. OpenAI format: {type: 'function', function: {name, description, parameters}}
+        completionParams.tools = tools.map(tool => {
+          // If already in OpenAI format, use as-is
+          if (tool.type === 'function' && tool.function) {
+            return tool;
           }
-        }));
+          // Otherwise, convert to OpenAI format
+          return {
+            type: 'function',
+            function: {
+              name: tool.name,
+              description: tool.description,
+              parameters: tool.parameters
+            }
+          };
+        });
       }
       
       // Grok 4 Fast Reasoning is a reasoning model - no temperature/frequency/presence penalties

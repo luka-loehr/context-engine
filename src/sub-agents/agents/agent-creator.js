@@ -59,7 +59,7 @@ The following tools are available for agents to use:
 export const agentConfig = {
   id: 'agent-id', // kebab-case identifier
   name: 'Agent Name', // Human-readable name
-  description: 'Brief description max 7 words', // MAX 7 WORDS!
+  description: 'Brief description',
   category: 'category', // e.g., 'documentation', 'development', 'testing'
   icon: '🤖', // Emoji icon
   

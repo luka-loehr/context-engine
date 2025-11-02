@@ -1,32 +1,25 @@
 # Context-Engine
 
-Context-Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using advanced AI models like XAI Grok. It provides instant answers to questions about code, automatically loads relevant files, and supports sub-agent workflows for complex tasks.
+Context-Engine is an interactive AI-powered CLI tool that enables developers to chat with their codebase using advanced language models like xAI's Grok. It provides instant access to project files, intelligent code analysis, and automated documentation generation through specialized sub-agents.
 
 ## Description
 
-Context-Engine transforms your codebase into an interactive AI assistant. By analyzing your project files and integrating with powerful AI models, it allows you to ask natural language questions about your code and receive intelligent, context-aware responses.
+Context-Engine transforms your codebase into a conversational interface, allowing you to ask natural language questions about your code, architecture, and implementation details. The tool automatically loads relevant files, maintains conversation context, and supports multiple AI providers.
 
-**Key Features:**
-- **Codebase Context Awareness**: Automatically analyzes and indexes your project files for instant access
-- **Interactive Chat Interface**: Natural language conversation with your codebase
-- **Multi-Model Support**: Compatible with XAI Grok and other AI providers
-- **Smart File Loading**: Dynamically loads relevant files based on your questions
-- **Sub-Agent System**: Advanced workflow automation through specialized AI agents
-- **Tool Integration**: Built-in tools for file operations, model switching, and configuration management
-- **Streaming Responses**: Real-time AI responses with token counting and progress indicators
+Key features include:
+- **Intelligent File Loading**: Automatically identifies and loads relevant code files based on your questions
+- **Sub-Agent System**: Specialized AI agents for tasks like generating README files and AGENTS.md documentation
+- **Multi-Model Support**: Compatible with xAI Grok and other OpenAI-compatible models
+- **Interactive Chat Interface**: Real-time conversation with token counting and streaming responses
+- **Concurrent Task Execution**: Handle multiple sub-agent tasks simultaneously for efficient workflows
 
-**Use Cases:**
-- Understanding complex codebases quickly
-- Debugging and troubleshooting assistance
-- Codebase documentation and explanation
-- Architecture analysis and design review
-- Onboarding new team members to projects
+Use cases include code reviews, architecture explanations, debugging assistance, documentation generation, and onboarding new developers to complex projects.
 
 ## Installation
 
 ### Prerequisites
 - Node.js ≥ 16.0.0
-- An XAI API key (obtain from [x.ai](https://x.ai))
+- xAI API key (obtain from [x.ai](https://x.ai))
 
 ### Installation Steps
 
@@ -36,14 +29,9 @@ Context-Engine transforms your codebase into an interactive AI assistant. By ana
    ```
 
 2. **Set up your API key:**
-   Create a `.env` file in your project directory:
+   Create a `.env` file in your project root:
    ```bash
-   echo 'XAI_API_KEY=your_xai_api_key_here' > .env
-   ```
-   
-   Or set it as an environment variable:
-   ```bash
-   export XAI_API_KEY=your_xai_api_key_here
+   XAI_API_KEY="xai-your_api_key_here"
    ```
 
 3. **Verify installation:**
@@ -51,70 +39,65 @@ Context-Engine transforms your codebase into an interactive AI assistant. By ana
    context --version
    ```
 
+### Post-Installation
+The tool will automatically run a post-install script to verify dependencies and show initial setup instructions.
+
 ## Usage
 
 ### Basic Usage
-
-1. **Navigate to your project directory:**
-   ```bash
-   cd /path/to/your/project
-   ```
-
-2. **Start the interactive session:**
-   ```bash
-   context
-   ```
-
-3. **Begin chatting with your codebase:**
-   The tool will automatically analyze your project and start an interactive session.
-
-### Command Line Options
+Navigate to your project directory and start the interactive session:
 
 ```bash
-context [options]
-
-Options:
-  --version, -v    Show version number
-  --help, -h       Show help
+cd your-project
+context
 ```
+
+The tool will:
+1. Analyze your project structure
+2. Load relevant files into context
+3. Start an interactive chat session
 
 ### Interactive Commands
+Within the chat interface, use these commands:
 
-Within the chat session, use these commands:
+- **Ask about code**: "Explain the authentication flow" or "What does the user service do?"
+- **Switch models**: Type "change model" to select different AI providers
+- **Manage API keys**: Type "manage API keys" to import from .env
+- **Clear conversation**: Type "clear chat" to reset while preserving context
+- **Exit**: Type "exit" or Ctrl+C to close
 
-- **`/exit`** - Exit the chat session
-- **`/help`** - Show available commands and tips
-- **`/model`** - Switch AI models
-- **`/api`** - Manage API keys
-- **`/clear`** - Clear conversation history (preserves context)
-
-### Example Interactions
-
+### CLI Options
+```bash
+context --help
+context --version
+context --clear-config  # Reset configuration
 ```
-> What does the main function do in this project?
 
-context-engine: The main function in src/index.js serves as the entry point for the Context-Engine CLI application. It imports and calls the startApp function from the core module, which handles the complete application initialization including CLI setup, command registration, and starting the interactive session.
+### Sub-Agent Commands
+Ask the AI to generate documentation:
+- "Create a README file for this project"
+- "Generate an AGENTS.md file explaining our AI agents"
+- "Write documentation for the current codebase"
 
-> Show me the authentication flow
-
-[AI loads and displays relevant authentication files with explanations]
-```
+The AI will automatically invoke the appropriate sub-agent to create files.
 
 ## Features
 
-- **Project Context Analysis**: Automatically scans and indexes all project files for comprehensive context awareness
-- **Multi-Provider Support**: Works with XAI Grok and extensible to other AI providers
-- **Real-time Streaming**: Live response generation with progress indicators and token counting
-- **Smart Tool Integration**: Dynamic tool calling for file operations, configuration, and workflow automation
-- **Sub-Agent Architecture**: Specialized AI agents for complex tasks like file generation and analysis
-- **Conversation Memory**: Maintains context across interactions while allowing history clearing
-- **Error Handling**: Robust API error management with fallback mechanisms
+- **Codebase Context Awareness**: Full project file access with intelligent loading
+- **Streaming Responses**: Real-time AI responses with token counting
+- **Multi-Tool Integration**: Supports file reading, configuration management, and sub-agent execution
+- **Concurrent Sub-Agent Execution**: Run multiple documentation agents simultaneously
+- **Model Flexibility**: Switch between xAI Grok, OpenAI models, and other compatible providers
+- **Session Management**: Maintain conversation history while preserving performance
+- **Error Handling**: Robust API error recovery and user-friendly messaging
 - **Update Notifications**: Automatic version checking and upgrade notifications
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+### Sub-Agent Capabilities
+- **README Generator**: Creates comprehensive project documentation
+- **AGENTS Documentation**: Generates specialized AI agent documentation
+- **Extensible Architecture**: Easy to add new specialized agents
 
 ## Contributing
-
-We welcome contributions to improve Context-Engine! Please follow these guidelines:
 
 ### Development Setup
 
@@ -133,37 +116,47 @@ We welcome contributions to improve Context-Engine! Please follow these guidelin
    ```bash
    # Copy example environment
    cp .env.example .env
-   # Add your XAI API key to .env
+   
+   # Set your API key
+   echo 'XAI_API_KEY="your_key_here"' >> .env
    ```
 
 4. **Run in development mode:**
    ```bash
-   # Link for local development
+   # Link globally for testing
    npm link
    
-   # Test in a sample project directory
-   cd /path/to/test/project
+   # Test in a sample project
+   cd ../your-test-project
    context
    ```
 
 ### Coding Standards
-
 - Use ES modules (import/export syntax)
 - Follow [JavaScript Standard Style](https://standardjs.com/)
-- Write descriptive commit messages
-- Add tests for new features
-- Update documentation for API changes
+- Write modular, single-responsibility functions
+- Include comprehensive JSDoc comments
+- Add unit tests for new features
+
+### Adding New Sub-Agents
+1. Create a new file in `src/sub-agents/agents/`
+2. Implement the `SubAgent` base class interface
+3. Register in `src/sub-agents/index.js`
+4. Add tool definition to the registry
+5. Test with sample projects
 
 ### Contribution Process
-
 1. Fork the repository and create a feature branch
-2. Make your changes and ensure tests pass
-3. Submit a pull request with a clear description of changes
-4. Ensure your code follows the project's style guidelines
+2. Make your changes and add tests
+3. Ensure all tests pass: `npm test`
+4. Submit a pull request with clear description
+5. Follow up on review feedback
 
 ### Testing
-
-Currently, the project uses manual testing. Contributions adding comprehensive test suites are especially welcome.
+Currently uses basic test setup. Contributions to expand test coverage are welcome:
+- Unit tests for core utilities
+- Integration tests for sub-agents
+- E2E tests for CLI interactions
 
 ## License
 

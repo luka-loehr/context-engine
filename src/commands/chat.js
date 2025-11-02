@@ -212,27 +212,96 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             apiKey: currentApiKey,
             provider
           }));
-          
-          // Execute concurrently
-          await manager.executeMultiple(configs);
-          
-          // Resolve all waiting calls
+
+          // Execute concurrently and get comprehensive results
+          const executionResults = await manager.executeMultiple(configs);
+
+          // Create detailed result message for the main AI
           const fileNames = configs.map(c => c.subAgent.name).join(' and ');
-          const result = { 
-            success: true, 
-            message: `Successfully created ${fileNames}`,
+          let detailedMessage = `Successfully created ${fileNames}.\n\n`;
+
+          // Add summary of work done
+          detailedMessage += `## Summary\n${executionResults.summary}\n\n`;
+
+          // Add details about generated content if available
+          if (executionResults.generatedContent && executionResults.generatedContent.length > 0) {
+            detailedMessage += `## Generated Files\n`;
+            executionResults.generatedContent.forEach(file => {
+              detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
+            });
+            detailedMessage += `\n`;
+          }
+
+          // Add analysis from each subagent
+          if (executionResults.results && executionResults.results.length > 0) {
+            detailedMessage += `## Analysis Details\n`;
+            executionResults.results.forEach(result => {
+              if (result.analysis && result.analysis.summary) {
+                detailedMessage += `### ${result.name}\n${result.analysis.summary}\n\n`;
+              }
+            });
+          }
+
+          // Add full content for AI reference (not for output to user)
+          if (executionResults.generatedContent && executionResults.generatedContent.length > 0) {
+            detailedMessage += `\n## Full Content (For Your Reference - DO NOT Output to User)\n`;
+            detailedMessage += `The following is the complete generated content. You can reference this to answer user questions, but DO NOT output it directly.\n\n`;
+            executionResults.generatedContent.forEach(file => {
+              detailedMessage += `### File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
+            });
+          }
+
+          const result = {
+            success: true,
+            message: detailedMessage,
+            subAgentResults: executionResults,
             stopLoop: false // Let AI provide feedback about what was created
           };
-          
+
           allCalls.forEach(call => call.resolveExecution(result));
           return result;
         } else {
           // Single subagent - execute directly
           const subAgent = getSubAgentByToolName(toolName);
-          await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
-          const result = { 
-            success: true, 
-            message: `${subAgent.name} creation completed`,
+          const executionResult = await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+
+          // Create detailed result message for the main AI
+          let detailedMessage = `${subAgent.name} creation completed successfully.\n\n`;
+
+          // Add summary of work done
+          if (executionResult.analysis && executionResult.analysis.summary) {
+            detailedMessage += `## Summary\n${executionResult.analysis.summary}\n\n`;
+          }
+
+          // Add details about generated content if available
+          if (executionResult.generatedFiles && executionResult.generatedFiles.length > 0) {
+            detailedMessage += `## Generated Files\n`;
+            executionResult.generatedFiles.forEach(file => {
+              detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
+            });
+            detailedMessage += `\n`;
+          }
+
+          // Add analysis details if available
+          if (executionResult.analysis) {
+            detailedMessage += `## Analysis Details\n`;
+            detailedMessage += `- Files analyzed: ${executionResult.totalFilesRead || 0}\n`;
+            detailedMessage += `- Files created: ${executionResult.totalFilesCreated || 0}\n`;
+          }
+
+          // Add full content for AI reference (not for output to user)
+          if (executionResult.generatedFiles && executionResult.generatedFiles.length > 0) {
+            detailedMessage += `\n## Full Content (For Your Reference - DO NOT Output to User)\n`;
+            detailedMessage += `The following is the complete generated content. You can reference this to answer user questions, but DO NOT output it directly.\n\n`;
+            executionResult.generatedFiles.forEach(file => {
+              detailedMessage += `### File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
+            });
+          }
+
+          const result = {
+            success: true,
+            message: detailedMessage,
+            subAgentResults: executionResult,
             stopLoop: false // Let AI provide feedback
           };
           allCalls[0].resolveExecution(result);

@@ -17,11 +17,11 @@ export class SubAgentManager {
   /**
    * Execute multiple sub-agents concurrently
    * @param {Array} subAgentConfigs - Array of {subAgent, params, projectContext, modelInfo, apiKey, provider}
-   * @returns {Promise<Array>} Array of results from each sub-agent
+   * @returns {Promise<Object>} Comprehensive result object with all subagent results
    */
   async executeMultiple(subAgentConfigs) {
     if (subAgentConfigs.length === 0) {
-      return [];
+      return { success: true, results: [], summary: 'No subagents to execute' };
     }
 
     // Single subagent - use simple execution
@@ -34,7 +34,14 @@ export class SubAgentManager {
         config.apiKey,
         config.provider
       );
-      return [result];
+      return {
+        success: true,
+        results: [result],
+        summary: this.generateOverallSummary([result]),
+        totalFilesCreated: result.totalFilesCreated || 0,
+        totalFilesRead: result.totalFilesRead || 0,
+        generatedContent: result.generatedFiles || []
+      };
     }
 
     // Multiple subagents - use concurrent execution with coordinated UI
@@ -67,11 +74,26 @@ export class SubAgentManager {
       // Clear interval and render final status
       clearInterval(updateInterval);
       this.stopHeaderSpinner();
-      
+
       // Show completion summary
       this.showCompletionSummary();
 
-      return this.results;
+      // Generate comprehensive results
+      const allResults = this.results;
+      const overallSummary = this.generateOverallSummary(allResults);
+      const totalFilesCreated = allResults.reduce((sum, result) => sum + (result.totalFilesCreated || 0), 0);
+      const totalFilesRead = allResults.reduce((sum, result) => sum + (result.totalFilesRead || 0), 0);
+      const allGeneratedContent = allResults.flatMap(result => result.generatedFiles || []);
+
+      return {
+        success: true,
+        results: allResults,
+        summary: overallSummary,
+        totalFilesCreated,
+        totalFilesRead,
+        generatedContent: allGeneratedContent,
+        subAgentCount: allResults.length
+      };
 
     } catch (error) {
       clearInterval(updateInterval);
@@ -194,7 +216,16 @@ export class SubAgentManager {
       handleSubAgentToolCall
     );
 
-    return { success: true };
+    // Return a basic result structure for the intercepted execution
+    // Note: This is a simplified version - the full result generation happens in the base class
+    return {
+      success: true,
+      name: subAgent.name,
+      description: subAgent.description,
+      totalFilesCreated: 0, // Would need more complex tracking for accurate counts
+      totalFilesRead: 0,
+      generatedFiles: []
+    };
   }
 
   /**
@@ -253,13 +284,48 @@ export class SubAgentManager {
   showCompletionSummary() {
     logUpdate.clear();
     console.log(chalk.green('✓ All subagents completed successfully\n'));
-    
+
     // Show individual completion messages
     this.activeSubAgents.forEach(agent => {
       console.log(chalk.green(`✔ ${agent.name} created successfully`));
     });
-    
+
     console.log(''); // Add spacing after completion
+  }
+
+  /**
+   * Generate an overall summary of all subagent results
+   * @param {Array} results - Array of subagent results
+   * @returns {string} Overall summary
+   */
+  generateOverallSummary(results) {
+    if (results.length === 0) {
+      return 'No subagents were executed.';
+    }
+
+    if (results.length === 1) {
+      const result = results[0];
+      return result.analysis?.summary || `${result.name} completed successfully.`;
+    }
+
+    // Multiple subagents summary
+    const subAgentNames = results.map(r => r.name).join(', ');
+    const totalFiles = results.reduce((sum, r) => sum + (r.totalFilesCreated || 0), 0);
+    const totalReads = results.reduce((sum, r) => sum + (r.totalFilesRead || 0), 0);
+
+    let summary = `${results.length} subagents completed: ${subAgentNames}. `;
+
+    if (totalFiles > 0) {
+      summary += `Created ${totalFiles} file(s) total. `;
+    }
+
+    if (totalReads > 0) {
+      summary += `Analyzed ${totalReads} file(s) across all subagents. `;
+    }
+
+    summary += 'All documentation and analysis tasks have been completed successfully.';
+
+    return summary;
   }
 }
 

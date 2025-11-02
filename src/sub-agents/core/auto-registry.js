@@ -42,7 +42,7 @@ class AutoAgentRegistry {
             // Validate agent config
             if (this.validateAgentConfig(config)) {
               this.agents.set(config.id, config);
-              console.log(`✓ Loaded agent: ${config.name} (${config.id})`);
+              // Silent loading - agents are discovered in background
             } else {
               console.warn(`⚠ Invalid agent config in ${file}`);
             }
@@ -52,7 +52,7 @@ class AutoAgentRegistry {
         }
       }
 
-      console.log(`\n📦 Loaded ${this.agents.size} agent(s)\n`);
+      // Agents loaded silently in background
     } catch (error) {
       console.error('Error discovering agents:', error);
     }

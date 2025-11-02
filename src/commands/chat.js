@@ -14,7 +14,7 @@ import { TOOLS, executeTool } from '../utils/tools.js';
 import { getToolsForContext } from '../tools/index.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
-import { getSubAgentByToolName, isSubAgentTool, SubAgentManager, getAllSubAgentTools } from '../sub-agents/index.js';
+import { getSubAgentByToolName, isSubAgentTool, SubAgentManager } from '../sub-agents/index.js';
 import {
   createSession,
   addUserMessage,
@@ -58,11 +58,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider (use the actual model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
-  // Tool definitions for AI - get from ToolRegistry for main context + subagent tools
-  const tools = [
-    ...getToolsForContext('main'), // Tools available to main AI from registry
-    ...getAllSubAgentTools()        // Dynamically add all subagent creation tools
-  ];
+  // Tool definitions for AI - get from ToolRegistry for main context
+  const tools = getToolsForContext('main'); // Tools available to main AI from registry
   
   // Tool call handler
   let currentToolSpinner = null;

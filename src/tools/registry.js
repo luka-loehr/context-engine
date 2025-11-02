@@ -119,9 +119,12 @@ class ToolRegistry {
       }
 
       tools.push({
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters
+        type: 'function',
+        function: {
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.parameters
+        }
       });
     }
     

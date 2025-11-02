@@ -29,6 +29,13 @@ TEXT FORMATTING:
 - Keep emoji use tasteful and contextual - not in every response, only when it fits naturally
 - Example: **package.json**: Dependencies include chalk, commander, inquirer
 
+LINK FORMATTING:
+- Output URLs as plain text - no markdown formatting
+- Just write the raw URL (e.g., https://example.com)
+- DO NOT use [text](url) syntax
+- DO NOT add link text or formatting
+- Simply provide the bare URL
+
 SPECIAL FORMATTING:
 - Use --- on its own line for horizontal separators (renders as gray line)
 - Example:

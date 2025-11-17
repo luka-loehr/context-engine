@@ -54,3 +54,5 @@ export function getAllSubAgentTools() {
   }));
 }
 
+// Export SubAgentManager for backwards compatibility
+export { SubAgentManager } from './core/manager.js';

@@ -98,6 +98,54 @@ export const executionTools = [
     }
   },
   {
+    name: 'terminalReadOnly',
+    category: 'execution',
+    description: 'Execute a read-only terminal command (git/gh only) and return stdout/stderr',
+    parameters: {
+      type: 'object',
+      properties: {
+        command: { type: 'string', description: 'Command starting with git or gh' },
+        workingDirectory: { type: 'string', description: 'Optional working directory' },
+        maxOutput: { type: 'number', description: 'Optional max output length', default: 5000 }
+      },
+      required: ['command']
+    },
+    handler: async (parameters, context) => {
+      const { command, workingDirectory, maxOutput = 5000 } = parameters;
+      const { spinner } = context;
+      const lower = command.trim().toLowerCase();
+      if (!(lower.startsWith('git ') || lower.startsWith('gh '))) {
+        return { success: false, error: 'Only git or gh commands are permitted' };
+      }
+      const disallowed = [
+        'commit', 'push', 'pull', 'merge', 'rebase', 'cherry-pick', 'reset', 'checkout ', 'stash', 'apply', 'am', 'clean', 'config',
+        'pr create', 'pr merge', 'issue create', 'release create', 'repo clone', 'repo fork', 'auth login', 'auth refresh',
+        'api -x post', 'api -x patch', 'api -x put', 'api -x delete'
+      ];
+      if (disallowed.some(k => lower.includes(k))) {
+        return { success: false, error: 'State-changing or write operation blocked' };
+      }
+      try {
+        if (spinner && spinner.isSpinning) spinner.text = `Executing: ${command}`;
+        const options = workingDirectory ? { cwd: workingDirectory, env: { ...process.env, PAGER: 'cat' } } : { env: { ...process.env, PAGER: 'cat' } };
+        const { stdout, stderr } = await execAsync(command, options);
+        const out = (stdout || '').trim();
+        const err = (stderr || '').trim();
+        const clippedOut = out.length > maxOutput ? out.slice(0, maxOutput) + '\n... (truncated)' : out;
+        const clippedErr = err.length > maxOutput ? err.slice(0, maxOutput) + '\n... (truncated)' : err;
+        return {
+          success: true,
+          command,
+          stdout: clippedOut,
+          stderr: clippedErr,
+          message: (clippedOut || clippedErr) ? `Output for: ${command}\n${clippedOut || clippedErr}` : `No output for: ${command}`
+        };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    }
+  },
+  {
     name: 'ghReadOnly',
     category: 'execution',
     description: 'Run allowed read-only GitHub CLI commands and return output',
@@ -192,4 +240,3 @@ export const executionTools = [
     }
   }
 ];
-

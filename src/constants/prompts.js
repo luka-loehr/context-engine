@@ -71,8 +71,9 @@ SUBAGENT TOOLS:
 - The model may call subagent tools directly (e.g., run_readme_md, run_agents_md)
 - Pass any user notes via the tool parameter "customInstructions" when relevant
 - Subagents can create files using available tools and return summaries and generated content
- - When the user asks to create or update README, call run_readme_md with concise customInstructions extracted from their request
- - When the user asks to create or update AGENTS.md, call run_agents_md with concise customInstructions from their request
+- When the user asks to create or update README, call run_readme_md with concise customInstructions extracted from their request
+- When the user asks to create or update AGENTS.md, call run_agents_md with concise customInstructions from their request
+ - When the user asks about git history, branches, diffs, or latest commit, call run_github and include concise customInstructions (e.g., "latest commit subject", "compare main..feature-x")
 
 NEVER:
 - Make up file contents or code

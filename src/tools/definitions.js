@@ -6,6 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { toolRegistry, ToolCategories } from './registry.js';
+import { executionTools } from './library/execution-tools.js';
 
 /**
  * Register all core tools
@@ -295,6 +296,22 @@ export function registerCoreTools() {
   });
 
   // No prompt command: rely on natural language messages only
+
+  // ============================================================================
+  // EXECUTION TOOLS (Available to both main AI and subagents)
+  // ============================================================================
+  
+  // Register execution tools for shared access
+  executionTools.forEach(tool => {
+    toolRegistry.register({
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+      availableTo: ToolCategories.SHARED,
+      tags: ['execution', 'git', 'github'],
+      handler: tool.handler
+    });
+  });
 }
 
 /**
@@ -303,3 +320,4 @@ export function registerCoreTools() {
 export function initializeToolRegistry() {
   registerCoreTools();
 }
+

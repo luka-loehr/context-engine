@@ -333,13 +333,36 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   }
 }
 /**
- * Display buffered AI response with proper formatting
+ * Display buffered AI response with typewriter effect to simulate streaming
  * @param {string} text - Text to display
  */
 async function displayBufferedResponse(text) {
-  const streamWriter = createStreamWriter();
-  streamWriter.write(text);
-  streamWriter.flush();
+  // Apply basic inline formatting
+  let formattedText = text
+    .replace(/\*\*(.*?)\*\*/g, (_, content) => chalk.white.bold(content))
+    .replace(/\*(.*?)\*/g, (_, content) => chalk.italic(content))
+    .replace(/`(.*?)`/g, (_, content) => chalk.yellow(content));
+
+  // Split into words while preserving whitespace
+  const words = formattedText.split(/(\s+)/);
+  let displayText = '';
+
+  // Type out each word with realistic timing
+  for (const word of words) {
+    displayText += word;
+
+    // Clear line and rewrite with current progress
+    process.stdout.write('\r\x1b[K');
+    process.stdout.write(chalk.gray('context-engine: ') + displayText);
+
+    // Calculate delay based on word characteristics
+    const isPunctuation = /^[^\w]*$/.test(word.trim());
+    const delay = isPunctuation ? 25 : Math.max(35, Math.min(100, word.replace(/\s/g, '').length * 20));
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  // Clean final output
+  console.log('');
 }
 
 /**

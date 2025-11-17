@@ -41,7 +41,7 @@ export const executionTools = [
         'gh pr create', 'gh pr merge', 'gh issue create', 'gh release create',
         'gh auth', 'gh api -x post', 'gh api -x patch', 'gh api -x delete'
       ];
-
+      
       if (disallowed.some(pattern => lower.includes(pattern))) {
         return {
           success: false,
@@ -50,11 +50,8 @@ export const executionTools = [
         };
       }
 
-      // Check if we're in streaming mode (don't show spinner to avoid conflicts)
-      const isStreaming = context?.isStreaming || false;
-
-      // Create spinner for command execution (skip in streaming mode)
-      const localSpinner = isStreaming ? null : ora(`Running: ${chalk.cyan(command)}`).start();
+      // Create spinner for command execution
+      const localSpinner = ora(`Running: ${chalk.cyan(command)}`).start();
 
       try {
         const { stdout, stderr } = await execAsync(command, {
@@ -63,15 +60,12 @@ export const executionTools = [
         });
 
         // Complete spinner asynchronously with random delay (don't block tool return)
-        // Skip spinner completion in streaming mode
-        if (!isStreaming) {
-          const delay = getRandomDelay();
-          setTimeout(() => {
-            if (localSpinner) {
-              localSpinner.succeed(`Ran: ${chalk.cyan(command)}`);
-            }
-          }, delay);
-        }
+        const delay = getRandomDelay();
+        setTimeout(() => {
+          if (localSpinner) {
+            localSpinner.succeed(`Ran: ${chalk.cyan(command)}`);
+          }
+        }, delay);
 
         return {
           success: true,
@@ -79,15 +73,13 @@ export const executionTools = [
           command
         };
       } catch (error) {
-        // Complete spinner with error (skip in streaming mode)
-        if (!isStreaming) {
-          const delay = getRandomDelay();
-          setTimeout(() => {
-            if (localSpinner) {
-              localSpinner.fail(`Failed: ${chalk.cyan(command)}`);
-            }
-          }, delay);
-        }
+        // Complete spinner with error
+        const delay = getRandomDelay();
+        setTimeout(() => {
+          if (localSpinner) {
+            localSpinner.fail(`Failed: ${chalk.cyan(command)}`);
+          }
+        }, delay);
 
         return {
           success: false,

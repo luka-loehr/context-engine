@@ -78,8 +78,8 @@ export class GenericAgentExecutor {
         );
       };
 
-      // Execute agent
-      await provider.refinePrompt(
+      // Execute agent and capture the final response
+      const agentFinalResponse = await provider.refinePrompt(
         userPrompt,
         systemPrompt,
         null, // No streaming
@@ -87,8 +87,9 @@ export class GenericAgentExecutor {
         handleToolCall
       );
 
-      // Generate summary
-      analysis.summary = this.generateSummary(agentConfig, analysis, generatedFiles);
+      // Store the agent's final response as the summary (or generate one if empty)
+      analysis.summary = agentFinalResponse.trim() || this.generateSummary(agentConfig, analysis, generatedFiles);
+      analysis.agentResponse = agentFinalResponse.trim();
 
       if (loadingSpinner.isSpinning) {
         loadingSpinner.succeed(`${agentConfig.name} completed`);

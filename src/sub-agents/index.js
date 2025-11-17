@@ -5,7 +5,6 @@
 
 export { autoAgentRegistry } from './core/auto-registry.js';
 export { genericAgentExecutor } from './core/generic-executor.js';
-export { showAgentsMenu, executeAgent } from '../commands/agents-menu.js';
 
 // Initialize and discover agents on module load
 import { autoAgentRegistry } from './core/auto-registry.js';

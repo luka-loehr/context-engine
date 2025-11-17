@@ -10,11 +10,11 @@ import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
-import { TOOLS, executeTool } from '../utils/tools.js';
-import { getToolsForContext } from '../tools/index.js';
+import { getToolsForContext, executeToolInContext } from '../tools/index.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
-import { getSubAgentByToolName, isSubAgentTool, SubAgentManager } from '../sub-agents/index.js';
+import { getSubAgentByToolName, isSubAgentTool, getAllSubAgentTools, autoAgentRegistry } from '../sub-agents/index.js';
+import { genericAgentExecutor } from '../sub-agents/core/generic-executor.js';
 import {
   createSession,
   addUserMessage,
@@ -58,8 +58,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Create provider (use the actual model name)
   let provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
   
-  // Tool definitions for AI - get from ToolRegistry for main context
-  const tools = getToolsForContext('main'); // Tools available to main AI from registry
+  // Tool definitions for AI: main tools + exposed subagent tools
+  const tools = [
+    ...getToolsForContext('main'),
+    ...getAllSubAgentTools()
+  ];
   
   // Tool call handler
   let currentToolSpinner = null;
@@ -166,17 +169,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       return { success: true, message: 'Conversation cleared', stopLoop: true };
     }
 
-    if (toolName === 'agents') {
-      // Open interactive agents menu
-      const { showAgentsMenu } = await import('./agents-menu.js');
-      const result = await showAgentsMenu({
-        projectContext: session.fullProjectContext,
-        modelInfo: currentModelInfo,
-        apiKey: currentApiKey,
-        session
-      });
-      return result;
-    }
+    // Natural language only: no special prompt injection command
 
     // Generic subagent handler - works for ALL subagents
     if (isSubAgentTool(toolName)) {
@@ -211,68 +204,63 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         activeSubAgentCalls.clear();
         
         if (allCalls.length > 1) {
-          // Multiple subagents - use SubAgentManager for concurrent execution
-          const manager = new SubAgentManager();
-          const configs = allCalls.map(call => ({
-            subAgent: getSubAgentByToolName(call.toolName),
-            params: {},
-            projectContext: session.fullProjectContext,
-            modelInfo: currentModelInfo,
-            apiKey: currentApiKey,
-            provider
-          }));
-          
-          // Execute concurrently and get comprehensive results
-          const executionResults = await manager.executeMultiple(configs);
-          
-          // Create detailed result message for the main AI
-          const fileNames = configs.map(c => c.subAgent.name).join(' and ');
-          let detailedMessage = `Successfully created ${fileNames}.\n\n`;
-
-          // Add summary of work done
-          detailedMessage += `## Summary\n${executionResults.summary}\n\n`;
-
-          // Add details about generated content if available
-          if (executionResults.generatedContent && executionResults.generatedContent.length > 0) {
+          // Multiple subagents - execute concurrently via generic executor
+          const executionPromises = allCalls.map(call => {
+            const agentId = call.toolName.startsWith('run_')
+              ? call.toolName.replace(/^run_/, '').replace(/_/g, '-')
+              : getSubAgentByToolName(call.toolName)?.id;
+            const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(call.toolName);
+            return agentConfig
+              ? genericAgentExecutor.execute(
+                  agentConfig,
+                  {
+                    projectContext: session.fullProjectContext,
+                    modelInfo: currentModelInfo,
+                    apiKey: currentApiKey
+                  },
+                  call.parameters?.customInstructions || null
+                )
+              : Promise.resolve({ success: false, error: `Unknown subagent: ${call.toolName}` });
+          });
+          const results = await Promise.all(executionPromises);
+          const names = results.map(r => r.agentName).filter(Boolean).join(' and ');
+          let detailedMessage = `Successfully executed ${names}.\n\n`;
+          const generatedContent = [];
+          results.forEach(r => {
+            if (r.generatedFiles && r.generatedFiles.length > 0) {
+              generatedContent.push(...r.generatedFiles);
+            }
+          });
+          if (generatedContent.length > 0) {
             detailedMessage += `## Generated Files\n`;
-            executionResults.generatedContent.forEach(file => {
+            generatedContent.forEach(file => {
               detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
             });
             detailedMessage += `\n`;
           }
-
-          // Add analysis from each subagent
-          if (executionResults.results && executionResults.results.length > 0) {
-            detailedMessage += `## Analysis Details\n`;
-            executionResults.results.forEach(result => {
-              if (result.analysis && result.analysis.summary) {
-                detailedMessage += `### ${result.name}\n${result.analysis.summary}\n\n`;
-              }
-            });
-          }
-
-          // Add full content for AI reference (not for output to user)
-          if (executionResults.generatedContent && executionResults.generatedContent.length > 0) {
-            detailedMessage += `\n## Full Content (For Your Reference - DO NOT Output to User)\n`;
-            detailedMessage += `The following is the complete generated content. You can reference this to answer user questions, but DO NOT output it directly.\n\n`;
-            executionResults.generatedContent.forEach(file => {
-              detailedMessage += `### File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
-            });
-          }
-
-          const result = { 
-            success: true, 
+          const result = {
+            success: true,
             message: detailedMessage,
-            subAgentResults: executionResults,
-            stopLoop: false // Let AI provide feedback about what was created
+            subAgentResults: results,
+            stopLoop: false
           };
-          
           allCalls.forEach(call => call.resolveExecution(result));
           return result;
         } else {
-          // Single subagent - execute directly
-          const subAgent = getSubAgentByToolName(toolName);
-          const executionResult = await subAgent.execute({}, session.fullProjectContext, currentModelInfo, currentApiKey, provider);
+          // Single subagent - execute directly via generic executor
+          const agentId = toolName.startsWith('run_')
+            ? toolName.replace(/^run_/, '').replace(/_/g, '-')
+            : getSubAgentByToolName(toolName)?.id;
+          const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(toolName);
+          const executionResult = await genericAgentExecutor.execute(
+            agentConfig,
+            {
+              projectContext: session.fullProjectContext,
+              modelInfo: currentModelInfo,
+              apiKey: currentApiKey
+            },
+            parameters?.customInstructions || null
+          );
 
           // Create detailed result message for the main AI
           let detailedMessage = `${subAgent.name} creation completed successfully.\n\n`;
@@ -311,7 +299,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             success: true, 
             message: detailedMessage,
             subAgentResults: executionResult,
-            stopLoop: false // Let AI provide feedback
+            stopLoop: false
           };
           allCalls[0].resolveExecution(result);
           return result;
@@ -335,7 +323,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     const localSpinner = ora(`Loading ${chalk.cyan(fileName)}`).start();
 
     // Execute tool
-    const result = executeTool(toolName, parameters, session.fullProjectContext);
+    const result = await executeToolInContext(toolName, parameters, 'main', {
+      projectContext: session.fullProjectContext
+    });
 
     // Calculate tokens from the file content (result is now an object)
     const tokens = result.content ? countTokens(result.content) : 0;

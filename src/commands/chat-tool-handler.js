@@ -18,6 +18,7 @@ import { clearConversationHistory, showWelcomeBanner } from '../session/index.js
 import { clearScreen } from '../terminal/index.js';
 import { isSubAgentTool, getSubAgentByToolName, autoAgentRegistry } from '../sub-agents/index.js';
 import { genericAgentExecutor } from '../sub-agents/core/generic-executor.js';
+import { executeToolInContext } from '../tools/index.js';
 
 /**
  * Utility class for handling common chat tool operations
@@ -139,8 +140,23 @@ export async function handleChatToolCall(toolName, parameters, context) {
     return await handleSubAgentTool(toolName, parameters, context);
   }
 
-  // If we get here, it's an unknown tool
-  return { success: false, error: `Unknown tool: ${toolName}` };
+  // Fallback to general tool execution for regular tools (terminal, getFileContent, etc.)
+  try {
+    const { session } = context;
+    const result = await executeToolInContext(toolName, parameters, 'main', {
+      projectContext: session.fullProjectContext
+    });
+
+    // Handle file reading spinners if needed
+    if (toolName === 'getFileContent' && result.content) {
+      // This would be handled by the spinner logic in the original code
+      // For now, just return the result
+    }
+
+    return result;
+  } catch (error) {
+    return { success: false, error: `Tool execution failed: ${error.message}` };
+  }
 }
 
 /**

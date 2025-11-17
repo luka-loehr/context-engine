@@ -24,15 +24,15 @@ export async function showWelcomeBanner(projectContext, contextPrefix) {
     // Calculate tokens from what we actually send (file paths + markdown content)
     const totalTokens = countTokens(contextPrefix);
     const formattedTokens = formatTokenCount(totalTokens);
-    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})\n`));
+    console.log(chalk.gray(`read: ${projectContext.length} files (${formattedTokens})\n`));
   } else {
-    console.log(chalk.yellow('loaded: 0 files (no project detected)\n'));
+    console.log(chalk.yellow('read: 0 files (no project detected)\n'));
   }
 
   console.log(chalk.cyan('🚀 Smart Context Engine Features:'));
   console.log('');
   console.log(chalk.gray('  • Instant whole-folder structure preload & injection'));
-  console.log(chalk.gray('  • AI-powered context retrieval - loads exactly what you need'));
+  console.log(chalk.gray('  • AI-powered context retrieval - reads exactly what you need'));
   console.log(chalk.gray('  • Multi-file analysis with intelligent file selection'));
   console.log(chalk.gray('  • Real-time code understanding & bug detection'));
   console.log(chalk.gray('  • Ask anything about your codebase - from architecture to implementation\n'));
@@ -45,7 +45,7 @@ export function showFeatures() {
   console.log(chalk.cyan('🚀 Smart Context Engine Features:'));
   console.log('');
   console.log(chalk.gray('  • Instant whole-folder structure preload & injection'));
-  console.log(chalk.gray('  • AI-powered context retrieval - loads exactly what you need'));
+  console.log(chalk.gray('  • AI-powered context retrieval - reads exactly what you need'));
   console.log(chalk.gray('  • Multi-file analysis with intelligent file selection'));
   console.log(chalk.gray('  • Real-time code understanding & bug detection'));
   console.log(chalk.gray('  • Ask anything about your codebase - from architecture to implementation'));
@@ -60,8 +60,8 @@ export function showProjectStats(projectContext, contextPrefix) {
   if (projectContext && projectContext.length > 0) {
     const totalTokens = countTokens(contextPrefix);
     const formattedTokens = formatTokenCount(totalTokens);
-    console.log(chalk.gray(`loaded: ${projectContext.length} files (${formattedTokens})`));
+    console.log(chalk.gray(`read: ${projectContext.length} files (${formattedTokens})`));
   } else {
-    console.log(chalk.yellow('loaded: 0 files (no project detected)'));
+    console.log(chalk.yellow('read: 0 files (no project detected)'));
   }
 }

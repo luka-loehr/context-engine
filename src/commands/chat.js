@@ -310,7 +310,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       }
     }
 
-    // Show file loading spinner only for meaningful file operations
+    // Show file reading spinner only for meaningful file operations
     const fileName = parameters.filePath || 'file';
     const isMeaningfulFile = fileName !== 'file' && fileName.includes('.'); // Only show for actual files with extensions
     
@@ -321,7 +321,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     }
     
     // Create a local spinner for this specific tool call (for concurrent execution)
-    const localSpinner = isMeaningfulFile ? ora(`Loading ${chalk.cyan(fileName)}`).start() : null;
+    const localSpinner = isMeaningfulFile ? ora(`Reading ${chalk.cyan(fileName)}`).start() : null;
 
     // Execute tool
     const result = await executeToolInContext(toolName, parameters, 'main', {
@@ -338,7 +338,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       if (localSpinner) {
         // Only show detailed message if there are tokens
         if (tokens > 0) {
-          localSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
+          localSpinner.succeed(`Read ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
         } else {
           // Silent completion for empty files
           localSpinner.stop();

@@ -144,7 +144,8 @@ export async function handleChatToolCall(toolName, parameters, context) {
   try {
     const { session } = context;
     const result = await executeToolInContext(toolName, parameters, 'main', {
-      projectContext: session.fullProjectContext
+      projectContext: session.fullProjectContext,
+      isStreaming: true // Indicate we're in streaming mode
     });
 
     // Handle file reading spinners if needed

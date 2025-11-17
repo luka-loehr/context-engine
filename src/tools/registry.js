@@ -121,14 +121,7 @@ class ToolRegistry {
         continue;
       }
 
-      tools.push({
-        type: 'function',
-        function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters
-        }
-      });
+      tools.push(tool);
     }
     
     return tools;

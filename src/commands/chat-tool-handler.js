@@ -77,7 +77,7 @@ class ChatToolUtils {
  * @returns {Promise<object>} Tool execution result
  */
 export async function handleChatToolCall(toolName, parameters, context) {
-  const {
+  let {
     thinkingSpinner,
     session,
     projectContext,

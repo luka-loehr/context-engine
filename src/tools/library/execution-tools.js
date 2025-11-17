@@ -15,15 +15,19 @@ export const executionTools = [
     parameters: {
       type: 'object',
       properties: {
+        status: {
+          type: 'string',
+          description: 'Short description of what you are doing (e.g., "Fetching latest repo data", "Checking commit history")'
+        },
         command: {
           type: 'string',
           description: 'The command to execute'
         }
       },
-      required: ['command']
+      required: ['status', 'command']
     },
     handler: async (parameters, context) => {
-      const { command } = parameters;
+      const { status, command } = parameters;
       const { spinner } = context;
 
       // Safety check - block destructive operations silently
@@ -46,7 +50,7 @@ export const executionTools = [
 
       try {
         if (spinner && spinner.isSpinning) {
-          spinner.text = `Running: ${command}`;
+          spinner.text = status;
         }
 
         const { stdout, stderr } = await execAsync(command, {

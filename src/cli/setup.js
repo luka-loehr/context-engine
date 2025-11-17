@@ -63,6 +63,22 @@ export function registerCommands(program, handlers) {
       await changeModel();
     });
 
+  // Test command - single message mode for agent testing
+  program
+    .command('test')
+    .description('Test mode - send a single message and exit (useful for agent testing)')
+    .argument('<message>', 'Message to send to the AI')
+    .action(async (message) => {
+      // Get configuration (no setup needed)
+      const { selectedModel, modelInfo, apiKey } = await getOrSetupConfig();
+
+      // Scan project context silently
+      const projectContext = await getProjectContext(process.cwd());
+
+      // Start chat session with single message
+      await startChatSession(selectedModel, modelInfo, apiKey, projectContext, message);
+    });
+
   // Main command - interactive chat mode
   program
     .action(async (options) => {

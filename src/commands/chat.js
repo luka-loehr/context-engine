@@ -31,7 +31,7 @@ import { handleAPIError } from '../errors/index.js';
 /**
  * Start interactive chat session with codebase context
  */
-export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext) {
+export async function startChatSession(selectedModel, modelInfo, apiKey, projectContext, singleMessage = null) {
   // Build system prompt with project context
   const systemPrompt = getSystemPrompt();
   const contextPrefix = buildProjectContextPrefix(projectContext);
@@ -310,8 +310,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       }
     }
 
-    // Show file loading spinner
+    // Show file loading spinner only for meaningful file operations
     const fileName = parameters.filePath || 'file';
+    const isMeaningfulFile = fileName !== 'file' && fileName.includes('.'); // Only show for actual files with extensions
     
     // Stop thinking spinner first if running (only once for first tool call)
     if (thinkingSpinner && thinkingSpinner.isSpinning) {
@@ -320,7 +321,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     }
     
     // Create a local spinner for this specific tool call (for concurrent execution)
-    const localSpinner = ora(`Loading ${chalk.cyan(fileName)}`).start();
+    const localSpinner = isMeaningfulFile ? ora(`Loading ${chalk.cyan(fileName)}`).start() : null;
 
     // Execute tool
     const result = await executeToolInContext(toolName, parameters, 'main', {
@@ -334,7 +335,15 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     // Complete spinner asynchronously with random delay (don't block tool return)
     const delay = 500 + Math.random() * 500;
     setTimeout(() => {
-      localSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
+      if (localSpinner) {
+        // Only show detailed message if there are tokens
+        if (tokens > 0) {
+          localSpinner.succeed(`Loaded ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
+        } else {
+          // Silent completion for empty files
+          localSpinner.stop();
+        }
+      }
     }, delay);
     
     return result;
@@ -375,7 +384,80 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Send initial context to AI ONCE
   await injectContext();
   
-  // Chat loop
+  // Handle single message mode (non-interactive)
+  if (singleMessage) {
+    try {
+      // Add user message to session
+      addUserMessage(session, singleMessage);
+      
+      // Build full prompt with conversation history (context already sent once)
+      let fullPrompt = '';
+
+      // Add conversation history from session (which includes the initial context)
+      if (session.conversationHistory.length > 0) {
+        session.conversationHistory.forEach(msg => {
+          fullPrompt += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n\n`;
+        });
+      }
+
+      // Add current question
+      fullPrompt += `User: ${singleMessage}`;
+      
+      // Show thinking indicator
+      thinkingSpinner = ora('Thinking...').start();
+      
+      // Get response from AI
+      const streamWriter = createStreamWriter();
+      let firstChunk = true;
+      let assistantResponse = '';
+      
+      try {
+        assistantResponse = await provider.refinePrompt(
+          fullPrompt,
+          systemPrompt,
+          (content) => {
+            if (firstChunk) {
+              // Stop any running spinners
+              if (thinkingSpinner && thinkingSpinner.isSpinning) {
+                thinkingSpinner.stop();
+                thinkingSpinner = null;
+              }
+              // Add one empty line for spacing
+              console.log('');
+              // Print header
+              console.log(chalk.gray('context-engine:'));
+              firstChunk = false;
+            }
+            streamWriter.write(content);
+          },
+          tools,
+          handleToolCall
+        );
+        
+        streamWriter.flush();
+        console.log('');  // Single line spacing after response
+
+        // Add assistant response to session
+        addAssistantMessage(session, assistantResponse);
+        
+      } catch (error) {
+        if (thinkingSpinner && thinkingSpinner.isSpinning) {
+          thinkingSpinner.stop();
+        }
+        handleAPIError(error, currentModelInfo);
+        console.log(chalk.gray('\nContinuing chat session...\n'));
+      }
+      
+      // Exit after single message
+      return;
+      
+    } catch (error) {
+      console.log(chalk.red('\nError:', error.message));
+      return;
+    }
+  }
+  
+  // Chat loop (interactive mode)
   while (true) {
     try {
       // Get user input

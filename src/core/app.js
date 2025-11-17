@@ -69,9 +69,9 @@ export function setupCommandHandlers(program) {
       const { getProjectContext } = await import('../commands/refine.js');
       return getProjectContext(dir);
     },
-    startChatSession: async (selectedModel, modelInfo, apiKey, projectContext) => {
+    startChatSession: async (selectedModel, modelInfo, apiKey, projectContext, singleMessage = null) => {
       const { startChatSession } = await import('../commands/chat.js');
-      return startChatSession(selectedModel, modelInfo, apiKey, projectContext);
+      return startChatSession(selectedModel, modelInfo, apiKey, projectContext, singleMessage);
     }
   };
 

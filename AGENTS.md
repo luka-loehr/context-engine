@@ -1,1 +1,119 @@
-# Sample AI Coding Assistant Project AGENTS.md\n\nThis AGENTS.md file provides comprehensive guidance for AI coding agents working on this project. It covers setup, development practices, testing, and contribution workflows to ensure consistent and efficient collaboration.\n\n## Project Overview\n\nThis project is a sample repository designed for AI coding assistants to demonstrate best practices in documentation generation. The architecture is minimal, serving as a template for more complex applications. It uses Node.js for backend logic and includes placeholder files for configuration, scripts, and documentation. The purpose is to provide a foundation for AI agents to analyze, extend, and maintain codebases with clear guidelines.\n\nKey components:\n- **Core Language**: JavaScript (Node.js)\n- **Structure**: Root-level configuration files (e.g., package.json), src/ directory for source code, tests/ for unit tests\n- **Dependencies**: Standard npm packages for development tools like ESLint, Jest, and Prettier\n- **Architecture Pattern**: Modular, with separation of concerns for utilities, services, and entry points\n\nAI agents should focus on maintaining modularity, ensuring all changes align with the project's goal of serving as an educational template for automated code analysis.\n\n## Setup commands\n\nTo get started with development, follow these steps. All commands assume you have Node.js (v14+) and npm installed.\n\n1. **Clone and Install Dependencies**:\n   ```\n   git clone <repository-url>\n   cd sample-ai-project\n   npm install\n   ```\n   This installs all production and development dependencies listed in `package.json`.\n\n2. **Environment Setup**:\n   - Copy the example environment file: `cp .env.example .env`\n   - Configure any required variables (e.g., API keys if applicable; none in this sample).\n\n3. **Start Development Server**:\n   ```\n   npm run dev\n   ```\n   This launches the development server with hot reloading (using nodemon). The app runs on `http://localhost:3000`.\n\n4. **Build for Production**:\n   ```\n   npm run build\n   ```\n   Compiles the code into a production-ready bundle in the `dist/` directory.\n\n5. **Run in Production Mode**:\n   ```\n   npm start\n   ```\n\nIf issues arise, check `package.json` scripts for additional commands and ensure your Node version matches the requirements in `.nvmrc` (if present).\n\n## Code style\n\nThis project follows modern JavaScript standards to ensure readability and maintainability. AI agents must adhere to these conventions when making changes.\n\n- **Language and Version**: ES6+ JavaScript (transpiled with Babel if needed). Use `const` for constants, `let` for variables, and avoid `var`.\n- **Module System**: ES modules (import/export syntax). Use absolute imports where possible, e.g., `import { utils } from './src/utils/index.js';`.\n- **Naming Conventions**:\n  - Variables/Functions: camelCase (e.g., `processData`).\n  - Classes: PascalCase (e.g., `DataProcessor`).\n  - Constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`).\n  - Files: kebab-case (e.g., `data-processor.js`).\n- **Import Patterns**:\n  - Group imports: Standard libraries first, then third-party, then local.\n  - Example:\n    ```js\n    import fs from 'fs';\n    import lodash from 'lodash';\n    import { config } from '../config.js';\n    ```\n  - Avoid relative paths longer than 2 levels; use aliases if configured in jsconfig.json.\n- **Code Organization**:\n  - Keep functions under 50 lines; break into smaller, focused modules.\n  - Use async/await over promises for readability.\n  - Follow single responsibility principle: one file, one concern.\n  - Comments: JSDoc for public APIs; inline for complex logic.\n\nEnforce styles with ESLint (`npm run lint`) and Prettier (`npm run format`). Run these before committing.\n\n## Dev environment tips\n\nOptimize your development workflow with these tools and commands. AI agents can automate repetitive tasks using these.\n\n- **Common Development Commands** (from `package.json`):\n  - `npm run lint`: Check code style with ESLint.\n  - `npm run format`: Auto-format with Prettier.\n  - `npm run type-check`: Run TypeScript checks (if using TS; otherwise, skip).\n  - `npm run clean`: Remove build artifacts (`rm -rf dist/ node_modules/.cache`).\n\n- **Build Processes**:\n  - Development: Incremental builds with `npm run dev`.\n  - Production: Full build with minification (`npm run build`).\n  - Watch Mode: Enabled in dev script for real-time updates.\n\n- **Environment Setup**:\n  - Use nvm for Node version management: `nvm use` (based on `.nvmrc`).\n  - IDE Recommendations: VS Code with extensions for ESLint, Prettier, and GitLens.\n  - Debugging: Use `node --inspect` or VS Code debugger for breakpoints.\n  - Logging: Use console.log for dev; switch to a logger like Winston in prod.\n\n- **Common Pitfalls**:\n  - Ensure `.gitignore` excludes `node_modules`, `.env`, and `dist/`.\n  - For AI agents: When generating code, validate with `npm test` immediately.\n\nMonitor performance with tools like Node Clinic if the project scales.\n\n## Testing instructions\n\nTesting is crucial for reliability. This project uses Jest for unit and integration tests, aiming for 80%+ coverage.\n\n- **Test Structure**:\n  - Tests located in `__tests__/` directories alongside source files or in a top-level `tests/` folder.\n  - Unit tests: Focus on individual functions (e.g., `utils.test.js`).\n  - Integration tests: Cover module interactions (e.g., API endpoints).\n  - Use `describe`/`it` blocks with `expect` assertions.\n\n- **How to Run Tests**:\n  ```\n  npm test\n  ```\n  Runs all tests with coverage report. For specific files: `npm test -- utils.test.js`.\n\n- **Additional Commands**:\n  - `npm run test:watch`: Interactive watch mode for TDD.\n  - `npm run test:coverage`: Generate detailed coverage report (threshold: 80%).\n  - `npm run test:e2e`: Run end-to-end tests (if Cypress or similar is set up; not in sample).\n\n- **Coverage Requirements**:\n  - Branches: 80%, Functions: 80%, Lines: 80%.\n  - Enforced in CI via `jest --coverage --coverageReporters=lcov`.\n\n- **CI/CD Processes**:\n  - GitHub Actions (or similar): Runs `npm ci`, `npm test`, `npm run build` on PRs.\n  - Failures block merges; review coverage reports in CI logs.\n  - For AI agents: Always run tests after changes and fix failures before proposing edits.\n\nMock external dependencies with Jest mocks to isolate tests.\n\n## PR instructions\n\nFollow these guidelines for clean, reviewable pull requests. AI agents should simulate this workflow when suggesting changes.\n\n- **Pull Request Workflow**:\n  1. Create a feature branch: `git checkout -b feature/ai-enhancement`.\n  2. Make changes, commit with semantic messages (e.g., `feat: add data validation`).\n  3. Run checks: `npm run lint && npm test && npm run build`.\n  4. Push and open PR: Link to issue if applicable (e.g., \"Closes #123\").\n\n- **Code Review Requirements**:\n  - All PRs require at least one approval.\n  - Checks: Linting passes, tests pass (80% coverage), no breaking changes.\n  - Self-review: Ensure code follows style guide; add tests for new features.\n  - AI Agent Tip: Include a summary of changes and rationale in PR description.\n\n- **Versioning**:\n  - Use Semantic Versioning (SemVer): MAJOR.MINOR.PATCH.\n  - Update `package.json` version on merge to main.\n  - Breaking changes: Increment MAJOR and add `CHANGELOG.md` entry.\n\n- **Release Process**:\n  1. Merge to main.\n  2. Tag release: `git tag v1.2.0 && git push --tags`.\n  3. Publish to npm: `npm publish` (requires credentials).\n  4. Update documentation (this AGENTS.md if workflows change).\n  - Automated releases via CI for minor/patch; manual for major.\n\nFor hotfixes, use `hotfix/` branches. Always squash commits before merging.\n\n---\n\n*Generated by [context-engine](https://github.com/luka-loehr/context-engine)*
+# Context-Engine AGENTS.md
+
+This AGENTS.md file provides comprehensive guidance for AI coding agents working on the context-engine project. Context-engine is an interactive AI-powered codebase assistant using XAI Grok that allows users to chat with their code and get instant answers.
+
+## Project Overview
+
+Context-engine is a sophisticated CLI tool that provides AI-powered codebase analysis and assistance. The architecture is modular with clear separation between core functionality, subagents, tools, and providers.
+
+Key components:
+- **Core Language**: JavaScript (Node.js) with ES modules
+- **CLI Framework**: Commander.js for command handling
+- **AI Provider**: XAI Grok API integration
+- **Architecture**: Modular with auto-discoverable subagents and tools
+- **Tool System**: Context-based tool registry (main, subagent, shared access levels)
+- **Subagent System**: Modular subagents with natural language invocation
+
+## Essential Commands for Agent Testing
+
+### Test Command (For Agent Development)
+```bash
+# Single message mode - perfect for testing agent responses without interactive mode
+./bin/context.js test "your test message here"
+
+# Examples:
+./bin/context.js test "tell me which branches exist"
+./bin/context.js test "use github to show recent commits"
+./bin/context.js test "what files are in the src directory"
+```
+
+This command is invaluable for agents like you to quickly test functionality, verify tool integration, and ensure responses are working correctly without entering interactive mode.
+
+### Interactive Mode
+```bash
+# Start full interactive chat session
+./bin/context.js
+```
+
+### Configuration Commands
+```bash
+# Reset model selection
+./bin/context.js reset
+
+# Change AI model
+./bin/context.js model
+```
+
+## Architecture Deep Dive
+
+### Tool System
+The tool system uses a registry pattern with three access levels:
+- **MAIN**: Tools only available to the main AI (exit, help, clear, etc.)
+- **SUBAGENT**: Tools only available to subagents (createFile, statusUpdate, etc.)
+- **SHARED**: Tools available to both (getFileContent, terminalReadOnly, etc.)
+
+### Subagent System
+Subagents are auto-discovered and can be invoked naturally:
+- GitHub subagent: "tell me about branches", "show recent commits"
+- Each subagent has specific tools and capabilities
+- Subagents return structured responses for AI consumption
+
+### Key Files and Their Roles
+- `src/tools/definitions.js`: Central tool registration
+- `src/sub-agents/agents/`: Individual subagent configurations
+- `src/providers/`: AI provider integrations (XAI, etc.)
+- `src/commands/chat.js`: Main chat session handling
+- `src/tools/library/execution-tools.js`: Terminal execution tools
+
+## Development Guidelines
+
+### When Adding New Tools
+1. Define tool in appropriate category (MAIN/SUBAGENT/SHARED)
+2. Add to `src/tools/definitions.js`
+3. Ensure proper parameter validation
+4. Test with both main AI and subagents
+
+### When Creating Subagents
+1. Create configuration in `src/sub-agents/agents/`
+2. Register in subagent index
+3. Define appropriate tools and system prompt
+4. Test natural language invocation
+
+### Testing Best Practices
+- Use the `test` command for quick verification
+- Test both success and error cases
+- Verify tool output format matches AI consumption requirements
+- Ensure no sensitive data exposure in responses
+
+## Terminal Tool Integration
+
+The `terminalReadOnly` tool is specifically designed for read-only git/GitHub operations:
+- Executes git commands safely (read-only)
+- Captures both stdout and stderr
+- Returns structured output for AI consumption
+- Integrated with GitHub subagent for branch/commit analysis
+
+## Security Considerations
+
+- All terminal operations are read-only
+- No write operations allowed through terminal tools
+- API keys are handled securely through environment variables
+- Subagents operate with limited, defined capabilities
+
+## Common Issues and Solutions
+
+1. **"Loaded file (0)" messages**: These are suppressed for cleaner output - the spinner logic only shows meaningful file operations
+2. **Tool not found**: Check tool registration in definitions.js and access level
+3. **Subagent not responding**: Verify subagent configuration and tool availability
+4. **API key issues**: Ensure XAI_API_KEY is set in environment or .env file
+
+## Testing Checklist for Agents
+
+- [ ] Test basic chat functionality
+- [ ] Test GitHub subagent with branch queries
+- [ ] Test terminalReadOnly tool execution
+- [ ] Verify clean output without loading spam
+- [ ] Test error handling and edge cases
+- [ ] Verify tool output format for AI consumption
+
+Remember: The `test` command is your best friend for rapid iteration and verification!

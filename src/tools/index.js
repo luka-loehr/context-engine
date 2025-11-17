@@ -1,31 +1,44 @@
 /**
  * Context Engine - Tools Module
- * Exports the tool registry and initializes core tools
+ * Simple tool management system
  *
  * Copyright (c) 2025 Luka Loehr
  * Licensed under the MIT License
  */
 
-import { toolRegistry, ToolRegistry, ToolCategories } from './registry.js';
-import { initializeToolRegistry } from './definitions.js';
+import { getToolsForMain, getToolsForSubagent, executeTool, getToolByName, getAllTools } from './registry.js';
 
-// Initialize all core tools
-initializeToolRegistry();
+/**
+ * Get tools for a specific context
+ * @param {string} context - 'main' or 'subagent'
+ */
+export function getToolsForContext(context) {
+  return context === 'main' ? getToolsForMain() : getToolsForSubagent();
+}
 
-// Export the singleton registry
-export { toolRegistry };
+/**
+ * Get tools for a specific agent (alias for subagent tools)
+ */
+export function getToolsForAgent() {
+  return getToolsForSubagent();
+}
 
-// Export for testing
-export { ToolRegistry };
+/**
+ * Execute a tool in context
+ */
+export async function executeToolInContext(toolName, parameters, context, contextData = {}) {
+  return await executeTool(toolName, parameters, contextData);
+}
 
-// Export categories for convenience
-export { ToolCategories };
+/**
+ * Check if tool is available (always true in simplified system)
+ */
+export function isToolAvailable() {
+  return true;
+}
 
-// Export helper functions
-export {
-  getToolsForContext,
-  getToolsForAgent,
-  executeToolInContext,
-  isToolAvailable
-} from './helpers.js';
+/**
+ * Get all available tools
+ */
+export { getAllTools, getToolByName };
 

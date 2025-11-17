@@ -20,6 +20,55 @@ import { isSubAgentTool, getSubAgentByToolName, autoAgentRegistry } from '../sub
 import { genericAgentExecutor } from '../sub-agents/core/generic-executor.js';
 
 /**
+ * Utility class for handling common chat tool operations
+ */
+class ChatToolUtils {
+  /**
+   * Get agent configuration from tool name
+   */
+  static getAgentConfig(toolName) {
+    const agentId = toolName.startsWith('run_')
+      ? toolName.replace(/^run_/, '').replace(/_/g, '-')
+      : getSubAgentByToolName(toolName)?.id;
+    return agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(toolName);
+  }
+
+  /**
+   * Create execution context for agent
+   */
+  static createExecutionContext(session, currentModelInfo, currentApiKey) {
+    return {
+      projectContext: session.fullProjectContext,
+      modelInfo: currentModelInfo,
+      apiKey: currentApiKey
+    };
+  }
+
+  /**
+   * Create detailed result message from execution result
+   */
+  static createResultMessage(executionResult) {
+    let message = `${executionResult.agentName} completed successfully.\n\n`;
+
+    // Add summary if available
+    if (executionResult.analysis?.summary) {
+      message += `## Summary\n${executionResult.analysis.summary}\n\n`;
+    }
+
+    // Add generated files if any
+    if (executionResult.generatedFiles?.length > 0) {
+      message += `## Generated Files\n`;
+      executionResult.generatedFiles.forEach(file => {
+        message += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
+      });
+      message += `\n`;
+    }
+
+    return message;
+  }
+}
+
+/**
  * Handle tool calls from the AI during chat sessions
  * @param {string} toolName - Name of the tool being called
  * @param {object} parameters - Tool parameters
@@ -212,18 +261,11 @@ async function executeMultipleSubAgents(allCalls, context) {
   const { session, currentModelInfo, currentApiKey } = context;
 
   const executionPromises = allCalls.map(call => {
-    const agentId = call.toolName.startsWith('run_')
-      ? call.toolName.replace(/^run_/, '').replace(/_/g, '-')
-      : getSubAgentByToolName(call.toolName)?.id;
-    const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(call.toolName);
+    const agentConfig = ChatToolUtils.getAgentConfig(call.toolName);
     return agentConfig
       ? genericAgentExecutor.execute(
           agentConfig,
-          {
-            projectContext: session.fullProjectContext,
-            modelInfo: currentModelInfo,
-            apiKey: currentApiKey
-          },
+          ChatToolUtils.createExecutionContext(session, currentModelInfo, currentApiKey),
           call.parameters?.customInstructions || null
         )
       : Promise.resolve({ success: false, error: `Unknown subagent: ${call.toolName}` });
@@ -265,41 +307,16 @@ async function executeMultipleSubAgents(allCalls, context) {
 async function executeSingleSubAgent(toolName, parameters, context) {
   const { session, currentModelInfo, currentApiKey } = context;
 
-  const agentId = toolName.startsWith('run_')
-    ? toolName.replace(/^run_/, '').replace(/_/g, '-')
-    : getSubAgentByToolName(toolName)?.id;
-  const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(toolName);
-
+  const agentConfig = ChatToolUtils.getAgentConfig(toolName);
   const executionResult = await genericAgentExecutor.execute(
     agentConfig,
-    {
-      projectContext: session.fullProjectContext,
-      modelInfo: currentModelInfo,
-      apiKey: currentApiKey
-    },
+    ChatToolUtils.createExecutionContext(session, currentModelInfo, currentApiKey),
     parameters?.customInstructions || null
   );
 
-  // Create detailed result message for the main AI
-  let detailedMessage = `${executionResult.agentName} completed successfully.\n\n`;
-
-  // Add summary of work done
-  if (executionResult.analysis && executionResult.analysis.summary) {
-    detailedMessage += `## Summary\n${executionResult.analysis.summary}\n\n`;
-  }
-
-  // Add details about generated content if available
-  if (executionResult.generatedFiles && executionResult.generatedFiles.length > 0) {
-    detailedMessage += `## Generated Files\n`;
-    executionResult.generatedFiles.forEach(file => {
-      detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
-    });
-    detailedMessage += `\n`;
-  }
-
   return {
     success: true,
-    message: detailedMessage,
+    message: ChatToolUtils.createResultMessage(executionResult),
     subAgentResult: executionResult,
     stopLoop: false
   };

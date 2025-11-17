@@ -263,7 +263,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           );
 
           // Create detailed result message for the main AI
-          let detailedMessage = `${subAgent.name} creation completed successfully.\n\n`;
+          let detailedMessage = `${executionResult.agentName} completed successfully.\n\n`;
 
           // Add summary of work done
           if (executionResult.analysis && executionResult.analysis.summary) {

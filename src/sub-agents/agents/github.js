@@ -20,7 +20,7 @@ Capabilities:
 - Compare differences between branches
 - Run approved git and GitHub CLI commands in read-only mode
 
-Available Git Commands (via gitReadOnly):
+Available Git Commands (via gitReadOnly - for LOCAL repository):
 - "log" - View commit history (e.g., "log --oneline -n 10", "log --stat", "log -1")
 - "show" - View commit details (e.g., "show <commit>", "show <commit> --stat", "show <commit> --name-status")
 - "diff" - View differences (e.g., "diff <commit>^..<commit>")
@@ -28,6 +28,14 @@ Available Git Commands (via gitReadOnly):
 - "branch" - List branches (e.g., "branch -a")
 - "remote -v" - View remote repositories
 - "ls-files" - List tracked files
+
+Available GitHub CLI Commands (via ghReadOnly - for GITHUB.COM features):
+- "repo view" - View repository info (use with --json for structured data)
+- "pr list" - List pull requests (e.g., "pr list --state open")
+- "pr view <number>" - View specific PR details
+- "issue list" - List issues
+- "issue view <number>" - View specific issue
+- "release list" - List releases
 
 Security:
 - Strictly read-only. Never perform write operations or modify repository state
@@ -46,7 +54,7 @@ Output:
 - Present information clearly and structured`,
   defaultInstructions: `GitHub agent workflow - adapt based on user's specific question:
 
-Common Git Commands to Use:
+Common Git Commands (LOCAL repo operations):
 - Latest commit: gitReadOnly args="log -1 --oneline"
 - Recent commits: gitReadOnly args="log --oneline -n 10"
 - Commit details: gitReadOnly args="show <commit-hash>"
@@ -55,6 +63,13 @@ Common Git Commands to Use:
 - Current branch: gitReadOnly args="status"
 - All branches: gitReadOnly args="branch -a"
 - Remotes: gitReadOnly args="remote -v"
+- Total commits: gitReadOnly args="rev-list --count HEAD"
+
+Common GitHub CLI Commands (GITHUB.COM operations):
+- Repo info with stars/forks: ghReadOnly args="repo view --json name,description,stargazerCount,forkCount"
+- Open PRs: ghReadOnly args="pr list --state open --limit 10"
+- PR details: ghReadOnly args="pr view <number>"
+- Issues: ghReadOnly args="issue list --limit 10"
 
 Workflow Steps:
 1. statusUpdate: Brief status of what you're checking
@@ -71,5 +86,8 @@ Important:
 - ALWAYS use git commands to get actual data - never say "unable to retrieve"
 - For commit details, use "show <hash>" which shows everything about that commit
 - For file counts, parse the output of "show <hash> --stat" or "--name-status"
-- Extract and count specific information from command outputs`
+- Extract and count specific information from command outputs
+- Use gitReadOnly for LOCAL repository operations (commits, branches, history, diffs)
+- Use ghReadOnly for GITHUB.COM features (PRs, issues, stars, forks, releases)
+- When using gh commands with --json, parse the JSON output to extract specific values`
 };

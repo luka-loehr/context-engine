@@ -1,5 +1,9 @@
 /**
- * Git-related terminal utilities
+ * Context Engine - Git Utilities
+ * Git status and repository information utilities
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { promisify } from 'util';

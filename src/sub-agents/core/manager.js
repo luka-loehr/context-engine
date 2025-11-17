@@ -1,6 +1,9 @@
 /**
- * SubAgent Manager
+ * Context Engine - SubAgent Manager
  * Handles concurrent execution of multiple sub-agents with coordinated UI
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import ora from 'ora';

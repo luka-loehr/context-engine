@@ -1,6 +1,9 @@
 /**
- * Auto-Discovery Agent Registry
+ * Context Engine - Auto-Discovery Agent Registry
  * Automatically discovers and registers agents from the agents directory
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import fs from 'fs';

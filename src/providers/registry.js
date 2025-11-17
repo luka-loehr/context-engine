@@ -1,5 +1,9 @@
 /**
- * Provider Registry - Modular AI provider management
+ * Context Engine - Provider Registry
+ * Modular AI provider management system
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 class ProviderRegistry {

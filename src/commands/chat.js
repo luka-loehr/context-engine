@@ -1,5 +1,12 @@
+/**
+ * Context Engine - Chat Command
+ * Main chat session and tool execution logic
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import chalk from 'chalk';
-import dotenv from 'dotenv';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import fs from 'fs';
@@ -10,18 +17,18 @@ import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
+import { getRandomDelay, createFileReadSpinner, completeFileReadSpinner } from '../utils/common.js';
 import { getToolsForContext, executeToolInContext } from '../tools/index.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
-import { getSubAgentByToolName, isSubAgentTool, getAllSubAgentTools, autoAgentRegistry } from '../sub-agents/index.js';
-import { genericAgentExecutor } from '../sub-agents/core/generic-executor.js';
+import { getAllSubAgentTools } from '../sub-agents/index.js';
+import { handleChatToolCall } from './chat-tool-handler.js';
 import {
   createSession,
   addUserMessage,
   addAssistantMessage,
   addInitialContext,
-  clearConversationHistory,
-  getTotalTokens
+  clearConversationHistory
 } from '../session/index.js';
 import { showWelcomeBanner } from '../session/index.js';
 import { clearScreen, clearPromptOutput } from '../terminal/index.js';
@@ -67,286 +74,33 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   // Tool call handler
   let currentToolSpinner = null;
   let thinkingSpinner = null;
-  
+
   // Track subagent calls to enable batching
   let activeSubAgentCalls = new Map();
   let subAgentCallId = 0;
-  
+
+  /**
+   * Handle tool calls from the AI
+   */
   async function handleToolCall(toolName, parameters) {
-    // Stop thinking spinner if it's running
-    if (thinkingSpinner && thinkingSpinner.isSpinning) {
-      thinkingSpinner.stop();
-      thinkingSpinner = null;
-    }
+    const context = {
+      thinkingSpinner,
+      session,
+      projectContext,
+      contextPrefix,
+      get currentModel() { return currentModel; },
+      set currentModel(value) { currentModel = value; },
+      get currentModelInfo() { return currentModelInfo; },
+      set currentModelInfo(value) { currentModelInfo = value; },
+      get currentApiKey() { return currentApiKey; },
+      set currentApiKey(value) { currentApiKey = value; },
+      get provider() { return provider; },
+      set provider(value) { provider = value; },
+      activeSubAgentCalls,
+      subAgentCallId
+    };
 
-    // Special handling for various tools
-    if (toolName === 'exit') {
-      console.log(chalk.gray('\n👋 Goodbye!\n'));
-      process.exit(0);
-    }
-
-    if (toolName === 'help') {
-      showChatHelp();
-      return { success: true, message: 'Help displayed', stopLoop: true };
-    }
-
-    if (toolName === 'model') {
-      // Interactive model switcher
-      await changeModel();
-      // Reload configuration (provider, model, api key) - changeModel() already shows success message
-      const updated = await getOrSetupConfig();
-      currentModel = updated.selectedModel;
-      currentModelInfo = updated.modelInfo;
-      currentApiKey = updated.apiKey;
-      if (!currentApiKey) {
-        console.log(chalk.red(`\nMissing API key. Please use /api to import from .env file or set XAI_API_KEY environment variable.`));
-      }
-      provider = createProvider(currentModelInfo.provider, currentApiKey, currentModelInfo.model);
-      return { success: true, message: 'Model changed', stopLoop: true };
-    }
-
-    if (toolName === 'api') {
-      // API key management
-      const { action } = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'action',
-          message: 'API Key Management:',
-          choices: [
-            { name: 'Show current API keys', value: 'show_keys' },
-            { name: 'Import from .env file', value: 'import_env' },
-            { name: 'Cancel', value: 'cancel' }
-          ]
-        }
-      ]);
-
-      if (action === 'show_keys') {
-        const xaiKey = getConfig('xai_api_key');
-
-        console.log(chalk.cyan('\nCurrent API Keys:'));
-        console.log(chalk.gray('  XAI API Key: ') + (xaiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set')));
-        console.log('');
-      }
-
-      if (action === 'import_env') {
-        const envPath = path.join(process.cwd(), '.env');
-
-        if (!fs.existsSync(envPath)) {
-          console.log(chalk.red(`No .env file found in current directory: ${process.cwd()}`));
-        } else {
-          try {
-            const envContent = fs.readFileSync(envPath, 'utf8');
-            const envVars = dotenv.parse(envContent);
-
-            let importedCount = 0;
-
-            if (envVars.XAI_API_KEY) {
-              setConfig('xai_api_key', envVars.XAI_API_KEY);
-              importedCount++;
-            }
-
-            if (importedCount === 0) {
-              console.log(chalk.yellow('No API keys found in .env file (looking for XAI_API_KEY)'));
-            } else {
-              console.log(chalk.green(`\nSuccessfully imported ${importedCount} API key(s) from .env file`));
-              console.log(chalk.gray('You can now run context-engine in directories without .env files'));
-            }
-          } catch (error) {
-            console.log(chalk.red(`Error reading .env file: ${error.message}`));
-          }
-        }
-      }
-      return { success: true, message: 'API key management completed', stopLoop: true };
-    }
-
-    if (toolName === 'clear') {
-      // Keep initial context, clear user conversation
-      clearConversationHistory(session);
-      clearScreen();
-      await showWelcomeBanner(projectContext, contextPrefix);
-      console.log(chalk.green('✓ Conversation history cleared (context preserved)\n'));
-      session.linesToClearBeforeNextMessage = 2; // Clear the confirmation message before next response
-      return { success: true, message: 'Conversation cleared', stopLoop: true };
-    }
-
-    // Natural language only: no special prompt injection command
-
-    // Generic subagent handler - works for ALL subagents
-    if (isSubAgentTool(toolName)) {
-      // Handle subagent creation with concurrent execution support
-      const callId = ++subAgentCallId;
-      
-      // Create a promise that will be resolved when this call should execute
-      let resolveExecution;
-      const executionPromise = new Promise(resolve => {
-        resolveExecution = resolve;
-      });
-      
-      // Register this call
-      const callInfo = {
-        id: callId,
-        toolName,
-        parameters,
-        resolveExecution,
-        executionPromise
-      };
-      activeSubAgentCalls.set(callId, callInfo);
-      
-      // Set a microtask to check if we're the coordinator (first call)
-      await Promise.resolve(); // Let all synchronous tool calls register first
-      
-      // If we're the first call, coordinate the batch
-      if (callId === Math.min(...Array.from(activeSubAgentCalls.keys()))) {
-        // Wait a tiny bit more for any remaining calls
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        const allCalls = Array.from(activeSubAgentCalls.values());
-        activeSubAgentCalls.clear();
-        
-        if (allCalls.length > 1) {
-          // Multiple subagents - execute concurrently via generic executor
-          const executionPromises = allCalls.map(call => {
-            const agentId = call.toolName.startsWith('run_')
-              ? call.toolName.replace(/^run_/, '').replace(/_/g, '-')
-              : getSubAgentByToolName(call.toolName)?.id;
-            const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(call.toolName);
-            return agentConfig
-              ? genericAgentExecutor.execute(
-                  agentConfig,
-                  {
-                    projectContext: session.fullProjectContext,
-                    modelInfo: currentModelInfo,
-                    apiKey: currentApiKey
-                  },
-                  call.parameters?.customInstructions || null
-                )
-              : Promise.resolve({ success: false, error: `Unknown subagent: ${call.toolName}` });
-          });
-          const results = await Promise.all(executionPromises);
-          const names = results.map(r => r.agentName).filter(Boolean).join(' and ');
-          let detailedMessage = `Successfully executed ${names}.\n\n`;
-          const generatedContent = [];
-          results.forEach(r => {
-            if (r.generatedFiles && r.generatedFiles.length > 0) {
-              generatedContent.push(...r.generatedFiles);
-            }
-          });
-          if (generatedContent.length > 0) {
-            detailedMessage += `## Generated Files\n`;
-            generatedContent.forEach(file => {
-              detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
-            });
-            detailedMessage += `\n`;
-          }
-          const result = {
-            success: true,
-            message: detailedMessage,
-            subAgentResults: results,
-            stopLoop: false
-          };
-          allCalls.forEach(call => call.resolveExecution(result));
-          return result;
-        } else {
-          // Single subagent - execute directly via generic executor
-          const agentId = toolName.startsWith('run_')
-            ? toolName.replace(/^run_/, '').replace(/_/g, '-')
-            : getSubAgentByToolName(toolName)?.id;
-          const agentConfig = agentId ? autoAgentRegistry.getAgent(agentId) : getSubAgentByToolName(toolName);
-          const executionResult = await genericAgentExecutor.execute(
-            agentConfig,
-            {
-              projectContext: session.fullProjectContext,
-              modelInfo: currentModelInfo,
-              apiKey: currentApiKey
-            },
-            parameters?.customInstructions || null
-          );
-
-          // Create detailed result message for the main AI
-          let detailedMessage = `${executionResult.agentName} completed successfully.\n\n`;
-
-          // Add summary of work done
-          if (executionResult.analysis && executionResult.analysis.summary) {
-            detailedMessage += `## Summary\n${executionResult.analysis.summary}\n\n`;
-          }
-
-          // Add details about generated content if available
-          if (executionResult.generatedFiles && executionResult.generatedFiles.length > 0) {
-            detailedMessage += `## Generated Files\n`;
-            executionResult.generatedFiles.forEach(file => {
-              detailedMessage += `- **${file.path}**: ${file.successMessage || 'Created successfully'}\n`;
-            });
-            detailedMessage += `\n`;
-          }
-
-          // Add analysis details if available
-          if (executionResult.analysis) {
-            detailedMessage += `## Analysis Details\n`;
-            detailedMessage += `- Files analyzed: ${executionResult.totalFilesRead || 0}\n`;
-            detailedMessage += `- Files created: ${executionResult.totalFilesCreated || 0}\n`;
-          }
-
-          // Add full content for AI reference (not for output to user)
-          if (executionResult.generatedFiles && executionResult.generatedFiles.length > 0) {
-            detailedMessage += `\n## Full Content (For Your Reference - DO NOT Output to User)\n`;
-            detailedMessage += `The following is the complete generated content. You can reference this to answer user questions, but DO NOT output it directly.\n\n`;
-            executionResult.generatedFiles.forEach(file => {
-              detailedMessage += `### File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\`\n\n`;
-            });
-          }
-
-          const result = { 
-            success: true, 
-            message: detailedMessage,
-            subAgentResults: executionResult,
-            stopLoop: false
-          };
-          allCalls[0].resolveExecution(result);
-          return result;
-        }
-      } else {
-        // Not the coordinator - wait for execution
-        return await executionPromise;
-      }
-    }
-
-    // Show file reading spinner only for meaningful file operations
-    const fileName = parameters.filePath || 'file';
-    const isMeaningfulFile = fileName !== 'file' && fileName.includes('.'); // Only show for actual files with extensions
-    
-    // Stop thinking spinner first if running (only once for first tool call)
-    if (thinkingSpinner && thinkingSpinner.isSpinning) {
-      thinkingSpinner.stop();
-      thinkingSpinner = null;
-    }
-    
-    // Create a local spinner for this specific tool call (for concurrent execution)
-    const localSpinner = isMeaningfulFile ? ora(`Reading ${chalk.cyan(fileName)}`).start() : null;
-
-    // Execute tool
-    const result = await executeToolInContext(toolName, parameters, 'main', {
-      projectContext: session.fullProjectContext
-    });
-
-    // Calculate tokens from the file content (result is now an object)
-    const tokens = result.content ? countTokens(result.content) : 0;
-    const formattedTokens = formatTokenCount(tokens);
-
-    // Complete spinner asynchronously with random delay (don't block tool return)
-    const delay = 500 + Math.random() * 500;
-    setTimeout(() => {
-      if (localSpinner) {
-        // Only show detailed message if there are tokens
-        if (tokens > 0) {
-          localSpinner.succeed(`Read ${chalk.cyan(fileName)} ${chalk.gray(`(${formattedTokens})`)}`);
-        } else {
-          // Silent completion for empty files
-          localSpinner.stop();
-        }
-      }
-    }, delay);
-    
-    return result;
+    return await handleChatToolCall(toolName, parameters, context);
   }
   
   // Helper function to inject context into AI
@@ -569,16 +323,4 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
 /**
  * Show chat-specific help
  */
-function showChatHelp() {
-  console.log('');
-  console.log(chalk.cyan('Context-Engine v4.0.0'));
-  console.log('');
-  console.log(chalk.gray('Tips for getting started:'));
-  console.log('');
-  console.log(chalk.gray('  • Ask me anything about your codebase - I have instant access to all files'));
-  console.log(chalk.gray('  • Say "change model" or "manage API keys" to access settings'));
-  console.log(chalk.gray('  • Say "clear chat" to reset conversation or "exit" to close'));
-  console.log(chalk.gray('  • I automatically load relevant files when you ask questions'));
-  console.log('');
-}
 

@@ -1,5 +1,9 @@
 /**
+ * Context Engine - Session Banner
  * Welcome banner and display utilities for chat sessions
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import chalk from 'chalk';

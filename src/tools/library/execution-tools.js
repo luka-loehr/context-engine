@@ -1,11 +1,16 @@
 /**
- * Execution Tools
+ * Context Engine - Execution Tools
+ * Terminal command execution and system operations
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import ora from 'ora';
 import chalk from 'chalk';
+import { getRandomDelay } from '../../utils/common.js';
 
 const execAsync = promisify(exec);
 
@@ -55,7 +60,7 @@ export const executionTools = [
         });
 
         // Complete spinner asynchronously with random delay (don't block tool return)
-        const delay = 500 + Math.random() * 500;
+        const delay = getRandomDelay();
         setTimeout(() => {
           if (localSpinner) {
             localSpinner.succeed(`Ran: ${chalk.cyan(command)}`);
@@ -69,7 +74,7 @@ export const executionTools = [
         };
       } catch (error) {
         // Complete spinner with error
-        const delay = 500 + Math.random() * 500;
+        const delay = getRandomDelay();
         setTimeout(() => {
           if (localSpinner) {
             localSpinner.fail(`Failed: ${chalk.cyan(command)}`);

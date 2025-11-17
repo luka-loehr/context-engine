@@ -1,5 +1,9 @@
 /**
- * Provider System - Registry-based
+ * Context Engine - Provider System
+ * Registry-based provider management system
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { providerRegistry } from './registry.js';

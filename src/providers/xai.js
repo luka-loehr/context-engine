@@ -1,3 +1,11 @@
+/**
+ * Context Engine - XAI Provider
+ * XAI Grok API integration using OpenAI-compatible interface
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import OpenAI from 'openai';
 import { BaseProvider } from './base.js';
 
@@ -11,10 +19,10 @@ export class XAIProvider extends BaseProvider {
     this.modelId = modelId;
   }
 
-  async refinePrompt(messyPrompt, systemPrompt, onChunk, tools = null, onToolCall = null) {
+  async refinePrompt(userPrompt, systemPrompt, onChunk, tools = null, onToolCall = null) {
     const messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: messyPrompt }
+      { role: 'user', content: userPrompt }
     ];
     
     let refinedPrompt = '';

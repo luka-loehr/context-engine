@@ -1,10 +1,14 @@
 /**
- * File Operations Tools
+ * Context Engine - File Operations Tools
  * Tools for reading, writing, and managing files
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import fs from 'fs';
 import path from 'path';
+import { writeFile } from '../../utils/common.js';
 
 export const fileOperationsTools = [
   {
@@ -69,52 +73,7 @@ export const fileOperationsTools = [
       const { filePath, content, successMessage } = parameters;
       const { spinner, allowedPaths } = context;
 
-      try {
-        const fullPath = path.join(process.cwd(), filePath);
-        
-        // Check if path restrictions apply
-        if (allowedPaths && allowedPaths.length > 0) {
-          const isAllowed = allowedPaths.some(allowedPath => {
-            const allowedFullPath = path.join(process.cwd(), allowedPath);
-            return fullPath.startsWith(allowedFullPath);
-          });
-          
-          if (!isAllowed) {
-            return {
-              success: false,
-              error: `Permission denied: Can only write to ${allowedPaths.join(', ')}`
-            };
-          }
-        }
-
-        // Ensure directory exists
-        const dir = path.dirname(fullPath);
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
-        }
-
-        // Write the file
-        fs.writeFileSync(fullPath, content, 'utf8');
-
-        // Use the spinner to show success
-        if (spinner && spinner.isSpinning) {
-          spinner.succeed(successMessage);
-        }
-
-        return {
-          success: true,
-          message: successMessage,
-          filePath: filePath
-        };
-      } catch (error) {
-        if (spinner && spinner.isSpinning) {
-          spinner.fail(`Failed to create ${filePath}: ${error.message}`);
-        }
-        return {
-          success: false,
-          error: `Failed to create file: ${error.message}`
-        };
-      }
+      return writeFile(filePath, content, { spinner, successMessage, allowedPaths });
     }
   },
 

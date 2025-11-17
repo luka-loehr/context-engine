@@ -1,6 +1,9 @@
 /**
- * Base sub-agent system for context-engine
+ * Context Engine - Base SubAgent System
  * Provides a framework for creating specialized AI agents that can analyze codebases
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { createProvider } from '../../providers/index.js';

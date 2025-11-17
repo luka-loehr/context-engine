@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Stream Writer
+ * Handles streaming text output with syntax highlighting and formatting
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import wrapAnsi from 'wrap-ansi';
 import chalk from 'chalk';
 import hljs from 'highlight.js';

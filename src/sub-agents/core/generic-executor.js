@@ -1,7 +1,10 @@
 /**
- * Generic Agent Executor
+ * Context Engine - Generic Agent Executor
  * Executes agents based on their configuration
  * Handles both default mode and custom instruction mode
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import ora from 'ora';

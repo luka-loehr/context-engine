@@ -1,5 +1,9 @@
 /**
- * Screen and cursor management utilities
+ * Context Engine - Screen Management
+ * Terminal screen and cursor control utilities
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 /**

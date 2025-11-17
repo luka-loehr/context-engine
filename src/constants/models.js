@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Model Definitions
+ * AI model configurations and provider integration
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import chalk from 'chalk';
 import { providerRegistry } from '../providers/index.js';
 

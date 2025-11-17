@@ -1,6 +1,9 @@
 /**
- * CLI setup and command definitions
+ * Context Engine - CLI Setup
  * Handles Commander.js configuration and command registration
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { program } from 'commander';

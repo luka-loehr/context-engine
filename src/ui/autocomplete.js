@@ -1,3 +1,11 @@
+/**
+ * Context Engine - UI Autocomplete
+ * Terminal input autocomplete functionality
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 

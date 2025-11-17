@@ -1,5 +1,9 @@
 /**
- * Prompt Registry - Template-based prompt management
+ * Context Engine - Prompt Registry
+ * Template-based prompt management system
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 class PromptRegistry {

@@ -1,6 +1,9 @@
 /**
- * SubAgent System Entry Point
+ * Context Engine - SubAgent System
  * Auto-discovers and provides access to all agents
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export { autoAgentRegistry } from './core/auto-registry.js';

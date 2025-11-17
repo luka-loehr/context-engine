@@ -1,6 +1,9 @@
 /**
- * Core application logic
+ * Context Engine - Core App Logic
  * Handles initialization, update checking, and main app flow
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import updateNotifier from 'update-notifier';

@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Configuration
+ * Application configuration management using Conf
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import Conf from 'conf';
 import { getAllModels } from '../constants/models.js';
 import chalk from 'chalk';

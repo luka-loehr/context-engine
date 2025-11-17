@@ -1,5 +1,9 @@
 /**
- * Centralized error handling utilities
+ * Context Engine - Error Handler
+ * Centralized error handling and user-friendly error messages
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import chalk from 'chalk';

@@ -1,5 +1,9 @@
 /**
- * File patterns and extensions for project scanning
+ * Context Engine - File Patterns
+ * File patterns and extensions for project scanning and filtering
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 // Files and directories to ignore when scanning project

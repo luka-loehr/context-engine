@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * context-engine CLI entry point
+ * Context Engine - CLI Entry Point
  * Interactive AI-powered codebase assistant using XAI Grok
  *
- * @author Luka Loehr
- * @license MIT
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 // Load environment variables from .env file

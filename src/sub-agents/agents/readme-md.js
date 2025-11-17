@@ -1,6 +1,9 @@
 /**
- * README.md Generator Agent
+ * Context Engine - README.md Generator Agent
  * Creates comprehensive README.md files for codebases
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export const agentConfig = {

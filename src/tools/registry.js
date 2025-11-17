@@ -1,7 +1,10 @@
 /**
- * Tool Registry
+ * Context Engine - Tool Registry
  * Central registry for all tools available to main AI and subagents
  * Provides access control and modular tool definitions
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 class ToolRegistry {

@@ -1,6 +1,9 @@
 /**
- * Chat session management
+ * Context Engine - Session Manager
  * Handles session state, conversation history, and token tracking
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { countTokens } from '../utils/tokenizer.js';

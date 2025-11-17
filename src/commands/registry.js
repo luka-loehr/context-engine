@@ -1,5 +1,9 @@
 /**
- * Command Registry - Modular CLI command management
+ * Context Engine - Command Registry
+ * Modular CLI command management
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 class CommandRegistry {

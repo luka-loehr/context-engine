@@ -1,6 +1,9 @@
 /**
- * SubAgent Registry
+ * Context Engine - SubAgent Registry
  * Central registry for all available sub-agents with automatic discovery
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import fs from 'fs';

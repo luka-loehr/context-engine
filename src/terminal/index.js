@@ -1,5 +1,9 @@
 /**
- * Terminal utilities exports
+ * Context Engine - Terminal Utilities
+ * Terminal and git integration utilities
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export { getGitStatus } from './git.js';

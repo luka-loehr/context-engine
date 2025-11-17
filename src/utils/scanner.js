@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Directory Scanner
+ * Scans project directories and builds context for AI processing
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { IGNORE_PATTERNS, VALID_EXTENSIONS, SKIP_CONFIG_FILES, MAX_FILE_SIZE } from '../constants/patterns.js';

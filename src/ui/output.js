@@ -1,3 +1,11 @@
+/**
+ * Context Engine - UI Output
+ * Terminal output formatting and streaming utilities
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import chalk from 'chalk';
 import ora from 'ora';
 import { createStreamWriter } from '../utils/stream-writer.js';
@@ -17,7 +25,7 @@ export function colorizeModelName(modelName) {
 /**
  * Display refined prompt output with streaming
  */
-export async function displayRefinedPrompt(provider, modelInfo, systemPrompt, messyPrompt, onComplete) {
+export async function displayRefinedPrompt(provider, modelInfo, systemPrompt, userPrompt, onComplete) {
   const spinner = ora(`Refining your prompt with ${colorizeModelName(modelInfo.name)}...`).start();
   
   try {
@@ -31,7 +39,7 @@ export async function displayRefinedPrompt(provider, modelInfo, systemPrompt, me
     let firstChunk = true;
     
     const refinedPrompt = await provider.refinePrompt(
-      messyPrompt,
+      userPrompt,
       systemPrompt,
       (content) => {
         if (firstChunk) {

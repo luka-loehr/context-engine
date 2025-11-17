@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Tokenizer
+ * Token counting and text length utilities for AI models
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import { encode } from 'gpt-tokenizer';
 
 /**

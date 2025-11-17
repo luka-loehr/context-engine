@@ -1,6 +1,9 @@
 /**
- * Tool Library Index
+ * Context Engine - Tool Library Index
  * Central registry of all available tools organized by category
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 import { fileOperationsTools } from './file-operations.js';

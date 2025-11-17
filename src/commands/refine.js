@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Refine Command
+ * Handles prompt refinement using AI models
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import chalk from 'chalk';
 import { scanDirectory } from '../utils/scanner.js';
 import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts.js';
@@ -25,12 +33,12 @@ export async function getProjectContext(currentDir) {
 /**
  * Refine prompt command
  */
-export async function refinePrompt(messyPrompt, selectedModel, modelInfo, apiKey, projectContext = null) {
+export async function refinePrompt(userPrompt, selectedModel, modelInfo, apiKey, projectContext = null) {
   try {
     // Build system prompt
     const systemPrompt = getSystemPrompt(!!projectContext);
     const contextPrefix = buildProjectContextPrefix(projectContext);
-    const fullPrompt = contextPrefix + messyPrompt;
+    const fullPrompt = contextPrefix + userPrompt;
     
     // Create provider
     const provider = createProvider(modelInfo.provider, apiKey, selectedModel);

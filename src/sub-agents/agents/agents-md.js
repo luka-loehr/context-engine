@@ -1,6 +1,9 @@
 /**
- * AGENTS.md Generator Agent
+ * Context Engine - AGENTS.md Generator Agent
  * Creates comprehensive AGENTS.md files for AI coding agents
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export const agentConfig = {

@@ -1,3 +1,11 @@
+/**
+ * Context Engine - Model Command
+ * Handles model selection and configuration
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
+ */
+
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { getConfig, setConfig } from '../config/config.js';

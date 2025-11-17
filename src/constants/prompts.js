@@ -1,5 +1,9 @@
 /**
- * System prompts for codebase understanding chat interface
+ * Context Engine - System Prompts
+ * AI system prompts and context building utilities
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export const SYSTEM_PROMPT = `You are context-engine, a codebase assistant. Answer questions using actual file contents.

@@ -15,7 +15,7 @@ export class MyProvider extends BaseProvider {
     this.modelId = modelId;
   }
 
-  async refinePrompt(messyPrompt, systemPrompt, onChunk, tools, onToolCall) {
+  async refinePrompt(userPrompt, systemPrompt, onChunk, tools, onToolCall) {
     // Implement streaming + tool calling
     // Return final response
   }
@@ -41,7 +41,7 @@ providerRegistry.register({
 ## Requirements
 
 Must implement:
-- `refinePrompt(messyPrompt, systemPrompt, onChunk, tools, onToolCall)`
+- `refinePrompt(userPrompt, systemPrompt, onChunk, tools, onToolCall)`
 - Handle streaming via onChunk callback
 - Handle tool calls via onToolCall callback
 - Return final refined prompt string

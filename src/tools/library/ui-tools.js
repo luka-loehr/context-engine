@@ -1,6 +1,9 @@
 /**
- * UI Tools
+ * Context Engine - UI Tools
  * Tools for updating status, showing progress, and user interaction
+ *
+ * Copyright (c) 2025 Luka Loehr
+ * Licensed under the MIT License
  */
 
 export const uiTools = [

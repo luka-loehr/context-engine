@@ -267,37 +267,49 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       
       // Show thinking indicator - directly after user input for single spacing
       thinkingSpinner = ora('Thinking...').start();
-      
-      // Get response from AI
-      const streamWriter = createStreamWriter();
-      let firstChunk = true;
+
+      // Get response from AI with buffered streaming
+      let responseBuffer = '';
       let assistantResponse = '';
-      
+      let hasToolCalls = false;
+
+      // Track if any tools were called during this response
+      const trackingHandleToolCall = async (toolName, parameters) => {
+        hasToolCalls = true;
+        return await handleToolCall(toolName, parameters);
+      };
+
       try {
         assistantResponse = await provider.refinePrompt(
           fullPrompt,
           systemPrompt,
           (content) => {
-            if (firstChunk) {
-              // Stop any running spinners
-              if (thinkingSpinner && thinkingSpinner.isSpinning) {
-                thinkingSpinner.stop();
-                thinkingSpinner = null;
-              }
-              // Add one empty line for spacing
-              console.log('');
-              // Print header
-              console.log(chalk.gray('context-engine:'));
-              firstChunk = false;
-            }
-            streamWriter.write(content);
+            // Buffer the content instead of displaying immediately
+            responseBuffer += content;
           },
           tools,
-          handleToolCall
+          trackingHandleToolCall
         );
-        
-        streamWriter.flush();
-        console.log('');  // Single line spacing after response
+
+        // Set assistantResponse to the buffered content
+        assistantResponse = responseBuffer;
+
+        // Now display the buffered response
+        if (responseBuffer.trim()) {
+          // Stop any remaining spinners
+          if (thinkingSpinner && thinkingSpinner.isSpinning) {
+            thinkingSpinner.stop();
+            thinkingSpinner = null;
+          }
+
+          // Display header
+          console.log('');
+          console.log(chalk.gray('context-engine:'));
+
+          // Display buffered response with proper formatting
+          await displayBufferedResponse(responseBuffer);
+          console.log('');  // Single line spacing after response
+        }
 
         // Add assistant response to session
         addAssistantMessage(session, assistantResponse);
@@ -320,6 +332,16 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     }
   }
 }
+/**
+ * Display buffered AI response with proper formatting
+ * @param {string} text - Text to display
+ */
+async function displayBufferedResponse(text) {
+  const streamWriter = createStreamWriter();
+  streamWriter.write(text);
+  streamWriter.flush();
+}
+
 /**
  * Show chat-specific help
  */

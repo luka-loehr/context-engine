@@ -78,6 +78,7 @@ class ChatToolUtils {
       'readLines': ['Reading', 'Read'],
       'replaceLines': ['Replacing', 'Replaced'],
       'rewriteFile': ['Rewriting', 'Rewrote'],
+      'removeFile': ['Removing', 'Removed'],
       'createFile': ['Creating', 'Created'],
       'run_readme_md': ['Generating', 'Generated'],
       'run_agents_md': ['Generating', 'Generated'],

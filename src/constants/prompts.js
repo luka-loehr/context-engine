@@ -62,6 +62,7 @@ TOOLS:
 - readLines: Read a specific range of lines. Useful for large files.
 - replaceLines: Replace a range of lines with new code. REQUIRES exact line numbers from a recent read.
 - rewriteFile: Completely overwrite a file. Use for new files or massive refactors.
+- removeFile: Delete a file.
 - terminal: Run any terminal command (git, gh, ls, cat, etc.).
 - help, model, api, clear, exit: System commands.
 

@@ -36,7 +36,10 @@ export function createSession(selectedModel, modelInfo, apiKey) {
     thinkingSpinner: null,
 
     // Context
-    fullProjectContext: null
+    fullProjectContext: null,
+
+    // Safety
+    readFiles: new Set()
   };
 }
 

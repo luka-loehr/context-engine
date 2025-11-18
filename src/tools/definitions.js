@@ -75,12 +75,23 @@ export function registerCoreTools() {
       if (lineNumbers) {
         const lines = content.split('\n');
         const numberedContent = lines.map((line, i) => `${i + 1}: ${line}`).join('\n');
+
+        // Track that this file has been read
+        if (context.session && context.session.readFiles) {
+          context.session.readFiles.add(filePath);
+        }
+
         return {
           success: true,
           filePath: filePath,
           content: numberedContent,
           message: `Read ${lines.length} lines from ${filePath}`
         };
+      }
+
+      // Track that this file has been read (even without line numbers)
+      if (context.session && context.session.readFiles) {
+        context.session.readFiles.add(filePath);
       }
 
       return {
@@ -133,6 +144,11 @@ export function registerCoreTools() {
         const selectedLines = lines.slice(startLine - 1, endLine);
         const numberedContent = selectedLines.map((line, i) => `${startLine + i}: ${line}`).join('\n');
 
+        // Track that this file has been read
+        if (context.session && context.session.readFiles) {
+          context.session.readFiles.add(filePath);
+        }
+
         return {
           success: true,
           filePath,
@@ -174,6 +190,14 @@ export function registerCoreTools() {
     tags: ['file', 'edit'],
     handler: async (parameters, context) => {
       const { filePath, startLine, endLine, newContent } = parameters;
+
+      // Enforce Read-Before-Write
+      if (context.session && context.session.readFiles && !context.session.readFiles.has(filePath)) {
+        return {
+          success: false,
+          error: `You must read the file with getFileContent (or readLines) before editing it. This ensures you have the latest context and line numbers.`
+        };
+      }
 
       try {
         const fullPath = path.join(process.cwd(), filePath);
@@ -233,9 +257,20 @@ export function registerCoreTools() {
     handler: async (parameters, context) => {
       const { filePath, content } = parameters;
 
-      try {
-        const fullPath = path.join(process.cwd(), filePath);
+      // Enforce Read-Before-Write for rewriting existing files
+      // (We check existence first to allow creating NEW files with rewriteFile if desired, 
+      // though createFile is preferred. If file exists, we require a read.)
+      const fullPath = path.join(process.cwd(), filePath);
+      if (fs.existsSync(fullPath)) {
+        if (context.session && context.session.readFiles && !context.session.readFiles.has(filePath)) {
+          return {
+            success: false,
+            error: `You must read the file with getFileContent before rewriting it. This ensures you are aware of the current content.`
+          };
+        }
+      }
 
+      try {
         // Ensure directory exists
         const dir = path.dirname(fullPath);
         if (!fs.existsSync(dir)) {
@@ -243,6 +278,11 @@ export function registerCoreTools() {
         }
 
         fs.writeFileSync(fullPath, content, 'utf8');
+
+        // Mark as read since we just wrote it
+        if (context.session && context.session.readFiles) {
+          context.session.readFiles.add(filePath);
+        }
 
         return {
           success: true,

@@ -268,8 +268,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Show thinking indicator - directly after user input for single spacing
       thinkingSpinner = ora('Thinking...').start();
 
-      // Get response from AI with buffered streaming
-      let responseBuffer = '';
+      // Get response from AI with real-time streaming
+      const streamWriter = createStreamWriter();
+      let firstChunk = true;
       let assistantResponse = '';
       let hasToolCalls = false;
 
@@ -284,32 +285,26 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           fullPrompt,
           systemPrompt,
           (content) => {
-            // Buffer the content instead of displaying immediately
-            responseBuffer += content;
+            if (firstChunk) {
+              // Stop any running spinners
+              if (thinkingSpinner && thinkingSpinner.isSpinning) {
+                thinkingSpinner.stop();
+                thinkingSpinner = null;
+              }
+              // Add one empty line for spacing
+              console.log('');
+              // Print header
+              console.log(chalk.gray('context-engine:'));
+              firstChunk = false;
+            }
+            streamWriter.write(content);
           },
           tools,
           trackingHandleToolCall
         );
 
-        // Set assistantResponse to the buffered content
-        assistantResponse = responseBuffer;
-
-        // Now display the buffered response
-        if (responseBuffer.trim()) {
-          // Stop any remaining spinners
-          if (thinkingSpinner && thinkingSpinner.isSpinning) {
-            thinkingSpinner.stop();
-            thinkingSpinner = null;
-          }
-
-          // Display header
-          console.log('');
-          console.log(chalk.gray('context-engine:'));
-
-          // Display buffered response with proper formatting
-          await displayBufferedResponse(responseBuffer);
-          console.log('');  // Single line spacing after response
-        }
+        streamWriter.flush();
+        console.log('');  // Single line spacing after response
 
         // Add assistant response to session
         addAssistantMessage(session, assistantResponse);
@@ -331,38 +326,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       console.log(chalk.gray('Continuing chat session...\n'));
     }
   }
-}
-/**
- * Display buffered AI response with typewriter effect to simulate streaming
- * @param {string} text - Text to display
- */
-async function displayBufferedResponse(text) {
-  // Apply basic inline formatting
-  let formattedText = text
-    .replace(/\*\*(.*?)\*\*/g, (_, content) => chalk.white.bold(content))
-    .replace(/\*(.*?)\*/g, (_, content) => chalk.italic(content))
-    .replace(/`(.*?)`/g, (_, content) => chalk.yellow(content));
-
-  // Split into words while preserving whitespace
-  const words = formattedText.split(/(\s+)/);
-  let displayText = '';
-
-  // Type out each word with realistic timing
-  for (const word of words) {
-    displayText += word;
-
-    // Clear line and rewrite with current progress
-    process.stdout.write('\r\x1b[K');
-    process.stdout.write(chalk.gray('context-engine: ') + displayText);
-
-    // Calculate delay based on word characteristics
-    const isPunctuation = /^[^\w]*$/.test(word.trim());
-    const delay = isPunctuation ? 25 : Math.max(35, Math.min(100, word.replace(/\s/g, '').length * 20));
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
-
-  // Clean final output
-  console.log('');
 }
 
 /**

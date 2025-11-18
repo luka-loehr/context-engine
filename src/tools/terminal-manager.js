@@ -112,25 +112,16 @@ class TerminalManager {
       // Stop spinner
       this.currentSpinner.stop();
 
-      // Display summary
-      const succeeded = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
-
-      if (failed === 0) {
-        console.log(chalk.green(`✔ Executed all ${count} commands successfully`));
-      } else if (succeeded > 0) {
-        console.log(chalk.yellow(`⚠ ${succeeded} succeeded, ${failed} failed`));
-      } else {
-        console.log(chalk.red(`✖ All ${count} commands failed`));
-      }
-
-      // Show individual results for failed commands
+      // Display individual results for ALL commands
       results.forEach((result, index) => {
-        if (result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success)) {
-          const cmd = calls[index].command;
+        const cmd = calls[index].command;
+
+        if (result.status === 'fulfilled' && result.value.success) {
+          console.log(chalk.green(`✔ Executed: ${chalk.cyan(cmd)}`));
+        } else {
           const error = result.status === 'rejected' ? result.reason.message : result.value.error;
-          console.log(chalk.red(`  ✖ ${chalk.cyan(cmd)}`));
-          console.log(chalk.gray(`    ${error}`));
+          console.log(chalk.red(`✖ Failed: ${chalk.cyan(cmd)}`));
+          console.log(chalk.gray(`  ${error}`));
         }
       });
 

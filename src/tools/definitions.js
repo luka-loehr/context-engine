@@ -16,20 +16,25 @@ import { writeFile } from '../utils/common.js';
  * Register all core tools
  */
 export function registerCoreTools() {
-  
+
   // ============================================================================
   // SHARED TOOLS (Available to both main AI and subagents)
   // ============================================================================
 
   toolRegistry.register({
     name: 'getFileContent',
-    description: 'Get the full content of a specific file from the codebase. Returns an object with success status, filePath, and content (if successful) or error message (if failed). Use this when you need to read or analyze a specific file.',
+    description: 'Get the full content of a specific file from the codebase. Returns an object with success status, filePath, and content. By default, adds line numbers to help with editing.',
     parameters: {
       type: 'object',
       properties: {
         filePath: {
           type: 'string',
           description: 'The exact path of the file to read (e.g., "src/index.js", "package.json")'
+        },
+        lineNumbers: {
+          type: 'boolean',
+          description: 'Whether to include line numbers in the output (default: true). Set to false for raw content.',
+          default: true
         }
       },
       required: ['filePath']
@@ -37,24 +42,216 @@ export function registerCoreTools() {
     availableTo: ToolCategories.SHARED,
     tags: ['file', 'read'],
     handler: async (parameters, context) => {
-      const { filePath } = parameters;
+      const { filePath, lineNumbers = true } = parameters;
       const { projectContext } = context;
-      
+
+      // Try to find in context first, then fallback to disk
+      let content = '';
       const file = projectContext.find(f => f.path === filePath);
-      
-      if (!file) {
+
+      if (file) {
+        content = file.content;
+      } else {
+        try {
+          const fullPath = path.join(process.cwd(), filePath);
+          if (fs.existsSync(fullPath)) {
+            content = fs.readFileSync(fullPath, 'utf8');
+          } else {
+            return {
+              success: false,
+              error: `File not found at path "${filePath}".`,
+              filePath: filePath
+            };
+          }
+        } catch (error) {
+          return {
+            success: false,
+            error: `Error reading file "${filePath}": ${error.message}`,
+            filePath: filePath
+          };
+        }
+      }
+
+      if (lineNumbers) {
+        const lines = content.split('\n');
+        const numberedContent = lines.map((line, i) => `${i + 1}: ${line}`).join('\n');
         return {
-          success: false,
-          error: `File not found at path "${filePath}". Please check the file path and try again.`,
-          filePath: filePath
+          success: true,
+          filePath: filePath,
+          content: numberedContent,
+          message: `Read ${lines.length} lines from ${filePath}`
         };
       }
-      
+
       return {
         success: true,
-        filePath: file.path,
-        content: file.content
+        filePath: filePath,
+        content: content
       };
+    }
+  });
+
+  toolRegistry.register({
+    name: 'readLines',
+    description: 'Read a specific range of lines from a file. Useful for examining specific sections of code.',
+    parameters: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'The exact path of the file to read'
+        },
+        startLine: {
+          type: 'number',
+          description: 'The starting line number (1-based)'
+        },
+        endLine: {
+          type: 'number',
+          description: 'The ending line number (1-based)'
+        }
+      },
+      required: ['filePath', 'startLine', 'endLine']
+    },
+    availableTo: ToolCategories.SHARED,
+    tags: ['file', 'read'],
+    handler: async (parameters, context) => {
+      const { filePath, startLine, endLine } = parameters;
+
+      try {
+        const fullPath = path.join(process.cwd(), filePath);
+        if (!fs.existsSync(fullPath)) {
+          return { success: false, error: `File not found: ${filePath}` };
+        }
+
+        const content = fs.readFileSync(fullPath, 'utf8');
+        const lines = content.split('\n');
+
+        if (startLine < 1 || endLine > lines.length || startLine > endLine) {
+          return { success: false, error: `Invalid line range: ${startLine}-${endLine} (File has ${lines.length} lines)` };
+        }
+
+        const selectedLines = lines.slice(startLine - 1, endLine);
+        const numberedContent = selectedLines.map((line, i) => `${startLine + i}: ${line}`).join('\n');
+
+        return {
+          success: true,
+          filePath,
+          content: numberedContent,
+          message: `Read lines ${startLine}-${endLine} of ${filePath}`
+        };
+      } catch (error) {
+        return { success: false, error: `Failed to read lines: ${error.message}` };
+      }
+    }
+  });
+
+  toolRegistry.register({
+    name: 'replaceLines',
+    description: 'Replace a specific range of lines in a file with new content. Use this for precise code edits.',
+    parameters: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'The exact path of the file to edit'
+        },
+        startLine: {
+          type: 'number',
+          description: 'The starting line number to replace (1-based)'
+        },
+        endLine: {
+          type: 'number',
+          description: 'The ending line number to replace (1-based)'
+        },
+        newContent: {
+          type: 'string',
+          description: 'The new content to insert in place of the specified lines'
+        }
+      },
+      required: ['filePath', 'startLine', 'endLine', 'newContent']
+    },
+    availableTo: ToolCategories.SHARED,
+    tags: ['file', 'edit'],
+    handler: async (parameters, context) => {
+      const { filePath, startLine, endLine, newContent } = parameters;
+
+      try {
+        const fullPath = path.join(process.cwd(), filePath);
+        if (!fs.existsSync(fullPath)) {
+          return { success: false, error: `File not found: ${filePath}` };
+        }
+
+        const content = fs.readFileSync(fullPath, 'utf8');
+        const lines = content.split('\n');
+
+        if (startLine < 1 || endLine > lines.length || startLine > endLine) {
+          return { success: false, error: `Invalid line range: ${startLine}-${endLine} (File has ${lines.length} lines)` };
+        }
+
+        // Remove indentation from newContent if it's passed as a block
+        // But keep relative indentation? For now, trust the model's output.
+        const newLines = newContent.split('\n');
+
+        // Splice in new content
+        // lines array is 0-indexed, so startLine-1 is the index
+        // delete count is endLine - startLine + 1
+        lines.splice(startLine - 1, endLine - startLine + 1, ...newLines);
+
+        const updatedContent = lines.join('\n');
+        fs.writeFileSync(fullPath, updatedContent, 'utf8');
+
+        return {
+          success: true,
+          filePath,
+          message: `Successfully replaced lines ${startLine}-${endLine} in ${filePath}`
+        };
+      } catch (error) {
+        return { success: false, error: `Failed to replace lines: ${error.message}` };
+      }
+    }
+  });
+
+  toolRegistry.register({
+    name: 'rewriteFile',
+    description: 'Completely rewrite a file with new content. Use this for creating new files or major refactors.',
+    parameters: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'The exact path of the file to rewrite'
+        },
+        content: {
+          type: 'string',
+          description: 'The complete new content for the file'
+        }
+      },
+      required: ['filePath', 'content']
+    },
+    availableTo: ToolCategories.SHARED,
+    tags: ['file', 'write'],
+    handler: async (parameters, context) => {
+      const { filePath, content } = parameters;
+
+      try {
+        const fullPath = path.join(process.cwd(), filePath);
+
+        // Ensure directory exists
+        const dir = path.dirname(fullPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+
+        fs.writeFileSync(fullPath, content, 'utf8');
+
+        return {
+          success: true,
+          filePath,
+          message: `Successfully rewrote ${filePath}`
+        };
+      } catch (error) {
+        return { success: false, error: `Failed to rewrite file: ${error.message}` };
+      }
     }
   });
 
@@ -279,7 +476,7 @@ export function registerCoreTools() {
   // ============================================================================
   // EXECUTION TOOLS (Available to both main AI and subagents)
   // ============================================================================
-  
+
   // Register execution tools for shared access
   executionTools.forEach(tool => {
     toolRegistry.register({

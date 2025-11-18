@@ -11,6 +11,7 @@ import inquirer from 'inquirer';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import ora from 'ora';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';
 import { createProvider } from '../providers/index.js';
@@ -66,6 +67,25 @@ class ChatToolUtils {
     }
 
     return message;
+  }
+
+  /**
+   * Get verbs for tool feedback (Present, Past)
+   */
+  static getToolVerbs(toolName) {
+    const verbs = {
+      'getFileContent': ['Reading', 'Read'],
+      'readLines': ['Reading', 'Read'],
+      'replaceLines': ['Replacing', 'Replaced'],
+      'rewriteFile': ['Rewriting', 'Rewrote'],
+      'createFile': ['Creating', 'Created'],
+      'run_readme_md': ['Generating', 'Generated'],
+      'run_agents_md': ['Generating', 'Generated'],
+      'terminal': ['Executing', 'Executed']
+    };
+
+    // Default for unknown tools
+    return verbs[toolName] || ['Running', 'Ran'];
   }
 }
 
@@ -140,21 +160,44 @@ export async function handleChatToolCall(toolName, parameters, context) {
     return await handleSubAgentTool(toolName, parameters, context);
   }
 
+  // Generic spinner for all other tools
+  let toolSpinner = null;
+  if (toolName !== 'terminal') {
+    const [presentVerb] = ChatToolUtils.getToolVerbs(toolName);
+    let target = '';
+
+    // Add specific target info if available
+    if (parameters.filePath) target = ` ${chalk.white(parameters.filePath)}`;
+    else if (parameters.command) target = ` ${chalk.white(parameters.command)}`;
+
+    toolSpinner = ora(`${presentVerb}${target}...`).start();
+  }
+
   // Fallback to general tool execution for regular tools (terminal, getFileContent, etc.)
   try {
     const { session } = context;
     const result = await executeToolInContext(toolName, parameters, 'main', {
-      projectContext: session.fullProjectContext
+      projectContext: session.fullProjectContext,
+      spinner: toolSpinner // Pass spinner to tool if it wants to use it
     });
 
-    // Handle file reading spinners if needed
-    if (toolName === 'getFileContent' && result.content) {
-      // This would be handled by the spinner logic in the original code
-      // For now, just return the result
+    if (toolSpinner) {
+      const [, pastVerb] = ChatToolUtils.getToolVerbs(toolName);
+      if (result.success) {
+        let target = '';
+        if (parameters.filePath) target = ` ${chalk.white(parameters.filePath)}`;
+        toolSpinner.succeed(`${pastVerb}${target}`);
+      } else {
+        toolSpinner.fail(`${pastVerb} failed`);
+      }
     }
 
     return result;
   } catch (error) {
+    if (toolSpinner) {
+      const [, pastVerb] = ChatToolUtils.getToolVerbs(toolName);
+      toolSpinner.fail(`${pastVerb} failed: ${error.message}`);
+    }
     return { success: false, error: `Tool execution failed: ${error.message}` };
   }
 }
@@ -280,10 +323,10 @@ async function executeMultipleSubAgents(allCalls, context) {
     const agentConfig = ChatToolUtils.getAgentConfig(call.toolName);
     return agentConfig
       ? genericAgentExecutor.execute(
-          agentConfig,
-          ChatToolUtils.createExecutionContext(session, currentModelInfo, currentApiKey),
-          call.parameters?.customInstructions || null
-        )
+        agentConfig,
+        ChatToolUtils.createExecutionContext(session, currentModelInfo, currentApiKey),
+        call.parameters?.customInstructions || null
+      )
       : Promise.resolve({ success: false, error: `Unknown subagent: ${call.toolName}` });
   });
 

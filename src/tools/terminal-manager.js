@@ -24,24 +24,6 @@ class TerminalManager {
    * @returns {Promise<Object>} Command result
    */
   async execute(command) {
-    // Safety check - block destructive operations
-    const lower = command.trim().toLowerCase();
-    const disallowed = [
-      'rm -rf', 'rm -fr', 'sudo rm',
-      'git push --force', 'git reset --hard', 'git clean -fd',
-      'git commit', 'git push', 'git pull', 'git merge', 'git rebase',
-      'gh pr create', 'gh pr merge', 'gh issue create', 'gh release create',
-      'gh auth', 'gh api -x post', 'gh api -x patch', 'gh api -x delete'
-    ];
-
-    if (disallowed.some(pattern => lower.includes(pattern))) {
-      return {
-        success: false,
-        error: 'Operation not permitted',
-        command
-      };
-    }
-
     // Create a batch entry for this command
     const callId = ++this.batchId;
 

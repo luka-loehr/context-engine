@@ -72,7 +72,6 @@ class TaskManager {
 
         // Header
         lines.push(chalk.bold('Tasks:'));
-        lines.push('');  // Blank line after header
 
         // Check for timeouts (60 seconds without update)
         const now = Date.now();

@@ -7,6 +7,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import ora from 'ora';
 import chalk from 'chalk';
+import { taskManager } from '../ui/task-manager.js';
 
 const execAsync = promisify(exec);
 
@@ -57,16 +58,23 @@ class TerminalManager {
         // Multiple commands - execute concurrently
         await this._executeBatch(allCalls);
       } else {
-        // Single command - execute directly with UI
+        // Single command - execute directly with UI (only if no tasks active)
         const cmd = allCalls[0].command;
-        const spinner = ora(`Executing: ${chalk.cyan(cmd)}`).start();
+        const hasActiveTasks = taskManager.hasActiveTasks();
+        
+        let spinner = null;
+        if (!hasActiveTasks) {
+          spinner = ora(`Executing: ${chalk.cyan(cmd)}`).start();
+        }
 
         const result = await this._executeCommand(cmd);
 
-        if (result.success) {
-          spinner.succeed(`Executed: ${chalk.cyan(cmd)}`);
-        } else {
-          spinner.fail(`Failed: ${chalk.cyan(cmd)}`);
+        if (!hasActiveTasks) {
+          if (result.success) {
+            spinner.succeed(`Executed: ${chalk.cyan(cmd)}`);
+          } else {
+            spinner.fail(`Failed: ${chalk.cyan(cmd)}`);
+          }
         }
 
         allCalls[0].resolveExecution(result);
@@ -83,7 +91,11 @@ class TerminalManager {
    */
   async _executeBatch(calls) {
     const count = calls.length;
-    this.currentSpinner = ora(`Executing ${count} terminal command${count > 1 ? 's' : ''}...`).start();
+    const hasActiveTasks = taskManager.hasActiveTasks();
+    
+    if (!hasActiveTasks) {
+      this.currentSpinner = ora(`Executing ${count} terminal command${count > 1 ? 's' : ''}...`).start();
+    }
 
     try {
       // Execute all commands in parallel
@@ -91,21 +103,25 @@ class TerminalManager {
         calls.map(call => this._executeCommand(call.command))
       );
 
-      // Stop spinner
-      this.currentSpinner.stop();
+      // Stop spinner if it was started
+      if (this.currentSpinner) {
+        this.currentSpinner.stop();
+      }
 
-      // Display individual results for ALL commands
-      results.forEach((result, index) => {
-        const cmd = calls[index].command;
+      // Display individual results for ALL commands (only if no tasks active)
+      if (!hasActiveTasks) {
+        results.forEach((result, index) => {
+          const cmd = calls[index].command;
 
-        if (result.status === 'fulfilled' && result.value.success) {
-          console.log(chalk.green(`✔ Executed: ${chalk.cyan(cmd)}`));
-        } else {
-          const error = result.status === 'rejected' ? result.reason.message : result.value.error;
-          console.log(chalk.red(`✖ Failed: ${chalk.cyan(cmd)}`));
-          console.log(chalk.gray(`  ${error}`));
-        }
-      });
+          if (result.status === 'fulfilled' && result.value.success) {
+            console.log(chalk.green(`✔ Executed: ${chalk.cyan(cmd)}`));
+          } else {
+            const error = result.status === 'rejected' ? result.reason.message : result.value.error;
+            console.log(chalk.red(`✖ Failed: ${chalk.cyan(cmd)}`));
+            console.log(chalk.gray(`  ${error}`));
+          }
+        });
+      }
 
       // Resolve each promise with its result
       results.forEach((result, index) => {
@@ -118,7 +134,9 @@ class TerminalManager {
       });
 
     } catch (error) {
-      this.currentSpinner.fail(`Batch execution failed: ${error.message}`);
+      if (this.currentSpinner) {
+        this.currentSpinner.fail(`Batch execution failed: ${error.message}`);
+      }
       // Resolve all promises with error
       calls.forEach(call => {
         call.resolveExecution({

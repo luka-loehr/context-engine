@@ -101,7 +101,8 @@ class TaskManager {
                 statusColor = chalk.green;
             } else {
                 symbol = chalk.cyan(this.spinnerFrames[this.frameIndex]);
-                statusColor = chalk.yellow;
+                // Pending is red, other updates are orange (yellow)
+                statusColor = task.status === 'Pending' ? chalk.red : chalk.yellow;
             }
 
             // Format: Symbol TaskName: (Status)
@@ -131,7 +132,7 @@ class TaskManager {
      * @param {string} initialStatus - Initial status message
      * @returns {string} taskId
      */
-    createTask(name, initialStatus = 'Starting...') {
+    createTask(name, initialStatus = 'Pending') {
         const taskId = `task_${this.nextTaskId++}`;
 
         this.tasks.set(taskId, {

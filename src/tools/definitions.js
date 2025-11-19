@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { toolRegistry, ToolCategories } from './registry.js';
 import { executionTools } from './library/execution-tools.js';
+import { statusUpdateTools } from './library/status-tools.js';
 import { writeFile } from '../utils/common.js';
 
 /**
@@ -182,6 +183,14 @@ export function registerCoreTools() {
         newContent: {
           type: 'string',
           description: 'The new content to insert in place of the specified lines'
+        },
+        isDangerous: {
+          type: 'boolean',
+          description: 'Set to true if this edit is risky (e.g., changing critical logic, overwriting user customization).'
+        },
+        dangerousReason: {
+          type: 'string',
+          description: 'The reason why this action is dangerous (required if isDangerous is true).'
         }
       },
       required: ['filePath', 'startLine', 'endLine', 'newContent']
@@ -236,6 +245,61 @@ export function registerCoreTools() {
   });
 
   toolRegistry.register({
+    name: 'createFile',
+    description: 'Create a NEW file with content. Fails if the file already exists.',
+    parameters: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'The path of the new file to create'
+        },
+        content: {
+          type: 'string',
+          description: 'The content to write to the new file'
+        },
+        isDangerous: {
+          type: 'boolean',
+          description: 'Set to true if this creation is risky (e.g., creating a large file).'
+        },
+        dangerousReason: {
+          type: 'string',
+          description: 'The reason why this action is dangerous (required if isDangerous is true).'
+        }
+      },
+      required: ['filePath', 'content']
+    },
+    availableTo: ToolCategories.SHARED,
+    tags: ['file', 'create'],
+    handler: async (parameters, context) => {
+      const { filePath, content } = parameters;
+      try {
+        const fullPath = path.join(process.cwd(), filePath);
+        if (fs.existsSync(fullPath)) {
+          return { success: false, error: `File already exists: ${filePath}. Use 'rewriteFile' to overwrite it.` };
+        }
+
+        // Ensure directory exists
+        const dir = path.dirname(fullPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+
+        fs.writeFileSync(fullPath, content, 'utf8');
+
+        // Mark as read since we just wrote it
+        if (context.session && context.session.readFiles) {
+          context.session.readFiles.add(filePath);
+        }
+
+        return { success: true, filePath, message: `Successfully created ${filePath}` };
+      } catch (error) {
+        return { success: false, error: `Failed to create file: ${error.message}` };
+      }
+    }
+  });
+
+  toolRegistry.register({
     name: 'rewriteFile',
     description: 'Completely rewrite a file with new content. Use this for creating new files or major refactors.',
     parameters: {
@@ -248,6 +312,14 @@ export function registerCoreTools() {
         content: {
           type: 'string',
           description: 'The complete new content for the file'
+        },
+        isDangerous: {
+          type: 'boolean',
+          description: 'Set to true if this rewrite is risky (e.g., overwriting a complex file).'
+        },
+        dangerousReason: {
+          type: 'string',
+          description: 'The reason why this action is dangerous (required if isDangerous is true).'
         }
       },
       required: ['filePath', 'content']
@@ -258,7 +330,7 @@ export function registerCoreTools() {
       const { filePath, content } = parameters;
 
       // Enforce Read-Before-Write for rewriting existing files
-      // (We check existence first to allow creating NEW files with rewriteFile if desired, 
+      // (We check existence first to allow creating NEW files with rewriteFile if desired,
       // though createFile is preferred. If file exists, we require a read.)
       const fullPath = path.join(process.cwd(), filePath);
       if (fs.existsSync(fullPath)) {
@@ -295,6 +367,44 @@ export function registerCoreTools() {
     }
   });
 
+  toolRegistry.register({
+    name: 'removeFile',
+    description: 'Delete a file from the filesystem.',
+    parameters: {
+      type: 'object',
+      properties: {
+        filePath: {
+          type: 'string',
+          description: 'The path of the file to delete'
+        },
+        isDangerous: {
+          type: 'boolean',
+          description: 'Set to true if this deletion is risky (e.g., deleting source code).'
+        },
+        dangerousReason: {
+          type: 'string',
+          description: 'The reason why this action is dangerous (required if isDangerous is true).'
+        }
+      },
+      required: ['filePath']
+    },
+    availableTo: ToolCategories.SHARED,
+    tags: ['file', 'delete'],
+    handler: async (parameters, context) => {
+      const { filePath } = parameters;
+      try {
+        const fullPath = path.join(process.cwd(), filePath);
+        if (!fs.existsSync(fullPath)) {
+          return { success: false, error: `File not found: ${filePath}` };
+        }
+        fs.unlinkSync(fullPath);
+        return { success: true, message: `Successfully removed ${filePath}` };
+      } catch (error) {
+        return { success: false, error: `Failed to remove file: ${error.message}` };
+      }
+    }
+  });
+
   // ============================================================================
   // SUBAGENT-ONLY TOOLS
   // ============================================================================
@@ -327,40 +437,6 @@ export function registerCoreTools() {
       const { spinner } = context;
 
       return writeFile(filePath, content, { spinner, successMessage });
-    }
-  });
-
-  toolRegistry.register({
-    name: 'statusUpdate',
-    description: 'Update the status message shown to the user. Use this frequently to keep users informed of progress.',
-    parameters: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          description: 'A concise status message (1-10 words) describing current activity'
-        }
-      },
-      required: ['status']
-    },
-    availableTo: ToolCategories.SUBAGENT,
-    tags: ['ui', 'status'],
-    handler: async (parameters, context) => {
-      const { status } = parameters;
-      const { spinner, subAgentName } = context;
-
-      // Update the loading spinner with the status message
-      if (spinner && spinner.isSpinning) {
-        spinner.text = status;
-      } else {
-        // If spinner is not running, log to console (shouldn't happen in normal flow)
-        console.log(`📝 ${subAgentName}: ${status}`);
-      }
-
-      return {
-        success: true,
-        message: `Status updated: ${status}`
-      };
     }
   });
 
@@ -525,6 +601,22 @@ export function registerCoreTools() {
       parameters: tool.parameters,
       availableTo: ToolCategories.SHARED,
       tags: ['execution', 'git', 'github'],
+      handler: tool.handler
+    });
+  });
+
+  // ============================================================================
+  // STATUS UPDATE TOOLS (Available to main AI)
+  // ============================================================================
+
+  // Register status update tools for main AI
+  statusUpdateTools.forEach(tool => {
+    toolRegistry.register({
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+      availableTo: ToolCategories.MAIN,
+      tags: ['status', 'task', 'ui'],
       handler: tool.handler
     });
   });

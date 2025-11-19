@@ -11,7 +11,7 @@ import path from 'path';
 import { toolRegistry, ToolCategories } from './registry.js';
 import { executionTools } from './library/execution-tools.js';
 import { statusUpdateTools } from './library/status-tools.js';
-import { writeFile } from '../utils/common.js';
+import { writeFile, normalizeNewlines } from '../utils/common.js';
 
 /**
  * Register all core tools
@@ -164,7 +164,7 @@ export function registerCoreTools() {
 
   toolRegistry.register({
     name: 'replaceLines',
-    description: 'Replace a specific range of lines in a file with new content. Use this for precise code edits.',
+    description: 'Replace a specific range of lines in a file with new content. Use this for precise code edits. CRITICAL: You MUST read the FULL file with getFileContent before using this tool - do not rely on readLines alone.',
     parameters: {
       type: 'object',
       properties: {
@@ -182,7 +182,7 @@ export function registerCoreTools() {
         },
         newContent: {
           type: 'string',
-          description: 'The new content to insert in place of the specified lines'
+          description: 'The new content to insert in place of the specified lines. Use actual newlines, not \\n escape sequences.'
         },
         isDangerous: {
           type: 'boolean',
@@ -200,11 +200,11 @@ export function registerCoreTools() {
     handler: async (parameters, context) => {
       const { filePath, startLine, endLine, newContent } = parameters;
 
-      // Enforce Read-Before-Write
+      // Enforce Read-Before-Write - MUST read FULL file, not just lines
       if (context.session && context.session.readFiles && !context.session.readFiles.has(filePath)) {
         return {
           success: false,
-          error: `You must read the file with getFileContent (or readLines) before editing it. This ensures you have the latest context and line numbers.`
+          error: `You must read the FULL file with getFileContent before editing it. Reading only specific lines is not sufficient - you need the complete file context to make safe edits.`
         };
       }
 
@@ -221,9 +221,9 @@ export function registerCoreTools() {
           return { success: false, error: `Invalid line range: ${startLine}-${endLine} (File has ${lines.length} lines)` };
         }
 
-        // Remove indentation from newContent if it's passed as a block
-        // But keep relative indentation? For now, trust the model's output.
-        const newLines = newContent.split('\n');
+        // Normalize newlines in newContent - convert literal \n to actual newlines
+        const normalizedNewContent = normalizeNewlines(newContent);
+        const newLines = normalizedNewContent.split('\n');
 
         // Splice in new content
         // lines array is 0-indexed, so startLine-1 is the index
@@ -232,6 +232,24 @@ export function registerCoreTools() {
 
         const updatedContent = lines.join('\n');
         fs.writeFileSync(fullPath, updatedContent, 'utf8');
+
+        // Validate the edited file for common errors
+        const { validateFileContent } = await import('./library/file-operations.js');
+        const validation = validateFileContent(updatedContent, fullPath);
+        
+        if (!validation.isValid) {
+          // Rollback the change
+          fs.writeFileSync(fullPath, content, 'utf8');
+          return {
+            success: false,
+            error: `Edit validation failed. Errors detected:\n${validation.errors.join('\n')}\n\n` +
+                   `The file has been restored to its original state. Please fix the edit and try again.`
+          };
+        }
+        if (validation.warnings.length > 0) {
+          // Don't fail, but the agent should be aware
+          console.warn(`⚠️  Warnings in ${filePath}:\n${validation.warnings.join('\n')}`);
+        }
 
         return {
           success: true,
@@ -256,7 +274,7 @@ export function registerCoreTools() {
         },
         content: {
           type: 'string',
-          description: 'The content to write to the new file'
+          description: 'The content to write to the new file. Use actual newlines, not \\n escape sequences.'
         },
         isDangerous: {
           type: 'boolean',
@@ -301,7 +319,7 @@ export function registerCoreTools() {
 
   toolRegistry.register({
     name: 'rewriteFile',
-    description: 'Completely rewrite a file with new content. Use this for creating new files or major refactors.',
+    description: 'Completely rewrite a file with new content. Use this for creating new files or major refactors. CRITICAL: You MUST read the FULL file with getFileContent before rewriting it.',
     parameters: {
       type: 'object',
       properties: {
@@ -311,7 +329,7 @@ export function registerCoreTools() {
         },
         content: {
           type: 'string',
-          description: 'The complete new content for the file'
+          description: 'The complete new content for the file. Use actual newlines, not \\n escape sequences.'
         },
         isDangerous: {
           type: 'boolean',
@@ -331,13 +349,13 @@ export function registerCoreTools() {
 
       // Enforce Read-Before-Write for rewriting existing files
       // (We check existence first to allow creating NEW files with rewriteFile if desired,
-      // though createFile is preferred. If file exists, we require a read.)
+      // though createFile is preferred. If file exists, we require a FULL file read.)
       const fullPath = path.join(process.cwd(), filePath);
       if (fs.existsSync(fullPath)) {
         if (context.session && context.session.readFiles && !context.session.readFiles.has(filePath)) {
           return {
             success: false,
-            error: `You must read the file with getFileContent before rewriting it. This ensures you are aware of the current content.`
+            error: `You must read the FULL file with getFileContent before rewriting it. Reading only specific lines is not sufficient - you need the complete file context to make safe edits.`
           };
         }
       }
@@ -349,7 +367,37 @@ export function registerCoreTools() {
           fs.mkdirSync(dir, { recursive: true });
         }
 
-        fs.writeFileSync(fullPath, content, 'utf8');
+        // Save original content if file exists (for rollback)
+        let originalContent = null;
+        if (fs.existsSync(fullPath)) {
+          originalContent = fs.readFileSync(fullPath, 'utf8');
+        }
+
+        // Normalize newlines - convert literal \n to actual newlines
+        const normalizedContent = normalizeNewlines(content);
+        fs.writeFileSync(fullPath, normalizedContent, 'utf8');
+
+        // Validate the rewritten file for common errors
+        const { validateFileContent } = await import('./library/file-operations.js');
+        const validation = validateFileContent(normalizedContent, fullPath);
+        
+        if (!validation.isValid) {
+          // Rollback to original if it existed
+          if (originalContent !== null) {
+            fs.writeFileSync(fullPath, originalContent, 'utf8');
+          } else {
+            // File didn't exist before, delete it
+            fs.unlinkSync(fullPath);
+          }
+          return {
+            success: false,
+            error: `File validation failed after rewrite. Errors detected:\n${validation.errors.join('\n')}\n\n` +
+                   `The file has been restored to its original state. Please fix the content and try again.`
+          };
+        }
+        if (validation.warnings.length > 0) {
+          console.warn(`⚠️  Warnings in ${filePath}:\n${validation.warnings.join('\n')}`);
+        }
 
         // Mark as read since we just wrote it
         if (context.session && context.session.readFiles) {
@@ -359,7 +407,8 @@ export function registerCoreTools() {
         return {
           success: true,
           filePath,
-          message: `Successfully rewrote ${filePath}`
+          message: `Successfully rewrote ${filePath}`,
+          warnings: validation.warnings.length > 0 ? validation.warnings : undefined
         };
       } catch (error) {
         return { success: false, error: `Failed to rewrite file: ${error.message}` };

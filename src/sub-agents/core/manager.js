@@ -176,9 +176,13 @@ export class SubAgentManager {
           
           const fs = await import('fs');
           const path = await import('path');
+          const { normalizeNewlines } = await import('../../utils/common.js');
 
           const filePath = path.join(process.cwd(), parameters.filePath);
-          fs.writeFileSync(filePath, parameters.content, 'utf8');
+          
+          // Normalize newlines - convert literal \n to actual newlines
+          const normalizedContent = normalizeNewlines(parameters.content);
+          fs.writeFileSync(filePath, normalizedContent, 'utf8');
 
           this.updateSubAgentStatus(index, '✓ File created');
           

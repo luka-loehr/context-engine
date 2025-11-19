@@ -12,6 +12,23 @@ import path from 'path';
 import { taskManager } from '../ui/task-manager.js';
 
 /**
+ * Normalize newlines in content - converts literal \n escape sequences to actual newlines
+ * This fixes issues where AI models provide escaped newlines in JSON that need to be converted
+ * @param {string} content - Content that may contain literal \n characters
+ * @returns {string} Content with normalized newlines
+ */
+export function normalizeNewlines(content) {
+  if (typeof content !== 'string') {
+    return content;
+  }
+  
+  // Replace literal \n (backslash followed by n) with actual newlines
+  // This handles cases where JSON.parse didn't properly decode escape sequences
+  // or where double-escaping occurred
+  return content.replace(/\\n/g, '\n');
+}
+
+/**
  * Create a random delay between 500-1000ms for smooth UX
  * @returns {number} Random delay in milliseconds
  */
@@ -57,6 +74,9 @@ export async function withSpinner(message, operation, successMessage = null) {
  */
 export function writeFile(filePath, content, { spinner, successMessage, allowedPaths } = {}) {
   try {
+    // Normalize newlines - convert literal \n to actual newlines
+    const normalizedContent = normalizeNewlines(content);
+    
     // Ensure we're writing to the project root
     const fullPath = path.join(process.cwd(), filePath);
 
@@ -81,8 +101,8 @@ export function writeFile(filePath, content, { spinner, successMessage, allowedP
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Write the file
-    fs.writeFileSync(fullPath, content, 'utf8');
+    // Write the file with normalized content
+    fs.writeFileSync(fullPath, normalizedContent, 'utf8');
 
     // Update spinner if provided
     if (spinner && spinner.isSpinning) {

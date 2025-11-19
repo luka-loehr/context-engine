@@ -188,11 +188,10 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         if (toolName === 'statusUpdate' && parameters.action === 'create') {
           shouldSuppressStreaming = true;
           // Flush any pending content before tasks start
-          const hadOutput = streamWriter.flush();
-          // Add exactly one blank line before tasks (only if flush didn't output anything)
-          if (!hadOutput) {
-            console.log('');
-          }
+          streamWriter.flush();
+          // Always add exactly one blank line before tasks
+          // (flush() may or may not add a newline depending on buffer state)
+          console.log('');
         }
         
         return await handleToolCall(toolName, parameters);

@@ -245,7 +245,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
-          console.log('');  // Single line spacing after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();
@@ -400,7 +399,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
-          console.log('');  // Single line spacing after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();

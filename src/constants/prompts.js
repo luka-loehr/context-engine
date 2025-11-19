@@ -55,8 +55,8 @@ You have access to the following tools. USE THEM.
    - **SAVE DETAILS FOR SUMMARY**: Put all detailed explanations in your final summary, NOT in status messages.
    
    **Actions:**
-   - **create**: Start a new task. Returns a taskId. Required: taskName, status
-     Example: \`statusUpdate(action='create', taskName='Removing Localization Files', status='Identifying files')\`
+   - **create**: Start a new task. Returns a taskId. Required: taskName, status='Pending'
+     Example: \`statusUpdate(action='create', taskName='Removing Localization Files', status='Pending')\`
    - **update**: Update task progress. Required: taskId, status (MAX 7 WORDS)
      Example: \`statusUpdate(action='update', taskId='task_1', status='Removing French files')\`
    - **complete**: Mark task as done. Required: taskId. ALWAYS use message='Completed'

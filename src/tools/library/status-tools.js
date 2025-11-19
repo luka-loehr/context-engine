@@ -31,7 +31,7 @@ export const statusUpdateTools = [
                 },
                 status: {
                     type: 'string',
-                    description: 'Status message (for create/update actions, e.g., "Planning structure...", "Writing components...", "Adding styles...")'
+                    description: 'Status message. MUST be "Pending" for create action. For update action, use short status like "Writing components..."'
                 },
                 message: {
                     type: 'string',

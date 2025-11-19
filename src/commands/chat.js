@@ -188,8 +188,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         if (toolName === 'statusUpdate' && parameters.action === 'create') {
           shouldSuppressStreaming = true;
           // Flush any pending content before tasks start
+          // Note: flush() uses console.log which adds newline, so we get proper spacing
           streamWriter.flush();
-          console.log(''); // Add breathing room before tasks
         }
         
         return await handleToolCall(toolName, parameters);
@@ -344,6 +344,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           shouldSuppressStreaming = true;
           // Flush any pending content before tasks start
           streamWriter.flush();
+          // Ensure exactly one blank line before tasks
+          console.log('');
         }
         
         return await handleToolCall(toolName, parameters);

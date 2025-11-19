@@ -252,10 +252,13 @@ export function createStreamWriter() {
     },
 
     flush() {
+      let hadOutput = false;
+      
       // Process any remaining content in buffer
       if (buffer) {
         this.processLine(buffer);
         buffer = '';
+        hadOutput = true;
       }
 
       // Close any open code blocks
@@ -265,7 +268,11 @@ export function createStreamWriter() {
         isInCodeBlock = false;
         codeBlockBuffer = '';
         codeBlockLang = '';
+        hadOutput = true;
       }
+      
+      // Return whether we output anything (for spacing control)
+      return hadOutput;
     }
   };
 }

@@ -7,9 +7,9 @@
  * Licensed under the MIT License
  */
 
-import ora from 'ora';
 import { createProvider } from '../../providers/index.js';
 import { getAllTools } from '../../tools/library/index.js';
+import { taskManager } from '../../ui/task-manager.js';
 
 export class GenericAgentExecutor {
   /**
@@ -21,7 +21,9 @@ export class GenericAgentExecutor {
    */
   async execute(agentConfig, context, customInstructions = null) {
     const { projectContext, modelInfo, apiKey } = context;
-    const loadingSpinner = ora(`${agentConfig.name} working...`).start();
+
+    // Create a task for this agent
+    const taskId = taskManager.createTask(agentConfig.name, 'Initializing...');
 
     const generatedFiles = [];
     const analysis = {
@@ -40,7 +42,7 @@ export class GenericAgentExecutor {
 
       // Build user prompt (default + custom if provided)
       let userPrompt = agentConfig.defaultInstructions;
-      
+
       if (customInstructions) {
         userPrompt += `\n\n**Additional Instructions from User:**\n${customInstructions}\n\nPlease follow both the default instructions above AND these additional user instructions.`;
       }
@@ -73,7 +75,7 @@ export class GenericAgentExecutor {
           agentConfig,
           {
             projectContext,
-            spinner: loadingSpinner,
+            taskId,
             agentName: agentConfig.name,
             generatedFiles,
             allowedPaths: agentConfig.allowedPaths || [] // Path restrictions if any
@@ -94,9 +96,11 @@ export class GenericAgentExecutor {
       analysis.summary = agentFinalResponse.trim() || this.generateSummary(agentConfig, analysis, generatedFiles);
       analysis.agentResponse = agentFinalResponse.trim();
 
-      if (loadingSpinner.isSpinning) {
-        loadingSpinner.succeed(`${agentConfig.name} completed`);
-      }
+      // Complete the task
+      const summary = analysis.filesCreated.length > 0
+        ? `Created ${analysis.filesCreated.length} file(s)`
+        : 'Completed';
+      taskManager.completeTask(taskId, summary);
 
       return {
         success: true,
@@ -108,9 +112,7 @@ export class GenericAgentExecutor {
         totalFilesRead: analysis.filesRead.length
       };
     } catch (error) {
-      if (loadingSpinner.isSpinning) {
-        loadingSpinner.fail(`${agentConfig.name} failed: ${error.message}`);
-      }
+      taskManager.failTask(taskId, error.message);
       throw error;
     }
   }
@@ -125,7 +127,7 @@ export class GenericAgentExecutor {
     const agentToolNames = agentConfig.tools;
 
     // Filter tools that the agent can use
-    const agentTools = allTools.filter(tool => 
+    const agentTools = allTools.filter(tool =>
       agentToolNames.includes(tool.name)
     );
 

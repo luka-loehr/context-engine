@@ -79,6 +79,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
   let activeSubAgentCalls = new Map();
   let subAgentCallId = 0;
 
+  // Tool execution queue to prevent UI clutter and race conditions
+  let toolQueue = Promise.resolve();
+
   /**
    * Handle tool calls from the AI
    */
@@ -100,7 +103,19 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       subAgentCallId
     };
 
-    return await handleChatToolCall(toolName, parameters, context);
+    // Enforce sequential execution using a promise queue
+    return new Promise((resolve, reject) => {
+      toolQueue = toolQueue.then(async () => {
+        try {
+          // Add spacing before tool execution
+          console.log('');
+          const result = await handleChatToolCall(toolName, parameters, context);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
   }
 
   // Helper function to inject context into AI

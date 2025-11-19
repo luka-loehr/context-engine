@@ -19,6 +19,14 @@ export const executionTools = [
         command: {
           type: 'string',
           description: 'The command to execute'
+        },
+        isDangerous: {
+          type: 'boolean',
+          description: 'Set to true if the command is destructive (e.g., git reset --hard, rm -rf) to trigger user confirmation.'
+        },
+        dangerousReason: {
+          type: 'string',
+          description: 'The reason why this command is dangerous (required if isDangerous is true).'
         }
       },
       required: ['command']

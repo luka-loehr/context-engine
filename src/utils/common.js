@@ -9,6 +9,7 @@
 import ora from 'ora';
 import fs from 'fs';
 import path from 'path';
+import { taskManager } from '../ui/task-manager.js';
 
 /**
  * Create a random delay between 500-1000ms for smooth UX
@@ -113,6 +114,9 @@ export function writeFile(filePath, content, { spinner, successMessage, allowedP
  */
 export function createFileReadSpinner(fileName, isMeaningful = true) {
   if (!isMeaningful) return null;
+  
+  // Don't show spinner if tasks are active (tasks will show status updates)
+  if (taskManager.hasActiveTasks()) return null;
 
   const ora = require('ora');
   const chalk = require('chalk');

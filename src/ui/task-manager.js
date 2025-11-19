@@ -102,7 +102,7 @@ class TaskManager {
             } else {
                 symbol = chalk.cyan(this.spinnerFrames[this.frameIndex]);
                 // Pending is red, other updates are orange (yellow)
-                statusColor = task.status === 'Pending' ? chalk.red : chalk.yellow;
+                statusColor = task.status.toLowerCase() === 'pending' ? chalk.red : chalk.yellow;
             }
 
             // Format: Symbol TaskName: (Status)

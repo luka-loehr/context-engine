@@ -52,7 +52,7 @@ export const statusUpdateTools = [
                         };
                     }
 
-                    const newTaskId = taskManager.createTask(taskName, status || 'Starting...');
+                    const newTaskId = taskManager.createTask(taskName, status || 'Pending');
 
                     return {
                         success: true,

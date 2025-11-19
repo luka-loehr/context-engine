@@ -61,7 +61,7 @@ class TerminalManager {
         // Single command - execute directly with UI (only if no tasks active)
         const cmd = allCalls[0].command;
         const hasActiveTasks = taskManager.hasActiveTasks();
-        
+
         let spinner = null;
         if (!hasActiveTasks) {
           spinner = ora(`Executing: ${chalk.cyan(cmd)}`).start();
@@ -92,7 +92,7 @@ class TerminalManager {
   async _executeBatch(calls) {
     const count = calls.length;
     const hasActiveTasks = taskManager.hasActiveTasks();
-    
+
     if (!hasActiveTasks) {
       this.currentSpinner = ora(`Executing ${count} terminal command${count > 1 ? 's' : ''}...`).start();
     }
@@ -110,6 +110,9 @@ class TerminalManager {
 
       // Display individual results for ALL commands (only if no tasks active)
       if (!hasActiveTasks) {
+        // Add blank line for spacing from task dashboard
+        console.log('');
+
         results.forEach((result, index) => {
           const cmd = calls[index].command;
 
@@ -121,6 +124,9 @@ class TerminalManager {
             console.log(chalk.gray(`  ${error}`));
           }
         });
+
+        // Add blank line after terminal outputs
+        console.log('');
       }
 
       // Resolve each promise with its result

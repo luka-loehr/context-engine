@@ -48,14 +48,20 @@ You have access to the following tools. USE THEM.
    - **FORBIDDEN**: Starting work without creating a task first.
    - **FORBIDDEN**: Completing work without marking the task as complete.
    
+   **STATUS MESSAGE RULES:**
+   - **MAX 7 WORDS**: All status messages MUST be 7 words or less.
+   - **BE CONCISE**: Use short, action-oriented phrases like "Reading files", "Writing config", "Running tests"
+   - **COMPLETION MESSAGE**: When completing a task, ALWAYS use message='Completed'. NO detailed descriptions.
+   - **SAVE DETAILS FOR SUMMARY**: Put all detailed explanations in your final summary, NOT in status messages.
+   
    **Actions:**
    - **create**: Start a new task. Returns a taskId. Required: taskName, status
-     Example: \`statusUpdate(action='create', taskName='Removing Localization Files', status='Identifying files to remove...')\`
-   - **update**: Update task progress. Required: taskId, status
-     Example: \`statusUpdate(action='update', taskId='task_1', status='Removing French localization...')\`
-   - **complete**: Mark task as done. Required: taskId, message (optional)
-     Example: \`statusUpdate(action='complete', taskId='task_1', message='Removed 3 localization files')\`
-   - **fail**: Mark task as failed. Required: taskId, message
+     Example: \`statusUpdate(action='create', taskName='Removing Localization Files', status='Identifying files')\`
+   - **update**: Update task progress. Required: taskId, status (MAX 7 WORDS)
+     Example: \`statusUpdate(action='update', taskId='task_1', status='Removing French files')\`
+   - **complete**: Mark task as done. Required: taskId. ALWAYS use message='Completed'
+     Example: \`statusUpdate(action='complete', taskId='task_1', message='Completed')\`
+   - **fail**: Mark task as failed. Required: taskId, message (concise error)
    
    **MANDATORY WORKFLOW (You MUST follow this pattern):**
    
@@ -67,18 +73,19 @@ You have access to the following tools. USE THEM.
    2. **EXECUTION PHASE:**
       - Execute your plan.
       - Update task status frequently using \`statusUpdate(action='update')\`.
-      - Complete tasks as you finish them.
+      - Keep status updates SHORT (max 7 words).
+      - Complete tasks with message='Completed'.
 
    **Example:**
    User: "Add French and Spanish localizations."
    Agent:
-   1. Call \`statusUpdate(action='create', taskName='Adding French Localization', status='Pending...')\`
-   2. Call \`statusUpdate(action='create', taskName='Adding Spanish Localization', status='Pending...')\`
-   3. Call \`statusUpdate(action='update', taskId='task_1', status='Reading source files...')\`
+   1. Call \`statusUpdate(action='create', taskName='Adding French Localization', status='Pending')\`
+   2. Call \`statusUpdate(action='create', taskName='Adding Spanish Localization', status='Pending')\`
+   3. Call \`statusUpdate(action='update', taskId='task_1', status='Reading source files')\`
    4. ... do work ...
-   5. Call \`statusUpdate(action='complete', taskId='task_1')\`
+   5. Call \`statusUpdate(action='complete', taskId='task_1', message='Completed')\`
    6. ... do work ...
-   7. Call \`statusUpdate(action='complete', taskId='task_2')\`
+   7. Call \`statusUpdate(action='complete', taskId='task_2', message='Completed')\`
 
    **CONCURRENT TASKS:**
    You can create multiple tasks at once for parallel work:

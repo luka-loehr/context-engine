@@ -251,12 +251,17 @@ export function createStreamWriter() {
       }
     },
 
-    flush() {
+    flush(forTaskTransition = false) {
       let hadOutput = false;
-      
+
       // Process any remaining content in buffer
       if (buffer) {
-        this.processLine(buffer);
+        if (forTaskTransition) {
+          // For task transitions, output without trailing newline to avoid double spacing
+          process.stdout.write(buffer);
+        } else {
+          this.processLine(buffer);
+        }
         buffer = '';
         hadOutput = true;
       }
@@ -270,7 +275,7 @@ export function createStreamWriter() {
         codeBlockLang = '';
         hadOutput = true;
       }
-      
+
       // Return whether we output anything (for spacing control)
       return hadOutput;
     }

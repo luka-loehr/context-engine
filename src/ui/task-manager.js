@@ -72,13 +72,29 @@ class TaskManager {
 
         // Header
         lines.push(chalk.bold('Tasks:'));
+        lines.push('');  // Blank line after header
+
+        // Check for timeouts (60 seconds without update)
+        const now = Date.now();
+        const TIMEOUT_MS = 60000; // 60 seconds
 
         // Tasks
         for (const task of this.tasks.values()) {
+            // Auto-timeout check
+            if (!task.completed && !task.failed && !task.timedOut) {
+                if (now - task.lastUpdateTime > TIMEOUT_MS) {
+                    task.timedOut = true;
+                    task.status = 'Timed out after 60 seconds';
+                }
+            }
+
             let symbol;
             let statusColor = chalk.gray;
 
-            if (task.failed) {
+            if (task.timedOut) {
+                symbol = chalk.yellow('⏱');
+                statusColor = chalk.yellow;
+            } else if (task.failed) {
                 symbol = chalk.red('✖');
                 statusColor = chalk.red;
             } else if (task.completed) {
@@ -106,8 +122,8 @@ class TaskManager {
         // Clear screen down from this position
         readline.clearScreenDown(process.stdout);
 
-        // Write new output
-        process.stdout.write(output + '\n');
+        // Write new output with extra spacing
+        process.stdout.write(output + '\n\n');
     }
 
     /**
@@ -125,7 +141,9 @@ class TaskManager {
             status: initialStatus,
             completed: false,
             failed: false,
-            startTime: Date.now()
+            timedOut: false,
+            startTime: Date.now(),
+            lastUpdateTime: Date.now()
         });
 
         // Start rendering if this is the first task
@@ -145,9 +163,10 @@ class TaskManager {
         const task = this.tasks.get(taskId);
         if (!task) return;
 
-        if (task.completed || task.failed) return;
+        if (task.completed || task.failed || task.timedOut) return;
 
         task.status = status;
+        task.lastUpdateTime = Date.now();
         // Render will pick up the change on next tick
     }
 
@@ -205,7 +224,7 @@ class TaskManager {
      * @returns {Array}
      */
     getActiveTasks() {
-        return Array.from(this.tasks.values()).filter(t => !t.completed && !t.failed);
+        return Array.from(this.tasks.values()).filter(t => !t.completed && !t.failed && !t.timedOut);
     }
 
     /**
@@ -214,7 +233,7 @@ class TaskManager {
      */
     allTasksCompleted() {
         if (this.tasks.size === 0) return true;
-        return Array.from(this.tasks.values()).every(t => t.completed || t.failed);
+        return Array.from(this.tasks.values()).every(t => t.completed || t.failed || t.timedOut);
     }
 
     /**
@@ -222,7 +241,7 @@ class TaskManager {
      */
     clearCompletedTasks() {
         for (const [taskId, task] of this.tasks.entries()) {
-            if (task.completed || task.failed) {
+            if (task.completed || task.failed || task.timedOut) {
                 this.tasks.delete(taskId);
             }
         }

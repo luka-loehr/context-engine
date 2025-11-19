@@ -187,13 +187,11 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
         // If tasks start, suppress further streaming
         if (toolName === 'statusUpdate' && parameters.action === 'create') {
           shouldSuppressStreaming = true;
-          // Flush any pending content before tasks start
-          streamWriter.flush();
-          // Always add exactly one blank line before tasks
-          // (flush() may or may not add a newline depending on buffer state)
-          console.log('');
+          // Flush any pending content before tasks start (without trailing newline)
+          streamWriter.flush(true);
+          // Don't add extra spacing - streamWriter.flush() handles proper spacing
         }
-        
+
         return await handleToolCall(toolName, parameters);
       };
 
@@ -207,7 +205,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             if (taskManager.hasActiveTasks()) {
               return;
             }
-            
+
             if (firstChunk) {
               // Stop any running spinners
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
@@ -240,13 +238,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           }
           // Small delay to ensure final render
           await new Promise(resolve => setTimeout(resolve, 500));
-          
+
           // Add blank line before summary
           console.log('');
-          
+
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
+          console.log('');  // Add blank line after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();
@@ -340,16 +339,15 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       // Track if any tools were called during this response
       const trackingHandleToolCall = async (toolName, parameters) => {
         hasToolCalls = true;
-        
+
         // If tasks start, suppress further streaming
         if (toolName === 'statusUpdate' && parameters.action === 'create') {
           shouldSuppressStreaming = true;
-          // Flush any pending content before tasks start
-          streamWriter.flush();
-          // Ensure exactly one blank line before tasks
-          console.log('');
+          // Flush any pending content before tasks start (without trailing newline)
+          streamWriter.flush(true);
+          // Don't add extra spacing - streamWriter.flush() handles proper spacing
         }
-        
+
         return await handleToolCall(toolName, parameters);
       };
 
@@ -363,7 +361,7 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
             if (taskManager.hasActiveTasks()) {
               return;
             }
-            
+
             if (firstChunk) {
               // Stop any running spinners
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
@@ -396,13 +394,14 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           }
           // Small delay to ensure final render
           await new Promise(resolve => setTimeout(resolve, 500));
-          
+
           // Add blank line before summary
           console.log('');
-          
+
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
+          console.log('');  // Add blank line after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();

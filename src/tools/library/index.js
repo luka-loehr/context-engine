@@ -9,6 +9,7 @@
 import { fileOperationsTools } from './file-operations.js';
 import { uiTools } from './ui-tools.js';
 import { executionTools } from './execution-tools.js';
+import { statusUpdateTools } from './status-tools.js';
 
 /**
  * All available tools organized by category
@@ -16,7 +17,8 @@ import { executionTools } from './execution-tools.js';
 export const toolLibrary = {
   'file-operations': fileOperationsTools,
   'ui': uiTools,
-  'execution': executionTools
+  'execution': executionTools,
+  'status': statusUpdateTools
 };
 
 /**
@@ -80,10 +82,10 @@ export function getToolsSummary() {
 export function validateToolNames(toolNames) {
   const allTools = getAllTools();
   const availableToolNames = allTools.map(t => t.name);
-  
+
   const validTools = toolNames.filter(name => availableToolNames.includes(name));
   const invalidTools = toolNames.filter(name => !availableToolNames.includes(name));
-  
+
   return {
     valid: invalidTools.length === 0,
     validTools,

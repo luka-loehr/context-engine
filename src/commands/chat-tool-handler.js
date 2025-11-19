@@ -161,44 +161,53 @@ export async function handleChatToolCall(toolName, parameters, context) {
     return await handleSubAgentTool(toolName, parameters, context);
   }
 
-  // Generic spinner for all other tools
-  let toolSpinner = null;
-  if (toolName !== 'terminal') {
-    const [presentVerb] = ChatToolUtils.getToolVerbs(toolName);
-    let target = '';
+  // NO automatic spinner - agent controls feedback via statusUpdate tool
+  // Exception: statusUpdate tool itself should be silent
 
-    // Add specific target info if available
-    if (parameters.filePath) target = ` ${chalk.white(parameters.filePath)}`;
-    else if (parameters.command) target = ` ${chalk.white(parameters.command)}`;
+  // Handle dangerous tools with explicit confirmation
+  if (parameters.isDangerous) {
+    console.log(chalk.yellow('\\nPotentially dangerous action:'));
+    if (parameters.dangerousReason) {
+      console.log(chalk.gray(`Reason: ${parameters.dangerousReason}`));
+    }
 
-    toolSpinner = ora(`${presentVerb}${target}...`).start();
+    // Show command or file target
+    if (parameters.command) {
+      console.log(chalk.red(`   ${parameters.command}`));
+    } else if (parameters.filePath) {
+      const action = toolName === 'removeFile' ? 'Delete' : 'Overwrite';
+      console.log(chalk.red(`   ${action}: ${parameters.filePath}`));
+    } else {
+      console.log(chalk.red(`   Tool: ${toolName}`));
+    }
+
+    const { confirm } = await inquirer.prompt([{
+      type: 'input',
+      name: 'confirm',
+      message: 'Do you want to execute this? (Y/n)',
+      default: 'Y'
+    }]);
+
+    const answer = confirm.toLowerCase();
+    if (answer === 'n') {
+      console.log(chalk.gray('Action execution denied by user.'));
+      return {
+        success: false,
+        error: 'User denied execution of dangerous action.',
+        userDenied: true
+      };
+    }
   }
 
-  // Fallback to general tool execution for regular tools (terminal, getFileContent, etc.)
+  // Execute tool without automatic UI feedback
   try {
     const { session } = context;
     const result = await executeToolInContext(toolName, parameters, 'main', {
-      projectContext: session.fullProjectContext,
-      spinner: toolSpinner // Pass spinner to tool if it wants to use it
+      projectContext: session.fullProjectContext
     });
-
-    if (toolSpinner) {
-      const [, pastVerb] = ChatToolUtils.getToolVerbs(toolName);
-      if (result.success) {
-        let target = '';
-        if (parameters.filePath) target = ` ${chalk.white(parameters.filePath)}`;
-        toolSpinner.succeed(`${pastVerb}${target}`);
-      } else {
-        toolSpinner.fail(`${pastVerb} failed`);
-      }
-    }
 
     return result;
   } catch (error) {
-    if (toolSpinner) {
-      const [, pastVerb] = ChatToolUtils.getToolVerbs(toolName);
-      toolSpinner.fail(`${pastVerb} failed: ${error.message}`);
-    }
     return { success: false, error: `Tool execution failed: ${error.message}` };
   }
 }

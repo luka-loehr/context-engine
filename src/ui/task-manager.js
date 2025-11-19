@@ -15,10 +15,16 @@ class TaskManager {
         this.tasks = new Map();
         this.nextTaskId = 1;
         this.isRendering = false;
-        this.lastLineCount = 0;
         this.spinnerFrames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
         this.frameIndex = 0;
         this.intervalId = null;
+    }
+
+    /**
+     * Check if there are any active tasks
+     */
+    hasActiveTasks() {
+        return this.tasks.size > 0 && !this.allTasksCompleted();
     }
 
     /**
@@ -27,6 +33,9 @@ class TaskManager {
     startRendering() {
         if (this.isRendering) return;
         this.isRendering = true;
+
+        // Save cursor position using ANSI escape code (more reliable than relative movements)
+        process.stdout.write('\x1b7'); // ESC 7 - Save cursor position
 
         // Hide cursor
         process.stdout.write('\u001B[?25l');
@@ -43,16 +52,16 @@ class TaskManager {
     stopRendering() {
         if (!this.isRendering) return;
         this.isRendering = false;
-        if (this.intervalId) clearInterval(this.intervalId);
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
 
         // Final render to ensure completed states are shown
         this.render();
 
         // Show cursor
         process.stdout.write('\u001B[?25h');
-
-        // Reset line count so next output doesn't overwrite
-        this.lastLineCount = 0;
     }
 
     /**
@@ -82,24 +91,23 @@ class TaskManager {
 
             // Format: Symbol TaskName: (Status)
             // Example: ⠋ Adding French Localisations: (Reading file...)
-            lines.push(`${symbol} ${chalk.white(task.name)}: ${chalk.gray('(')}${statusColor(task.status)}${chalk.gray(')')}`);
+            // Ensure single line
+            const safeName = task.name.replace(/\n/g, ' ');
+            const safeStatus = task.status.replace(/\n/g, ' ');
+            lines.push(`${symbol} ${chalk.white(safeName)}: ${chalk.gray('(')}${statusColor(safeStatus)}${chalk.gray(')')}`);
         }
 
         const output = lines.join('\n');
 
-        // Move cursor up to overwrite previous output
-        if (this.lastLineCount > 0) {
-            readline.moveCursor(process.stdout, 0, -this.lastLineCount);
-        }
+        // Restore cursor to saved position (from startRendering)
+        // This ensures we always start from the same position, regardless of scrolling or wrapping
+        process.stdout.write('\x1b8'); // ESC 8 - Restore cursor position
 
-        // Clear screen down
+        // Clear screen down from this position
         readline.clearScreenDown(process.stdout);
 
         // Write new output
         process.stdout.write(output + '\n');
-
-        // Update last line count
-        this.lastLineCount = lines.length;
     }
 
     /**
@@ -157,13 +165,14 @@ class TaskManager {
         task.completed = true;
         task.status = finalMessage || 'Completed';
 
-        // Check if all tasks are done
+        // Check if all tasks are done - stop rendering after a brief delay
         if (this.allTasksCompleted()) {
-            // We don't stop rendering immediately to show the "Completed" state for a moment
-            // But the caller might want to stop it. 
-            // For now, we keep rendering until explicit reset or new task?
-            // Actually, we should probably stop the animation loop but keep the final state.
-            // But let's keep it running for now so the user sees the checkmark.
+            // Stop animation but keep final state visible
+            setTimeout(() => {
+                if (this.allTasksCompleted()) {
+                    this.stopRendering();
+                }
+            }, 500);
         }
     }
 

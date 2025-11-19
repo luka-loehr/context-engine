@@ -239,10 +239,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           // Small delay to ensure final render
           await new Promise(resolve => setTimeout(resolve, 500));
           
+          // Add blank line before summary
+          console.log('');
+          
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
-          console.log('');  // Single line spacing
+          console.log('');  // Single line spacing after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();
@@ -391,10 +394,13 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           // Small delay to ensure final render
           await new Promise(resolve => setTimeout(resolve, 500));
           
+          // Add blank line before summary
+          console.log('');
+          
           // Flush any remaining content from streamWriter (summary)
           // The onChunk handler will have resumed writing to streamWriter once tasks finished
           streamWriter.flush();
-          console.log('');  // Single line spacing
+          console.log('');  // Single line spacing after summary
         } else {
           // Normal case: no tasks, just flush what we have
           streamWriter.flush();

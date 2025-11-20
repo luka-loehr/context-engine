@@ -107,8 +107,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
     return new Promise((resolve, reject) => {
       toolQueue = toolQueue.then(async () => {
         try {
-          // Add spacing before tool execution
-          console.log('');
           const result = await handleChatToolCall(toolName, parameters, context);
           resolve(result);
         } catch (error) {
@@ -197,8 +195,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
                 thinkingSpinner.stop();
                 thinkingSpinner = null;
               }
-              // Add one empty line for spacing
-              console.log('');
               // Print header
               console.log(chalk.gray('context-engine:'));
               firstChunk = false;
@@ -314,8 +310,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
                 thinkingSpinner.stop();
                 thinkingSpinner = null;
               }
-              // Add one empty line for spacing
-              console.log('');
               // Print header
               console.log(chalk.gray('context-engine:'));
               firstChunk = false;

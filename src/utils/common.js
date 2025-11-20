@@ -9,7 +9,6 @@
 import ora from 'ora';
 import fs from 'fs';
 import path from 'path';
-import { taskManager } from '../ui/task-manager.js';
 
 /**
  * Normalize newlines in content - converts literal \n escape sequences to actual newlines
@@ -21,7 +20,7 @@ export function normalizeNewlines(content) {
   if (typeof content !== 'string') {
     return content;
   }
-  
+
   // Replace literal \n (backslash followed by n) with actual newlines
   // This handles cases where JSON.parse didn't properly decode escape sequences
   // or where double-escaping occurred
@@ -76,7 +75,7 @@ export function writeFile(filePath, content, { spinner, successMessage, allowedP
   try {
     // Normalize newlines - convert literal \n to actual newlines
     const normalizedContent = normalizeNewlines(content);
-    
+
     // Ensure we're writing to the project root
     const fullPath = path.join(process.cwd(), filePath);
 
@@ -123,36 +122,5 @@ export function writeFile(filePath, content, { spinner, successMessage, allowedP
       success: false,
       error: `Failed to create file: ${error.message}`
     };
-  }
-}
-
-/**
- * Create a spinner for file reading operations
- * @param {string} fileName - Name of file being read
- * @param {boolean} isMeaningful - Whether the file is meaningful to show spinner
- * @returns {Object|null} Spinner instance or null
- */
-export function createFileReadSpinner(fileName, isMeaningful = true) {
-  if (!isMeaningful) return null;
-  
-  // Don't show spinner if tasks are active (tasks will show status updates)
-  if (taskManager.hasActiveTasks()) return null;
-
-  const ora = require('ora');
-  const chalk = require('chalk');
-  return ora(`Reading ${chalk.cyan(fileName)}`).start();
-}
-
-/**
- * Complete file read spinner with token count
- * @param {Object} spinner - Ora spinner instance
- * @param {string} fileName - Name of file that was read
- * @param {number} tokenCount - Number of tokens read
- */
-export function completeFileReadSpinner(spinner, fileName, tokenCount) {
-  if (spinner && spinner.isSpinning) {
-    const formatTokenCount = require('./tokenizer.js').formatTokenCount;
-    const chalk = require('chalk');
-    spinner.succeed(`Read ${chalk.cyan(fileName)} (${formatTokenCount(tokenCount)})`);
   }
 }

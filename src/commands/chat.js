@@ -17,7 +17,7 @@ import { getSystemPrompt, buildProjectContextPrefix } from '../constants/prompts
 import { createStreamWriter } from '../utils/stream-writer.js';
 import { displayError, colorizeModelName } from '../ui/output.js';
 import { formatTokenCount, countTokens } from '../utils/tokenizer.js';
-import { getRandomDelay, createFileReadSpinner, completeFileReadSpinner } from '../utils/common.js';
+import { getRandomDelay } from '../utils/common.js';
 import { getToolsForContext, executeToolInContext } from '../tools/index.js';
 import { changeModel } from './model.js';
 import { getOrSetupConfig, setConfig, getConfig } from '../config/config.js';

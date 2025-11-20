@@ -489,11 +489,6 @@ export function registerCoreTools() {
         const fullPath = path.join(process.cwd(), filePath);
         const content = fs.readFileSync(fullPath, 'utf8');
 
-        // Update status if spinner is available
-        if (spinner && spinner.isSpinning) {
-          spinner.text = `Re-reading generated file: ${filePath}`;
-        }
-
         return {
           success: true,
           filePath: filePath,

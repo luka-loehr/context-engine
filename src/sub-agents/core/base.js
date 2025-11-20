@@ -5,6 +5,7 @@
 
 import { createProvider } from '../../providers/index.js';
 import { getToolsForContext, getToolsForAgent, executeToolInContext } from '../../tools/index.js';
+import { buildProjectContextPrefix } from '../../constants/prompts.js';
 import ora from 'ora';
 
 /**
@@ -65,8 +66,11 @@ export class SubAgent {
       // Create sub-agent provider
       const subAgentProvider = createProvider(modelInfo.provider, apiKey, modelInfo.model);
 
-      // Get sub-agent configuration
-      const systemPrompt = this.getSystemPrompt();
+      // Get sub-agent configuration with project context
+      const baseSystemPrompt = this.getSystemPrompt();
+      const contextPrefix = buildProjectContextPrefix(projectContext);
+      const systemPrompt = baseSystemPrompt + contextPrefix;
+
       const tools = this.getTools();
       const initialPrompt = this.getInitialPrompt();
 

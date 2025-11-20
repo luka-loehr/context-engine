@@ -1,58 +1,66 @@
 /**
- * Context Engine - SubAgent System
- * Auto-discovers and provides access to all agents
- *
- * Copyright (c) 2025 Luka Loehr
- * Licensed under the MIT License
+ * SubAgent System Entry Point
+ * Provides access to the registry and initializes all agents
  */
 
-export { autoAgentRegistry } from './core/auto-registry.js';
-export { genericAgentExecutor } from './core/generic-executor.js';
+import { registry } from './core/registry.js';
 
-// Initialize and discover agents on module load
-import { autoAgentRegistry } from './core/auto-registry.js';
+// Import and register all agents
+import { agentConfig as agentsMdConfig } from './agents/agents-md.js';
+import { agentConfig as readmeMdConfig } from './agents/readme-md.js';
 
-// Auto-discover all agents from the agents directory
-await autoAgentRegistry.discoverAgents();
+// Register agents
+registry.register(agentsMdConfig);
+registry.register(readmeMdConfig);
 
-// Export helper functions for backwards compatibility
+/**
+ * Get a subagent instance by ID
+ * @param {string} id - Agent ID (e.g., 'agents-md', 'readme-md')
+ * @returns {SubAgent}
+ */
+export function getSubAgent(id) {
+  return registry.getAgent(id);
+}
+
+/**
+ * Get a subagent instance by tool name
+ * @param {string} toolName - Tool function name (e.g., 'createAgentsMd')
+ * @returns {SubAgent}
+ */
 export function getSubAgentByToolName(toolName) {
-  // Legacy tool name mapping
-  const toolToAgentMap = {
-    'createReadme': 'readme-md',
-    'createAgentsMd': 'agents-md'
-  };
-  
-  const agentId = toolToAgentMap[toolName];
-  return agentId ? autoAgentRegistry.getAgent(agentId) : null;
+  return registry.getAgentByToolName(toolName);
 }
 
-export function isSubAgentTool(toolName) {
-  // Check if it's a legacy tool name or starts with create/run
-  return toolName.startsWith('create') || toolName.startsWith('run') || toolName.includes('Agent');
-}
-
+/**
+ * Get all tool definitions for AI
+ * @returns {Array}
+ */
 export function getAllSubAgentTools() {
-  // Return tool definitions for all discovered agents
-  const agents = autoAgentRegistry.getAllAgents();
-  
-  return agents.map(agent => ({
-    type: 'function',
-    function: {
-      name: `run_${agent.id.replace(/-/g, '_')}`,
-      description: agent.description,
-      parameters: {
-        type: 'object',
-        properties: {
-          customInstructions: {
-            type: 'string',
-            description: 'Optional custom instructions to modify agent behavior'
-          }
-        }
-      }
-    }
-  }));
+  return registry.getAllToolDefinitions();
 }
 
-// Export SubAgentManager for backwards compatibility
+/**
+ * Check if a tool name is a subagent tool
+ * @param {string} toolName
+ * @returns {boolean}
+ */
+export function isSubAgentTool(toolName) {
+  return registry.isSubAgentTool(toolName);
+}
+
+/**
+ * Get all registered agent IDs
+ * @returns {Array<string>}
+ */
+export function getAllAgentIds() {
+  return registry.getAllAgentIds();
+}
+
+// Export the registry for advanced usage
+export { registry };
+
+// Export SubAgentManager for concurrent execution
 export { SubAgentManager } from './core/manager.js';
+
+// Export base class for creating new agents
+export { SubAgent } from './core/base.js';

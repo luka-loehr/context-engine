@@ -1,9 +1,6 @@
 /**
- * Context Engine - SubAgent Manager
+ * SubAgent Manager
  * Handles concurrent execution of multiple sub-agents with coordinated UI
- *
- * Copyright (c) 2025 Luka Loehr
- * Licensed under the MIT License
  */
 
 import ora from 'ora';
@@ -20,11 +17,11 @@ export class SubAgentManager {
   /**
    * Execute multiple sub-agents concurrently
    * @param {Array} subAgentConfigs - Array of {subAgent, params, projectContext, modelInfo, apiKey, provider}
-   * @returns {Promise<Object>} Comprehensive result object with all subagent results
+   * @returns {Promise<Array>} Array of results from each sub-agent
    */
   async executeMultiple(subAgentConfigs) {
     if (subAgentConfigs.length === 0) {
-      return { success: true, results: [], summary: 'No subagents to execute' };
+      return [];
     }
 
     // Single subagent - use simple execution
@@ -37,14 +34,7 @@ export class SubAgentManager {
         config.apiKey,
         config.provider
       );
-      return {
-        success: true,
-        results: [result],
-        summary: this.generateOverallSummary([result]),
-        totalFilesCreated: result.totalFilesCreated || 0,
-        totalFilesRead: result.totalFilesRead || 0,
-        generatedContent: result.generatedFiles || []
-      };
+      return [result];
     }
 
     // Multiple subagents - use concurrent execution with coordinated UI
@@ -81,22 +71,7 @@ export class SubAgentManager {
       // Show completion summary
       this.showCompletionSummary();
 
-      // Generate comprehensive results
-      const allResults = this.results;
-      const overallSummary = this.generateOverallSummary(allResults);
-      const totalFilesCreated = allResults.reduce((sum, result) => sum + (result.totalFilesCreated || 0), 0);
-      const totalFilesRead = allResults.reduce((sum, result) => sum + (result.totalFilesRead || 0), 0);
-      const allGeneratedContent = allResults.flatMap(result => result.generatedFiles || []);
-
-      return {
-        success: true,
-        results: allResults,
-        summary: overallSummary,
-        totalFilesCreated,
-        totalFilesRead,
-        generatedContent: allGeneratedContent,
-        subAgentCount: allResults.length
-      };
+      return this.results;
 
     } catch (error) {
       clearInterval(updateInterval);
@@ -176,13 +151,9 @@ export class SubAgentManager {
           
           const fs = await import('fs');
           const path = await import('path');
-          const { normalizeNewlines } = await import('../../utils/common.js');
 
           const filePath = path.join(process.cwd(), parameters.filePath);
-          
-          // Normalize newlines - convert literal \n to actual newlines
-          const normalizedContent = normalizeNewlines(parameters.content);
-          fs.writeFileSync(filePath, normalizedContent, 'utf8');
+          fs.writeFileSync(filePath, parameters.content, 'utf8');
 
           this.updateSubAgentStatus(index, '✓ File created');
           
@@ -223,16 +194,7 @@ export class SubAgentManager {
       handleSubAgentToolCall
     );
 
-    // Return a basic result structure for the intercepted execution
-    // Note: This is a simplified version - the full result generation happens in the base class
-    return {
-      success: true,
-      name: subAgent.name,
-      description: subAgent.description,
-      totalFilesCreated: 0, // Would need more complex tracking for accurate counts
-      totalFilesRead: 0,
-      generatedFiles: []
-    };
+    return { success: true };
   }
 
   /**
@@ -298,41 +260,6 @@ export class SubAgentManager {
     });
     
     console.log(''); // Add spacing after completion
-  }
-
-  /**
-   * Generate an overall summary of all subagent results
-   * @param {Array} results - Array of subagent results
-   * @returns {string} Overall summary
-   */
-  generateOverallSummary(results) {
-    if (results.length === 0) {
-      return 'No subagents were executed.';
-    }
-
-    if (results.length === 1) {
-      const result = results[0];
-      return result.analysis?.summary || `${result.name} completed successfully.`;
-    }
-
-    // Multiple subagents summary
-    const subAgentNames = results.map(r => r.name).join(', ');
-    const totalFiles = results.reduce((sum, r) => sum + (r.totalFilesCreated || 0), 0);
-    const totalReads = results.reduce((sum, r) => sum + (r.totalFilesRead || 0), 0);
-
-    let summary = `${results.length} subagents completed: ${subAgentNames}. `;
-
-    if (totalFiles > 0) {
-      summary += `Created ${totalFiles} file(s) total. `;
-    }
-
-    if (totalReads > 0) {
-      summary += `Analyzed ${totalReads} file(s) across all subagents. `;
-    }
-
-    summary += 'All documentation and analysis tasks have been completed successfully.';
-
-    return summary;
   }
 }
 

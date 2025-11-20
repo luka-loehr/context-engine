@@ -1,9 +1,5 @@
 /**
- * Context Engine - Tool Helpers
- * Tool registry helper functions and utilities
- *
- * Copyright (c) 2025 Luka Loehr
- * Licensed under the MIT License
+ * Tool Registry Helper Functions
  */
 
 import { toolRegistry } from './registry.js';

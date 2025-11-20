@@ -1,9 +1,6 @@
 /**
- * Context Engine - Tools Module
+ * Tools Module Entry Point
  * Exports the tool registry and initializes core tools
- *
- * Copyright (c) 2025 Luka Loehr
- * Licensed under the MIT License
  */
 
 import { toolRegistry, ToolRegistry, ToolCategories } from './registry.js';

@@ -12,15 +12,14 @@ export const agentConfig = {
   description: 'Creates AGENTS.md documentation for AI',
   category: 'documentation',
   icon: '🤖',
-  
+
   // Tools this agent can use
   tools: [
     'getFileContent',
     'createFile',
-    'statusUpdate',
     'listFiles'
   ],
-  
+
   // System prompt defines the agent's expertise and behavior
   systemPrompt: `You are an expert technical writer specializing in creating AGENTS.md files for AI coding assistants.
 
@@ -60,15 +59,13 @@ Pull request workflow, code review requirements, versioning, release process
 **Workflow:**
 1. Use listFiles to understand project structure
 2. Use getFileContent to read key files (package.json, README, test configs, etc.)
-3. Use statusUpdate FREQUENTLY (at least 6 times) to show progress
-4. Analyze development practices and tooling
-5. Create AGENTS.md using createFile with descriptive successMessage
+3. Analyze development practices and tooling
+4. Create AGENTS.md using createFile with descriptive successMessage
 
 **Important:**
-- ALWAYS use statusUpdate before starting each major task
 - MUST include successMessage parameter when calling createFile
 - Focus on practical, actionable information for AI agents`,
-  
+
   // Default instructions (used when user doesn't provide custom instructions)
   defaultInstructions: `Analyze this codebase and create a comprehensive AGENTS.md file tailored for AI coding agents.
 
@@ -76,8 +73,7 @@ Follow these steps:
 1. Examine the project structure, package files, and configuration
 2. Identify development workflows, testing practices, and coding standards
 3. Create a well-structured AGENTS.md with all required sections
-4. Use statusUpdate frequently to show progress (at least 6 times)
-5. Ensure the documentation is clear, actionable, and AI-agent friendly
+4. Ensure the documentation is clear, actionable, and AI-agent friendly
 
 Remember to include the REQUIRED successMessage parameter when calling createFile.`
 };

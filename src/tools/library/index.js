@@ -7,18 +7,14 @@
  */
 
 import { fileOperationsTools } from './file-operations.js';
-import { uiTools } from './ui-tools.js';
 import { executionTools } from './execution-tools.js';
-import { statusUpdateTools } from './status-tools.js';
 
 /**
  * All available tools organized by category
  */
 export const toolLibrary = {
   'file-operations': fileOperationsTools,
-  'ui': uiTools,
-  'execution': executionTools,
-  'status': statusUpdateTools
+  'execution': executionTools
 };
 
 /**

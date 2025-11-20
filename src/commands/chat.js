@@ -33,7 +33,6 @@ import {
 import { showWelcomeBanner } from '../session/index.js';
 import { clearScreen, clearPromptOutput } from '../terminal/index.js';
 import { handleAPIError } from '../errors/index.js';
-import { taskManager } from '../ui/task-manager.js';
 
 
 /**
@@ -182,16 +181,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       let assistantResponse = '';
       let shouldSuppressStreaming = false;
 
-      // Track tool calls to detect when tasks start
+      // Track tool calls
       const trackingHandleToolCall = async (toolName, parameters) => {
-        // If tasks start, suppress further streaming
-        if (toolName === 'statusUpdate' && parameters.action === 'create') {
-          shouldSuppressStreaming = true;
-          // Flush any pending content before tasks start (without trailing newline)
-          streamWriter.flush(true);
-          // Don't add extra spacing - streamWriter.flush() handles proper spacing
-        }
-
         return await handleToolCall(toolName, parameters);
       };
 
@@ -200,12 +191,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           fullPrompt,
           systemPrompt,
           (content) => {
-            // Suppress streaming ONLY if tasks are active
-            // Note: we allow streaming to RESUME after tasks are done
-            if (taskManager.hasActiveTasks()) {
-              return;
-            }
-
             if (firstChunk) {
               // Stop any running spinners
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
@@ -224,33 +209,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           trackingHandleToolCall
         );
 
-        // Only flush if we were actually streaming and no tasks started
-        if (!shouldSuppressStreaming && !taskManager.hasActiveTasks()) {
-          streamWriter.flush();
-          console.log('');  // Single line spacing after response
-        }
-
-        // Wait for tasks to complete if they're active or were active
-        if (taskManager.hasActiveTasks() || shouldSuppressStreaming) {
-          // Wait for all tasks to complete
-          while (taskManager.hasActiveTasks()) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          // Small delay to ensure final render
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Add blank line before summary
-          console.log('');
-
-          // Flush any remaining content from streamWriter (summary)
-          // The onChunk handler will have resumed writing to streamWriter once tasks finished
-          streamWriter.flush();
-          console.log('');  // Add blank line after summary
-        } else {
-          // Normal case: no tasks, just flush what we have
-          streamWriter.flush();
-          console.log('');  // Single line spacing after response
-        }
+        // Flush the streamed content
+        streamWriter.flush();
+        console.log('');  // Single line spacing after response
 
         // Add assistant response to session
         addAssistantMessage(session, assistantResponse);
@@ -336,18 +297,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       let hasToolCalls = false;
       let shouldSuppressStreaming = false;
 
-      // Track if any tools were called during this response
+      // Track tool calls
       const trackingHandleToolCall = async (toolName, parameters) => {
         hasToolCalls = true;
-
-        // If tasks start, suppress further streaming
-        if (toolName === 'statusUpdate' && parameters.action === 'create') {
-          shouldSuppressStreaming = true;
-          // Flush any pending content before tasks start (without trailing newline)
-          streamWriter.flush(true);
-          // Don't add extra spacing - streamWriter.flush() handles proper spacing
-        }
-
         return await handleToolCall(toolName, parameters);
       };
 
@@ -356,12 +308,6 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           fullPrompt,
           systemPrompt,
           (content) => {
-            // Suppress streaming ONLY if tasks are active
-            // Note: we allow streaming to RESUME after tasks are done
-            if (taskManager.hasActiveTasks()) {
-              return;
-            }
-
             if (firstChunk) {
               // Stop any running spinners
               if (thinkingSpinner && thinkingSpinner.isSpinning) {
@@ -380,33 +326,9 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
           trackingHandleToolCall
         );
 
-        // Only flush if we were actually streaming and no tasks started
-        if (!shouldSuppressStreaming && !taskManager.hasActiveTasks()) {
-          streamWriter.flush();
-          console.log('');  // Single line spacing after response
-        }
-
-        // Wait for tasks to complete if they're active or were active
-        if (taskManager.hasActiveTasks() || shouldSuppressStreaming) {
-          // Wait for all tasks to complete
-          while (taskManager.hasActiveTasks()) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          // Small delay to ensure final render
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Add blank line before summary
-          console.log('');
-
-          // Flush any remaining content from streamWriter (summary)
-          // The onChunk handler will have resumed writing to streamWriter once tasks finished
-          streamWriter.flush();
-          console.log('');  // Add blank line after summary
-        } else {
-          // Normal case: no tasks, just flush what we have
-          streamWriter.flush();
-          console.log('');  // Single line spacing after response
-        }
+        // Flush the streamed content
+        streamWriter.flush();
+        console.log('');  // Single line spacing after response
 
         // Add assistant response to session
         addAssistantMessage(session, assistantResponse);

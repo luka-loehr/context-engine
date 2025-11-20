@@ -10,7 +10,6 @@ import fs from 'fs';
 import path from 'path';
 import { toolRegistry, ToolCategories } from './registry.js';
 import { executionTools } from './library/execution-tools.js';
-import { statusUpdateTools } from './library/status-tools.js';
 import { writeFile, normalizeNewlines } from '../utils/common.js';
 
 /**
@@ -195,7 +194,7 @@ export function registerCoreTools() {
       },
       required: ['filePath', 'startLine', 'endLine', 'newContent']
     },
-    availableTo: ToolCategories.SHARED,
+    availableTo: ToolCategories.SUBAGENT,
     tags: ['file', 'edit'],
     handler: async (parameters, context) => {
       const { filePath, startLine, endLine, newContent } = parameters;
@@ -236,14 +235,14 @@ export function registerCoreTools() {
         // Validate the edited file for common errors
         const { validateFileContent } = await import('./library/file-operations.js');
         const validation = validateFileContent(updatedContent, fullPath);
-        
+
         if (!validation.isValid) {
           // Rollback the change
           fs.writeFileSync(fullPath, content, 'utf8');
           return {
             success: false,
             error: `Edit validation failed. Errors detected:\n${validation.errors.join('\n')}\n\n` +
-                   `The file has been restored to its original state. Please fix the edit and try again.`
+              `The file has been restored to its original state. Please fix the edit and try again.`
           };
         }
         if (validation.warnings.length > 0) {
@@ -287,7 +286,7 @@ export function registerCoreTools() {
       },
       required: ['filePath', 'content']
     },
-    availableTo: ToolCategories.SHARED,
+    availableTo: ToolCategories.SUBAGENT,
     tags: ['file', 'create'],
     handler: async (parameters, context) => {
       const { filePath, content } = parameters;
@@ -342,7 +341,7 @@ export function registerCoreTools() {
       },
       required: ['filePath', 'content']
     },
-    availableTo: ToolCategories.SHARED,
+    availableTo: ToolCategories.SUBAGENT,
     tags: ['file', 'write'],
     handler: async (parameters, context) => {
       const { filePath, content } = parameters;
@@ -380,7 +379,7 @@ export function registerCoreTools() {
         // Validate the rewritten file for common errors
         const { validateFileContent } = await import('./library/file-operations.js');
         const validation = validateFileContent(normalizedContent, fullPath);
-        
+
         if (!validation.isValid) {
           // Rollback to original if it existed
           if (originalContent !== null) {
@@ -392,7 +391,7 @@ export function registerCoreTools() {
           return {
             success: false,
             error: `File validation failed after rewrite. Errors detected:\n${validation.errors.join('\n')}\n\n` +
-                   `The file has been restored to its original state. Please fix the content and try again.`
+              `The file has been restored to its original state. Please fix the content and try again.`
           };
         }
         if (validation.warnings.length > 0) {
@@ -437,7 +436,7 @@ export function registerCoreTools() {
       },
       required: ['filePath']
     },
-    availableTo: ToolCategories.SHARED,
+    availableTo: ToolCategories.SUBAGENT,
     tags: ['file', 'delete'],
     handler: async (parameters, context) => {
       const { filePath } = parameters;
@@ -457,37 +456,6 @@ export function registerCoreTools() {
   // ============================================================================
   // SUBAGENT-ONLY TOOLS
   // ============================================================================
-
-  toolRegistry.register({
-    name: 'createFile',
-    description: 'Create or overwrite a file with the specified content. Use this when you have completed your analysis and are ready to write the final output.',
-    parameters: {
-      type: 'object',
-      properties: {
-        filePath: {
-          type: 'string',
-          description: 'The path where the file should be created (e.g., "AGENTS.md", "README.md")'
-        },
-        content: {
-          type: 'string',
-          description: 'The complete content to write to the file'
-        },
-        successMessage: {
-          type: 'string',
-          description: 'A descriptive success message to show when the file is created (e.g., "AGENTS.md for ProjectName successfully created")'
-        }
-      },
-      required: ['filePath', 'content', 'successMessage']
-    },
-    availableTo: ToolCategories.SUBAGENT,
-    tags: ['file', 'write'],
-    handler: async (parameters, context) => {
-      const { filePath, content, successMessage } = parameters;
-      const { spinner } = context;
-
-      return writeFile(filePath, content, { spinner, successMessage });
-    }
-  });
 
   toolRegistry.register({
     name: 'readGeneratedFile',
@@ -650,22 +618,6 @@ export function registerCoreTools() {
       parameters: tool.parameters,
       availableTo: ToolCategories.SHARED,
       tags: ['execution', 'git', 'github'],
-      handler: tool.handler
-    });
-  });
-
-  // ============================================================================
-  // STATUS UPDATE TOOLS (Available to main AI)
-  // ============================================================================
-
-  // Register status update tools for main AI
-  statusUpdateTools.forEach(tool => {
-    toolRegistry.register({
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.parameters,
-      availableTo: ToolCategories.MAIN,
-      tags: ['status', 'task', 'ui'],
       handler: tool.handler
     });
   });

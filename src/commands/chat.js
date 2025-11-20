@@ -100,7 +100,8 @@ export async function startChatSession(selectedModel, modelInfo, apiKey, project
       get provider() { return provider; },
       set provider(value) { provider = value; },
       activeSubAgentCalls,
-      subAgentCallId
+      get subAgentCallId() { return subAgentCallId; },
+      set subAgentCallId(value) { subAgentCallId = value; }
     };
 
     // Enforce sequential execution using a promise queue

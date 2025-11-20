@@ -281,7 +281,8 @@ async function handleSubAgentTool(toolName, parameters, context) {
   } = context;
 
   // Handle subagent creation with concurrent execution support
-  const callId = ++subAgentCallId;
+  context.subAgentCallId = context.subAgentCallId + 1;
+  const callId = context.subAgentCallId;
 
   // Create a promise that will be resolved when this call should execute
   let resolveExecution;
